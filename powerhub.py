@@ -24,5 +24,6 @@ if __name__ == "__main__":
     execute_from_command_line([
         sys.argv[0],
         "runserver",
+        "--insecure",  # also server static files
         "%s:%d" % (args.LHOST, args.LPORT)
         ])
