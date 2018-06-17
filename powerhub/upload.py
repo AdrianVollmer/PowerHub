@@ -3,7 +3,10 @@ from powerhub.settings import BASE_DIR
 
 
 def save_file(file):
-    filename = os.path.join(BASE_DIR, "upload", str(file))
+    upload_dir = os.path.join(BASE_DIR, "upload")
+    if not os.path.exists(upload_dir):
+        os.makedirs(upload_dir)
+    filename = os.path.join(upload_dir, str(file))
     if os.path.isfile(filename):
         count = 1
         while os.path.isfile("%s.%d" % (filename, count)):
