@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     '-p',
     '--lport',
-    default=4443,
+    default=8000,
     dest="LPORT",
     type=int,
     help="the local port to listen on (default: 8000)"
