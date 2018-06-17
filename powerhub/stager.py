@@ -35,17 +35,22 @@ def load_exe_files(directory):
     return result
 
 
+def ensure_dir_exists(dirname):
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+
+
 def import_modules():
     mod_dir = os.path.join(
         BASE_DIR,
         'modules',
     )
 
-    if not os.path.exists(mod_dir):
-        os.makedirs(mod_dir)
+    ensure_dir_exists(mod_dir)
+    ensure_dir_exists(os.path.join(mod_dir, 'ps1'))
+    ensure_dir_exists(os.path.join(mod_dir, 'exe'))
 
     ps_modules = load_powershell_scripts(os.path.join(mod_dir, 'ps1'))
-
     exe_modules = load_exe_files(os.path.join(mod_dir, 'exe'))
 
     return ps_modules + exe_modules

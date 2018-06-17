@@ -10,17 +10,18 @@ parser.add_argument(
     default=4443,
     dest="LPORT",
     type=int,
-    help="the local port to listen on (default: 4443)"
+    help="the local port to listen on (default: 8000)"
 )
 
-parser.add_argument(
-    '-s',
-    '--ssl',
-    default=False,
-    dest="SSL",
-    action="store_true",
-    help="use SSL"
-)
+# TODO currently not supported
+#  parser.add_argument(
+#      '-s',
+#      '--ssl',
+#      default=False,
+#      dest="SSL",
+#      action="store_true",
+#      help="use SSL"
+#  )
 
 parser.add_argument(
     '-l', '--lhost', default='0.0.0.0',
@@ -62,7 +63,8 @@ args = parser.parse_args()
 if args.URI_PORT == 0:
     args.URI_PORT = args.LPORT
 
-if args.SSL:
-    args.PROTOCOL = 'https'
-else:
-    args.PROTOCOL = 'http'
+args.PROTOCOL = 'http'
+#  if args.SSL:
+#      args.PROTOCOL = 'https'
+#  else:
+#      args.PROTOCOL = 'http'

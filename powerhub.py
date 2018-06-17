@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
-import powerhub.args
+from powerhub.args import args
 
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "powerhub.settings")
@@ -21,4 +21,8 @@ if __name__ == "__main__":
             )
         raise
     #  execute_from_command_line(sys.argv)
-    execute_from_command_line([sys.argv[0], "runserver"])
+    execute_from_command_line([
+        sys.argv[0],
+        "runserver",
+        "%s:%d" % (args.LHOST, args.LPORT)
+        ])
