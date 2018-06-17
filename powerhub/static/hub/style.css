@@ -1,0 +1,31 @@
+.submitButton {
+ border: 0;
+ background: none;
+ background-color: #87CEFA;
+ outline: 1;
+ box-shadow: none;
+ border-radius: 1px;
+ display: inline-block;
+ float: left;
+}
+
+.deleteButton {
+ border: 0;
+ background: none;
+ background-color: #ffe6e6;
+ outline: 1;
+ box-shadow: none;
+ border-radius: 1px;
+ display: inline-block;
+ float: left;
+}
+
+.clip-entry, .code_div{
+ contenteditable: true;
+ font-family: monospace;
+ font-size: 12pt;
+ background-color: #EEEEEE;
+ border-style: solid;
+ border-width: 1pt;
+ border-color: #DDDDDD;
+}

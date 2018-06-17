@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+    <title>PowerHub</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'hub/style.css' %}" />
+    <script type="text/javascript" src="{% static 'hub/script.js' %}" ></script>
+</head>
+<body>
+<div class=page>
+  <h1>PowerHub</h1>
+
+    <h2>Hub</h2>
+        <div class="downloadstring">
+            <p>Paste this in PowerShell (<a href="#" onclick="alert('TODO')">copy to clipboard</a>):</p>
+            <div class="code_div" contenteditable='true'>{{ dl_str }}</div>
+            <p>Current size of payload: {{ pl_size }}</p>
+        </div>
+
+        <div class="modules">
+            <p>Modules ({{ active_modules }} active):
+            (<a href="#" onclick="toggleDiv('module-list')">click to show/hide</a>)
+            <form action="module/activate" method="post" class="module-form">
+            <input type="hidden" value="-1" name="n">
+            <input type="submit" value="Activate all" class="submitButton">
+                    {% csrf_token %}
+            </form>
+            <form action="module/deactivate" method="post" class="module-form">
+            <input type="hidden" value="-1" name="n">
+            <input type="submit" value="Deactivate all" class="deleteButton">
+                    {% csrf_token %}
+            </form>
+            </p>
+        {% if modules %}
+            <ul id="module-list" style="display: none">
+            {% for m in modules %}
+            <li>
+                {% if m.active %}
+                    <form action="module/deactivate" method="post" class="module-form">
+                    <input type="hidden" value="{{ forloop.counter }}" name="n">
+                    <input type="submit" value="−" class="deleteButton">
+                    {% csrf_token %}
+                    </form>
+                    <div class="active-module-name">{{ m.name }}</div>
+                {% else %}
+                    <form action="module/activate" method="post" class="module-form">
+                    <input type="hidden" value="{{ forloop.counter }}" name="n">
+                    <input type="submit" value="+" class="submitButton">
+                    {% csrf_token %}
+                    </form>
+                    <div class="inactive-module-name">{{ m.name }}</div>
+                {% endif %}
+            </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>No modules found</p>
+        {% endif %}
+        </div>
+
+    <h2>Clipboard</h2>
+        <div class="clipboard">
+            <form action="clipboard/add" method="post" id="clipform">
+            {% csrf_token %}
+            <textarea id="clipboard-area" rows="4" cols="80" name="content" form="clipform"></textarea>
+            <input type="submit" value="+" class="submitButton">
+            </form>
+        {% if clipboard %}
+            <ul class="clip-list">
+            {% for c in clipboard %}
+            <li>
+                <div class="clip-time">{{ c.time }}</div>
+                <div class="clip-ip">{{ c.IP }}</div>
+                <form action="clipboard/delete" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" value="{{ forloop.counter }}" name="n">
+                    <input type="submit" value="−" class="deleteButton">
+                </form>
+                <div class="clip-entry" contenteditable="true">{{ c.content }}</div>
+            </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>Clipboard is empty</p>
+        {% endif %}
+        </div>
+
+    <h2>File Upload</h2>
+    <div class="uploadform">
+    <form action="u" method=post enctype="multipart/form-data">
+        {% csrf_token %}
+        <dl>
+        {{ upload_form }}
+            <dd><input type=submit value=Upload class="submitButton"></dd>
+        </dl>
+      </form>
+    </div>
+</div>
+<div>
+</div>
+</body></html>
