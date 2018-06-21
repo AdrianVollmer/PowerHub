@@ -116,7 +116,7 @@ Load-HubModule "1,4-6"
 
 Description
 -----------
-Transfers the code of modules #1, #4, #5 and #6 from the hub and imports it.
+Transfers the code of modules #1, #4, #5 and #6 from the hub and imports them.
 
 .EXAMPLE
 
@@ -124,7 +124,7 @@ Load-HubModule "-"
 
 Description
 -----------
-Transfers the code of all modules from the hub and imports it.
+Transfers the code of all modules from the hub and imports them.
 
 .NOTES
 
