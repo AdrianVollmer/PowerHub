@@ -30,7 +30,7 @@ def load_exe_files(directory):
                     d = f.read()
                 result.append(Module(
                     filename.replace(BASE_DIR, ''),
-                    "ps1",
+                    "exe",
                     base64.b64encode(d)))
     return result
 
@@ -52,41 +52,29 @@ def import_modules():
 
     ps_modules = load_powershell_scripts(os.path.join(mod_dir, 'ps1'))
     exe_modules = load_exe_files(os.path.join(mod_dir, 'exe'))
+    result = ps_modules + exe_modules
+    for i, m in enumerate(result):
+        m.n = i
 
-    return ps_modules + exe_modules
+    return result
 
 
 class Module(object):
     def __init__(self, name, type, code):
         self.name = name
         self.type = type
-        self.code = code
+        self._code = code
+        self.code = ""
         self.active = False
+        self.n = -1
 
     def activate(self):
         self.active = True
+        self.code = self._code
 
     def deactivate(self):
         self.active = False
-
-#  PowerSploit = Module(
-#      "PowerSploit",
-#      "https://github.com/PowerShellMafia/PowerSploit.git",
-#  )
-#
-#  PowerSploitDev = Module(
-#      "PowerSploit (dev branch)",
-#      "https://github.com/PowerShellMafia/PowerSploit.git",
-#      branch='dev',
-#  )
-#
-#  BloodHound = Module(
-#      "BloodHound Ingestor",
-#      "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Ingestors/SharpHound.ps1", # noqa
-#      proto='web',
-#  )
-
-#  Nishang = Module("https://github.com/samratashok/nishang")
+        self.code = ""
 
 
 modules = import_modules()

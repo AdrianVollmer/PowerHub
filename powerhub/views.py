@@ -1,12 +1,15 @@
 from django.shortcuts import render, redirect
 from django import forms
+from django.http import HttpResponse
 
 
 from powerhub.clipboard import clipboard
-from powerhub.stager import modules, stager_str
+from powerhub.stager import modules, stager_str, callback_url
 from powerhub.upload import save_file
+#  from powerhub.av_evasion import clean_ps1
 
 from datetime import datetime
+from base64 import b64decode
 
 
 class UploadFileForm(forms.Form):
@@ -65,16 +68,42 @@ def deactivate_module(request):
 
 def payload(request):
     context = {
-        "modules": [m for m in modules if m.active],
+        "modules": modules,
+        "callback_url": callback_url,
     }
-    return render(request,
-                  "hub/payload.ps1",
-                  context,
-                  content_type='text/plain'
-                  )
+    if 'm' in request.GET:
+        n = int(request.GET['m'])
+        if n < len(modules):
+            modules[n].activate()
+            result = HttpResponse(
+                modules[n].code,
+                content_type='text/plain; charset=utf-8'
+            )
+        else:
+            result = HttpResponse("not found")
+    else:
+        result = render(request,
+                        "hub/payload.ps1",
+                        context,
+                        content_type='text/plain'
+                        )
+    return result
 
 
 def upload(request):
     file = request.FILES["file"]
     save_file(file)
     return redirect('/')
+
+
+def debug(request):
+    m = request.GET['m']
+    result = [x for x in modules if m in x.name]
+    if result:
+        response = HttpResponse(
+            b64decode(result[0].code),
+            content_type='text/plain; charset=utf-8'
+        )
+    else:
+        response = HttpResponse("not found")
+    return response

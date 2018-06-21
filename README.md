@@ -23,7 +23,8 @@ The Clipboard
 -------------
 
 The clipboard functionality is meant for exchanging small snippets, such as
-hashes, passwords, one liners, and so forth.
+hashes, passwords, one liners, and so forth. It's like an extremely basic
+etherpad.
 
 File Dropper
 ------------

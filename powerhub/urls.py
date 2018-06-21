@@ -7,6 +7,7 @@ urlpatterns = [
     url(r'^clipboard/delete$', powerhub.views.del_clipboard),
     url(r'^module/activate$', powerhub.views.activate_module),
     url(r'^module/deactivate$', powerhub.views.deactivate_module),
+    url(r'^debug/', powerhub.views.debug),
     url(r'^u$', powerhub.views.upload),
     url(r'^$', powerhub.views.index),
 ]
