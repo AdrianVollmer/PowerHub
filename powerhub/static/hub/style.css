@@ -1,3 +1,18 @@
+form {
+    text-align: left;
+    display: inline-block;
+}
+
+.inactive-module-name {
+ display: inline;
+ float:left;
+}
+
+.active-module-name {
+ display: inline;
+ float: left;
+}
+
 .submitButton {
  border: 0;
  background: none;
@@ -5,8 +20,6 @@
  outline: 1;
  box-shadow: none;
  border-radius: 1px;
- display: inline-block;
- float: left;
 }
 
 .deleteButton {
@@ -16,8 +29,6 @@
  outline: 1;
  box-shadow: none;
  border-radius: 1px;
- display: inline-block;
- float: left;
 }
 
 .clip-entry, .code_div{

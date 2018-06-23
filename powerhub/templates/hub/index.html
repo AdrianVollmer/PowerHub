@@ -18,9 +18,11 @@
         </div>
 
         <div class="modules">
-            <p>Modules ({{ active_modules }} active):
-            (<a href="#" onclick="toggleDiv('module-list')">click to show/hide</a>)
+            <div class="outer-buttons">
             <form action="module/activate" method="post" class="module-form">
+            <div>Modules ({{ active_modules }} active):
+            (<a href="#" onclick="toggleDiv('module-list')">click to show/hide</a>)
+            </div>
             <input type="hidden" value="-1" name="n">
             <input type="submit" value="Activate all" class="submitButton">
                     {% csrf_token %}
@@ -30,7 +32,7 @@
             <input type="submit" value="Deactivate all" class="deleteButton">
                     {% csrf_token %}
             </form>
-            </p>
+            </div>
         {% if modules %}
             <ul id="module-list" style="display: none">
             {% for m in modules %}
