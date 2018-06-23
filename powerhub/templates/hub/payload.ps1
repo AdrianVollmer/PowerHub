@@ -1,7 +1,10 @@
 $CALLBACK_URL = "{{callback_url}}"
 
 Write-Host @"
-PowerHub [ASCII art]
+  _____   _____  _  _  _ _______  ______ _     _ _     _ ______
+ |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
+ |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
+                                 written by Adrian Vollmer, 2018
 Run 'Help-PowerHub' for help
 "@
 
