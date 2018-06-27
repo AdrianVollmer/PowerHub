@@ -35,6 +35,20 @@ def load_exe_files(directory):
     return result
 
 
+def load_shellcode_files(directory):
+    result = []
+    for dirName, subdirList, fileList in os.walk(directory):
+        for fname in fileList:
+            filename = os.path.join(dirName, fname)
+            with open(filename, "br") as f:
+                d = f.read()
+            result.append(Module(
+                filename.replace(BASE_DIR, ''),
+                "shellcode",
+                base64.b64encode(d)))
+    return result
+
+
 def ensure_dir_exists(dirname):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
@@ -52,7 +66,11 @@ def import_modules():
 
     ps_modules = load_powershell_scripts(os.path.join(mod_dir, 'ps1'))
     exe_modules = load_exe_files(os.path.join(mod_dir, 'exe'))
-    result = ps_modules + exe_modules
+    shellcode_modules = load_shellcode_files(os.path.join(
+        mod_dir,
+        'shellcode'
+    ))
+    result = ps_modules + exe_modules + shellcode_modules
     for i, m in enumerate(result):
         m.n = i
 
