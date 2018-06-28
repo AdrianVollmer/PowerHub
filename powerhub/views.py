@@ -6,10 +6,11 @@ from django.http import HttpResponse
 from powerhub.clipboard import clipboard
 from powerhub.stager import modules, stager_str, callback_url
 from powerhub.upload import save_file
+from powerhub.tools import encrypt, compress, key
 #  from powerhub.av_evasion import clean_ps1
 
 from datetime import datetime
-from base64 import b64decode
+from base64 import b64decode, b64encode
 
 
 class UploadFileForm(forms.Form):
@@ -70,13 +71,14 @@ def payload(request):
     context = {
         "modules": modules,
         "callback_url": callback_url,
+        "key": key,
     }
     if 'm' in request.GET:
         n = int(request.GET['m'])
         if n < len(modules):
             modules[n].activate()
             result = HttpResponse(
-                modules[n].code,
+                b64encode(encrypt(compress(modules[n].code), key)),
                 content_type='text/plain; charset=utf-8'
             )
         else:

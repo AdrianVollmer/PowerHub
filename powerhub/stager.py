@@ -16,7 +16,9 @@ def load_powershell_scripts(directory):
                 result.append(Module(
                     filename.replace(os.path.join(BASE_DIR, 'modules'), ''),
                     "ps1",
-                    base64.b64encode(d)))
+                    #  base64.b64encode(d),
+                    d,
+                ))
     return result
 
 
@@ -31,7 +33,9 @@ def load_exe_files(directory):
                 result.append(Module(
                     filename.replace(BASE_DIR, ''),
                     "exe",
-                    base64.b64encode(d)))
+                    #  base64.b64encode(d),
+                    d,
+                ))
     return result
 
 
@@ -45,7 +49,9 @@ def load_shellcode_files(directory):
             result.append(Module(
                 filename.replace(BASE_DIR, ''),
                 "shellcode",
-                base64.b64encode(d)))
+                #  base64.b64encode(d),
+                d,
+            ))
     return result
 
 
