@@ -5,7 +5,7 @@ PowerHub is a web application which aids a pentester in transferring files,
 in particular code which may get flagged by endpoint protection.
 
 
-![PowerHub Webapp](https://github.com/AdrianVollmer/PowerHub/img/powerhub-webapp.png)
+![PowerHub Webapp](https://github.com/AdrianVollmer/PowerHub/blob/master/img/powerhub-webapp.png)
 
 The web application is made with Django 1.11 and consists of three parts.
 
