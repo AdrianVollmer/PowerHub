@@ -85,7 +85,7 @@ def payload():
     else:
         result = render_template(
                         "payload.ps1",
-                        context,
+                        **context,
                         content_type='text/plain'
                         )
     return result
