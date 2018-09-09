@@ -54,10 +54,8 @@ Author
 
 Adrian Vollmer, 2018
 
-License
-=======
-
-MIT licence:
+License (MIT)
+============
 
 Copyright (c) 2018, Adrian Vollmer
 
