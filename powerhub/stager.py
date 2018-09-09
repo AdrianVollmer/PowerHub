@@ -1,8 +1,8 @@
 from powerhub.args import args
-from powerhub.settings import BASE_DIR
 import os
 import base64
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def load_powershell_scripts(directory):
     result = []

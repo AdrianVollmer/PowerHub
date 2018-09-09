@@ -1,7 +1,4 @@
-from django.shortcuts import render, redirect
-from django import forms
-from django.http import HttpResponse
-
+from flask import Flask, render_template, request, Response, redirect
 
 from powerhub.clipboard import clipboard
 from powerhub.stager import modules, stager_str, callback_url
@@ -13,42 +10,42 @@ from datetime import datetime
 from base64 import b64decode, b64encode
 
 
-class UploadFileForm(forms.Form):
-    file = forms.FileField()
+app = Flask(__name__)
 
 
-def index(request):
-    pl_size = len(payload(request).content)
+@app.route('/')
+def index():
     active_modules = sum(1 for m in modules if m.active)
     context = {
         "dl_str": stager_str,
-        "pl_size": "%d bytes" % pl_size,
         "active_modules": active_modules,
         "clipboard": clipboard,
         "modules": modules,
-        "upload_form": UploadFileForm(),
     }
-    return render(request, "hub/index.html", context)
+    return render_template("index.html", **context)
 
 
-def add_clipboard(request):
-    content = request.POST["content"]
+@app.route('/clipboard/add', methods=["POST"])
+def add_clipboard():
+    content = request.form.get("content")
     clipboard.add(
         content,
         datetime.utcnow(),
-        request.META.get('REMOTE_ADDR'),
+        request.remote_addr
     )
     return redirect('/')
 
 
-def del_clipboard(request):
-    n = int(request.POST["n"]) - 1
+@app.route('/clipboard/delete', methods=["POST"])
+def del_clipboard():
+    n = int(request.form.get("n")) - 1
     clipboard.delete(n)
     return redirect('/')
 
 
-def activate_module(request):
-    n = int(request.POST["n"]) - 1
+@app.route('/module/activate', methods=["POST"])
+def activate_module():
+    n = int(request.form.get("n")) - 1
     if n == -2:
         for m in modules:
             m.activate()
@@ -57,8 +54,9 @@ def activate_module(request):
     return redirect('/')
 
 
-def deactivate_module(request):
-    n = int(request.POST["n"]) - 1
+@app.route('/module/deactivate', methods=["POST"])
+def deactivate_module():
+    n = int(request.form.get("n")) - 1
     if n == -2:
         for m in modules:
             m.deactivate()
@@ -67,45 +65,47 @@ def deactivate_module(request):
     return redirect('/')
 
 
-def payload(request):
+@app.route('/ps')
+def payload():
     context = {
         "modules": modules,
         "callback_url": callback_url,
         "key": key,
     }
-    if 'm' in request.GET:
-        n = int(request.GET['m'])
+    if 'm' in request.args:
+        n = int(request.args.get('m'))
         if n < len(modules):
             modules[n].activate()
-            result = HttpResponse(
+            result = Response(
                 b64encode(encrypt(compress(modules[n].code), key)),
                 content_type='text/plain; charset=utf-8'
             )
         else:
-            result = HttpResponse("not found")
+            result = Response("not found")
     else:
-        result = render(request,
-                        "hub/payload.ps1",
+        result = render_template(
+                        "payload.ps1",
                         context,
                         content_type='text/plain'
                         )
     return result
 
 
-def upload(request):
-    file = request.FILES["file"]
+@app.route('/u', methods=["POST"])
+def upload():
+    file = request.files['file']
     save_file(file)
     return redirect('/')
 
 
-def debug(request):
-    m = request.GET['m']
+def debug():
+    m = request.args.get('m')
     result = [x for x in modules if m in x.name]
     if result:
-        response = HttpResponse(
+        response = Response(
             b64decode(result[0].code),
             content_type='text/plain; charset=utf-8'
         )
     else:
-        response = HttpResponse("not found")
+        response = Response("not found")
     return response
