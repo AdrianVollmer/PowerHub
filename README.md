@@ -7,7 +7,7 @@ in particular code which may get flagged by endpoint protection.
 
 ![PowerHub Webapp](https://github.com/AdrianVollmer/PowerHub/blob/master/img/powerhub-webapp.png)
 
-The web application is made with Django 1.11 and consists of three parts.
+The web application is made with Flask and consists of three parts.
 
 
 The Hub
