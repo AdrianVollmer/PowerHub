@@ -93,8 +93,14 @@ def payload():
 
 @app.route('/u', methods=["POST"])
 def upload():
+    if 'file' not in request.files:
+        return redirect(request.url)
     file = request.files['file']
-    save_file(file)
+    if file.filename == '':
+        return redirect(request.url)
+    if file:
+        save_file(file)
+        return redirect('/')
     return redirect('/')
 
 
