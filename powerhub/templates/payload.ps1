@@ -141,8 +141,7 @@ function List-HubModules {
 <#
 .SYNOPSIS
 
-Lists all modules that are available via the hub. The property 'n' can be used
-to activate and load the code of a module.
+Lists all modules that are available via the hub.
 
 #>
     $(foreach ($ht in $Modules) {
@@ -158,15 +157,14 @@ function Load-HubModule {
 Transfers a module from the hub and imports it. It creates a web request to
 load the Base64 encoded module code.
 
-Author: Adrian Vollmer
-
 .DESCRIPTION
 
 Load-HubModule loads a module.
 
 .PARAMETER s
 
-Number of the module, separated by commas. Can contain ranges.
+Number of the module, separated by commas. Can contain a range such as "1,4-8".
+Try a leading zero in case it is not working.
 
 .EXAMPLE
 
@@ -218,6 +216,19 @@ Use the '-Verbose' option to print detailed information.
 
 
 function Run-Exe {
+<#
+.SYNOPSIS
+
+Executes a loaded exe module in memory using Invoke-ReflectivePEInjection, which must be loaded first.
+
+.EXAMPLE
+
+Run-Exe 47
+
+Description
+-----------
+Execute the exe module 47 in memory
+#>
     Param(
         [parameter(Mandatory=$true)]
         [Int]
@@ -237,6 +248,19 @@ function Run-Exe {
 }
 
 function Run-Shellcode {
+<#
+.SYNOPSIS
+
+Executes a loaded shellcode module in memory using Invoke-Shellcode, which must be loaded first.
+
+.EXAMPLE
+
+Run-Shellcode 47
+
+Description
+-----------
+Execute the shellcode module 47 in memory
+#>
     Param(
         [parameter(Mandatory=$true)]
         [Int]
@@ -271,6 +295,7 @@ The following functions are available:
   * List-HubModules
   * Load-HubModule
   * Run-Exe
+  * Run-Shellcode
 
 Use 'Get-Help' to learn more about those functions.
 "@
