@@ -1,0 +1,32 @@
+<p>
+<h2>Clipboard</h2>
+    <form action="clipboard/add" method="post" id="clipform">
+        <div class="input-group mb-3">
+          <textarea id="clipboard-area" rows="4" cols="80" name="content"
+              form="clipform" class="form-control"
+              aria-describedby="basic-addon2"> </textarea>
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="submit"><span
+            data-feather="plus-circle"></span></button>
+          </div>
+        </div>
+    </form>
+    <div class="col">
+{% if clipboard %}
+        {% for c in clipboard %}
+            <div class="card" id="card-{{loop.index}}">
+              <div class="card-body">
+                <h5 class="card-title">{{c.time}}<a href="#"
+                class="card-link" onclick="deleteClip({{ loop.index }})">
+                    <span data-feather="trash-2"></span>
+                </a></h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{c.IP}}</h6>
+                <p class="card-text"><pre>{{ c.content }}</pre></p>
+              </div>
+            </div>
+        {% endfor %}
+{% else %}
+        <p>Clipboard is empty</p>
+{% endif %}
+    </div>
+</p>

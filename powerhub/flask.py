@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, Response, redirect
+from flask import Flask, render_template, request, Response, redirect, \
+         send_from_directory
 
 from powerhub.clipboard import clipboard
 from powerhub.stager import modules, stager_str, callback_url
@@ -15,14 +16,27 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    active_modules = sum(1 for m in modules if m.active)
     context = {
         "dl_str": stager_str,
-        "active_modules": active_modules,
         "clipboard": clipboard,
-        "modules": modules,
+        "files": [],
     }
     return render_template("index.html", **context)
+
+
+@app.route('/css/<path:path>')
+def send_css(path):
+    return send_from_directory('static/css', path)
+
+
+@app.route('/js/<path:path>')
+def send_js(path):
+    return send_from_directory('static/js', path)
+
+
+@app.route('/img/<path:path>')
+def send_img(path):
+    return send_from_directory('static/img', path)
 
 
 @app.route('/clipboard/add', methods=["POST"])
@@ -33,35 +47,13 @@ def add_clipboard():
         datetime.utcnow(),
         request.remote_addr
     )
-    return redirect('/')
+    return redirect('/#clipboard')
 
 
 @app.route('/clipboard/delete', methods=["POST"])
 def del_clipboard():
     n = int(request.form.get("n")) - 1
     clipboard.delete(n)
-    return redirect('/')
-
-
-@app.route('/module/activate', methods=["POST"])
-def activate_module():
-    n = int(request.form.get("n")) - 1
-    if n == -2:
-        for m in modules:
-            m.activate()
-    else:
-        modules[n].activate()
-    return redirect('/')
-
-
-@app.route('/module/deactivate', methods=["POST"])
-def deactivate_module():
-    n = int(request.form.get("n")) - 1
-    if n == -2:
-        for m in modules:
-            m.deactivate()
-    else:
-        modules[n].deactivate()
     return redirect('/')
 
 
@@ -94,14 +86,14 @@ def payload():
 @app.route('/u', methods=["POST"])
 def upload():
     if 'file' not in request.files:
-        return redirect(request.url)
+        return redirect('/#fileexchange')
     file = request.files['file']
     if file.filename == '':
         return redirect(request.url)
     if file:
         save_file(file)
-        return redirect('/')
-    return redirect('/')
+        return redirect('/#fileexchange')
+    return redirect('/#fileexchange')
 
 
 def debug():

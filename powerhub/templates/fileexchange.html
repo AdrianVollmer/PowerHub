@@ -1,0 +1,20 @@
+<p>
+<h2>File Upload</h2>
+<form action="u" method="POST" enctype="multipart/form-data">
+  <div class="form-group">
+    <label class="btn btn-default btn-file">
+        <input value="file" name="file" type="file" class="form-control-file" id="exampleFormControlFile1">
+    </label>
+    <input type=submit value=Upload class="submitButton btn btn-primary">
+  </div>
+</form>
+</p>
+<p>
+<ul class="list-group">
+{% for f in files %}
+  <li class="list-group-item"><a href="{{f.url}}"
+  title="{{f.name}}">{{f.name}}</a></li>
+{% endfor %}
+</ul>
+</p>
+

@@ -1,94 +1,74 @@
 <!doctype html>
-<html>
-<head>
+<html lang="en" style="font-size: 20px">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Jekyll v3.8.5">
     <title>PowerHub</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
-    <script type="text/javascript" src="{{ url_for('static', filename='script.js') }}" ></script>
-</head>
-<body>
-<div class=page>
-  <h1>PowerHub</h1>
 
-    <h2>Hub</h2>
-        <div class="downloadstring">
-            <p>Paste this in PowerShell (<a href="#" onclick="alert('TODO')">copy to clipboard</a>):</p>
-            <div class="code_div" contenteditable='true'>{{ dl_str }}</div>
-        </div>
+    <!-- Bootstrap core CSS -->
+<link href="/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
 
-        <div class="modules">
-            <div class="outer-buttons">
-            <form action="module/activate" method="post" class="module-form">
-            <div>Modules ({{ active_modules }} active):
-            (<a href="#" onclick="toggleDiv('module-list')">click to show/hide</a>)
-            </div>
-            <input type="hidden" value="-1" name="n">
-            <input type="submit" value="Activate all" class="submitButton">
-            </form>
-            <form action="module/deactivate" method="post" class="module-form">
-            <input type="hidden" value="-1" name="n">
-            <input type="submit" value="Deactivate all" class="deleteButton">
-            </form>
-            </div>
-        {% if modules %}
-            <ul id="module-list" style="display: none">
-            {% for m in modules %}
-            <li>
-                {% if m.active %}
-                    <form action="module/deactivate" method="post" class="module-form">
-                    <input type="hidden" value="{{ loop.index }}" name="n">
-                    <input type="submit" value="−" class="deleteButton">
-                    </form>
-                    <div class="active-module-name">{{ m.name }}</div>
-                {% else %}
-                    <form action="module/activate" method="post" class="module-form">
-                    <input type="hidden" value="{{ loop.index }}" name="n">
-                    <input type="submit" value="+" class="submitButton">
-                    </form>
-                    <div class="inactive-module-name">{{ m.name }}</div>
-                {% endif %}
-            </li>
-            {% endfor %}
-            </ul>
-        {% else %}
-            <p>No modules found</p>
-        {% endif %}
-        </div>
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+    </style>
+    <!-- Custom styles for this template -->
+    <link href="/css/dashboard.css" rel="stylesheet">
+  </head>
+  <body>
 
-    <h2>Clipboard</h2>
-        <div class="clipboard">
-            <form action="clipboard/add" method="post" id="clipform">
-            <textarea id="clipboard-area" rows="4" cols="80" name="content" form="clipform"></textarea>
-            <input type="submit" value="+" class="submitButton">
-            </form>
-        {% if clipboard %}
-            <ul class="clip-list">
-            {% for c in clipboard %}
-            <li>
-                <div class="clip-time">{{ c.time }}</div>
-                <div class="clip-ip">{{ c.IP }}</div>
-                <form action="clipboard/delete" method="post">
-                    <input type="hidden" value="{{ loop.index }}" name="n">
-                    <input type="submit" value="−" class="deleteButton">
-                </form>
-                <div class="clip-entry" contenteditable="true">{{ c.content }}</div>
-            </li>
-            {% endfor %}
-            </ul>
-        {% else %}
-            <p>Clipboard is empty</p>
-        {% endif %}
-        </div>
+<nav class="navbar navbar-expand navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+  <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">PowerHub</a>
+</nav>
 
-    <h2>File Upload</h2>
-    <div class="uploadform">
-    <form action="u" method=post enctype="multipart/form-data">
-        <dl>
-            <dd><input type=file value=file name=file></dd>
-            <dd><input type=submit value=Upload class="submitButton"></dd>
-        </dl>
-      </form>
+<div class="container">
+    <h1>PowerHub</h1>
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="hub-tab" data-toggle="tab"
+                href="#hub" role="tab" aria-controls="hub"
+                aria-selected="true">Hub</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="clipboard-tab" data-toggle="tab"
+                href="#clipboard" role="tab" aria-controls="clipboard"
+                aria-selected="false">Clipboard</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="fileexchange-tab" data-toggle="tab"
+                href="#fileexchange" role="tab" aria-controls="fileexchange"
+                aria-selected="false">File Exchange</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="hub" role="tabpanel"
+            aria-labelledby="hub-tab">{% include 'hub.html' %}</div>
+        <div class="tab-pane fade" id="clipboard" role="tabpanel"
+        aria-labelledby="clipboard-tab">{% include 'clipboard.html' %}</div>
+        <div class="tab-pane fade" id="fileexchange" role="tabpanel"
+            aria-labelledby="fileexchange-tab">{% include 'fileexchange.html' %}</div>
     </div>
 </div>
-<div>
-</div>
-</body></html>
+<script src="/js/jquery-3.3.1.min.js"></script>
+<script>window.jQuery || document.write('<script src="/js/jquery-3.3.1.min.js"><\/script>')</script>
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/feather.min.js"></script>
+<script src="/js/Chart.min.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/powerhub.js" ></script>
+</body>
+</html>

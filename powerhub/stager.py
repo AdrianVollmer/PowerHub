@@ -6,7 +6,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def load_powershell_scripts(directory):
     result = []
-    for dirName, subdirList, fileList in os.walk(directory):
+    for dirName, subdirList, fileList in os.walk(directory, followlinks=True):
         for fname in fileList:
             filename = os.path.join(dirName, fname)
             # remove tests from powersploit
@@ -24,7 +24,7 @@ def load_powershell_scripts(directory):
 
 def load_exe_files(directory):
     result = []
-    for dirName, subdirList, fileList in os.walk(directory):
+    for dirName, subdirList, fileList in os.walk(directory, followlinks=True):
         for fname in fileList:
             filename = os.path.join(dirName, fname)
             if fname.endswith('exe'):
@@ -41,7 +41,7 @@ def load_exe_files(directory):
 
 def load_shellcode_files(directory):
     result = []
-    for dirName, subdirList, fileList in os.walk(directory):
+    for dirName, subdirList, fileList in os.walk(directory, followlinks=True):
         for fname in fileList:
             filename = os.path.join(dirName, fname)
             with open(filename, "br") as f:
