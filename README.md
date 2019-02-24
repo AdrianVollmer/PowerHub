@@ -34,10 +34,10 @@ The clipboard functionality is meant for exchanging small snippets, such as
 hashes, passwords, one liners, and so forth. It's like an extremely basic
 etherpad.
 
-File Dropper
-------------
+File Exchange
+-------------
 
-The file dropper offers a way to transfer files via HTTP back to the host.
+The file exchange offers a way to transfer files via HTTP back to the host.
 Think [Droopy](https://github.com/stackp/Droopy).
 
 Usage
