@@ -24,3 +24,8 @@ $(document).ready(function() {
     var hash = window.location.hash;
     $('#myTab a[href="' + hash + '"]').tab('show');
 });
+
+$(document).ready(function(){
+    $('[data-toggle="popover"]').popover();
+});
+

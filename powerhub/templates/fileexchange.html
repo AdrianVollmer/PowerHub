@@ -1,5 +1,11 @@
 <p>
-<h2>File Upload</h2>
+<h2>File Upload
+    <sup>
+        <a href="#" title="What's this?" data-toggle="popover"
+        data-trigger="focus" data-content="Here you can upload and download files
+        via HTTP. Think Droopy."><span data-feather="help-circle"></span></a>
+    </sup>
+</h2>
 <form action="u" method="POST" enctype="multipart/form-data">
   <div class="form-group">
     <label class="btn btn-default btn-file">
@@ -9,12 +15,28 @@
   </div>
 </form>
 </p>
-<p>
-<ul class="list-group">
+<div class="container">
+{% if files %}
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Name</th>
+      <th scope="col">Size</th>
+      <th scope="col">Date</th>
+    </tr>
+  </thead>
+  <tbody>
 {% for f in files %}
-  <li class="list-group-item"><a href="{{f.url}}"
-  title="{{f.name}}">{{f.name}}</a></li>
+    <tr>
+      <th scope="row">{{loop.index}}</th>
+      <td><a href="/d/{{f.name}}" title="{{f.name}}">{{f.name}}</a></td>
+      <td>{{f.size}}</td>
+      <td>{{f.date}}</td>
+    </tr>
 {% endfor %}
-</ul>
-</p>
+  </tbody>
+</table>
+{% endif %}
+</div>
 

@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, Response, redirect, \
 
 from powerhub.clipboard import clipboard
 from powerhub.stager import modules, stager_str, callback_url
-from powerhub.upload import save_file
+from powerhub.upload import save_file, get_filelist, upload_dir
 from powerhub.tools import encrypt, compress, key
 #  from powerhub.av_evasion import clean_ps1
 
@@ -19,7 +19,7 @@ def index():
     context = {
         "dl_str": stager_str,
         "clipboard": clipboard,
-        "files": [],
+        "files": get_filelist(),
     }
     return render_template("index.html", **context)
 
@@ -79,7 +79,7 @@ def payload():
                         "payload.ps1",
                         **context,
                         content_type='text/plain'
-                        )
+        )
     return result
 
 
@@ -94,6 +94,13 @@ def upload():
         save_file(file)
         return redirect('/#fileexchange')
     return redirect('/#fileexchange')
+
+
+@app.route('/d/<path:filename>')
+def download_file(filename):
+    return send_from_directory(upload_dir,
+                               filename,
+                               as_attachment=True)
 
 
 def debug():
