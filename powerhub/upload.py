@@ -17,6 +17,8 @@ def save_file(file):
 
 
 def get_filelist():
+    if not os.path.exists(upload_dir):
+        os.makedirs(upload_dir)
     onlyfiles = [f for f in os.listdir(upload_dir)
                  if os.path.isfile(os.path.join(upload_dir, f))]
     return [{
