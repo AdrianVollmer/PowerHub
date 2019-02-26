@@ -55,6 +55,13 @@ parser.add_argument(
 
 
 parser.add_argument(
+    '--auth', dest="AUTH", type=str,
+    default=None,
+    help=("Define credentials for basic authentication in the form of \
+          'user:pass'"))
+
+
+parser.add_argument(
     '-v', '--version', action='version', version='%(prog)s 0.1'
 )
 

@@ -5,6 +5,7 @@ from powerhub.clipboard import clipboard
 from powerhub.stager import modules, stager_str, callback_url
 from powerhub.upload import save_file, get_filelist, upload_dir
 from powerhub.tools import encrypt, compress, key
+from powerhub.auth import requires_auth
 #  from powerhub.av_evasion import clean_ps1
 
 from datetime import datetime
@@ -15,6 +16,7 @@ app = Flask(__name__)
 
 
 @app.route('/')
+@requires_auth
 def index():
     context = {
         "dl_str": stager_str,
@@ -40,6 +42,7 @@ def send_img(path):
 
 
 @app.route('/clipboard/add', methods=["POST"])
+@requires_auth
 def add_clipboard():
     content = request.form.get("content")
     clipboard.add(
@@ -51,6 +54,7 @@ def add_clipboard():
 
 
 @app.route('/clipboard/delete', methods=["POST"])
+@requires_auth
 def del_clipboard():
     n = int(request.form.get("n")) - 1
     clipboard.delete(n)
@@ -84,6 +88,7 @@ def payload():
 
 
 @app.route('/u', methods=["POST"])
+@requires_auth
 def upload():
     if 'file' not in request.files:
         return redirect('/#fileexchange')
@@ -97,6 +102,7 @@ def upload():
 
 
 @app.route('/d/<path:filename>')
+@requires_auth
 def download_file(filename):
     return send_from_directory(upload_dir,
                                filename,
