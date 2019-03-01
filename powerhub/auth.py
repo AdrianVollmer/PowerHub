@@ -2,10 +2,12 @@ from functools import wraps
 from flask import request, Response
 from powerhub.args import args
 
+
 def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
+    print(args.AUTH)
     if args.AUTH:
         user, pwd = args.AUTH.split(':')
         return username == user and password == pwd
@@ -23,9 +25,10 @@ def authenticate():
 
 def requires_auth(f):
     @wraps(f)
-    def decorated(*args, **kwargs):
+    def decorated(*largs, **kwargs):
         auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
+        if args.AUTH and (not auth or not check_auth(auth.username,
+                                                     auth.password)):
             return authenticate()
-        return f(*args, **kwargs)
+        return f(*largs, **kwargs)
     return decorated
