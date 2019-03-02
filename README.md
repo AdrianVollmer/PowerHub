@@ -19,13 +19,13 @@ can be executed directly from memory with
 `Invoke-ReflectivePEInjection`.
 
 Modules have to be placed in `./modules` and can be either PowerShell
-scripts or PE executables. You can activate the individual modules in the
-web interface. "Activated" means they will be transferred with the download
-cradle. However, you can also load them on the target via PowerShell with
+scripts or PE executables. You can load them on the target via PowerShell with
 `Load-HubModule`. Run `Help-PowerHub` for more information.
 
 PowerHub on the attacker system simply looks for `*.ps1` or `*.exe` files.
-The `*.ps1` files are imported on the target via `[Scriptblock]::Create()`.
+They need to be in their respective directory, though, so `exe` files need
+to be in `modules/exe` (or at least symlinked), and so forth. The `*.ps1`
+files are imported on the target via `[Scriptblock]::Create()`.
 
 The Clipboard
 -------------
