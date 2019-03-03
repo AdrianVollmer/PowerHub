@@ -19,8 +19,8 @@ can be executed directly from memory with
 `Invoke-ReflectivePEInjection`.
 
 Modules have to be placed in `./modules` and can be either PowerShell
-scripts or PE executables. You can load them on the target via PowerShell with
-`Load-HubModule`. Run `Help-PowerHub` for more information.
+scripts, PE executables, or shellcode. You can load them on the target via
+PowerShell with `Load-HubModule`. Run `Help-PowerHub` for more information.
 
 PowerHub on the attacker system simply looks for `*.ps1` or `*.exe` files.
 They need to be in their respective directory, though, so `exe` files need
@@ -57,7 +57,7 @@ Adrian Vollmer, 2018
 License (MIT)
 ============
 
-Copyright (c) 2018, Adrian Vollmer
+Copyright (c) 2018-2019, Adrian Vollmer
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to
