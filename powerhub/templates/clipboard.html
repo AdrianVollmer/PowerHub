@@ -1,3 +1,7 @@
+{% extends "index.html" %}
+{% block clipboard_active %}active{% endblock %}
+{% block clipboard_selected %}selected{% endblock %}
+{% block content %}
 <p>
 <h2>Clipboard
 <sup>
@@ -37,3 +41,4 @@ non-persistent guestbook for transfering small code snippets, passwords,
 {% endif %}
     </div>
 </p>
+{% endblock %}

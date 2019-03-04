@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory
 
-from powerhub.clipboard import clipboard
+from powerhub.clipboard import clipboard as cb
 from powerhub.stager import modules, stager_str, callback_url
 from powerhub.upload import save_file, get_filelist, upload_dir
 from powerhub.tools import encrypt, compress, key
@@ -18,12 +18,46 @@ app = Flask(__name__)
 @app.route('/')
 @requires_auth
 def index():
+    #  context = {
+    #      "dl_str": stager_str,
+    #      "clipboard": clipboard,
+    #      "files": get_filelist(),
+    #  }
+    #  return render_template("index.html", **context)
+    return redirect('/hub')
+
+
+@app.route('/hub')
+@requires_auth
+def hub():
     context = {
         "dl_str": stager_str,
-        "clipboard": clipboard,
+        "clipboard": cb,
         "files": get_filelist(),
     }
-    return render_template("index.html", **context)
+    return render_template("hub.html", **context)
+
+
+@app.route('/clipboard')
+@requires_auth
+def clipboard():
+    context = {
+        "dl_str": stager_str,
+        "clipboard": cb,
+        "files": get_filelist(),
+    }
+    return render_template("clipboard.html", **context)
+
+
+@app.route('/fileexchange')
+@requires_auth
+def fileexchange():
+    context = {
+        "dl_str": stager_str,
+        "clipboard": cb,
+        "files": get_filelist(),
+    }
+    return render_template("fileexchange.html", **context)
 
 
 @app.route('/css/<path:path>')
@@ -45,19 +79,19 @@ def send_img(path):
 @requires_auth
 def add_clipboard():
     content = request.form.get("content")
-    clipboard.add(
+    cb.add(
         content,
         datetime.utcnow(),
         request.remote_addr
     )
-    return redirect('/#clipboard')
+    return redirect('/clipboard')
 
 
 @app.route('/clipboard/delete', methods=["POST"])
 @requires_auth
 def del_clipboard():
     n = int(request.form.get("n")) - 1
-    clipboard.delete(n)
+    cb.delete(n)
     return redirect('/')
 
 
@@ -91,14 +125,14 @@ def payload():
 @requires_auth
 def upload():
     if 'file' not in request.files:
-        return redirect('/#fileexchange')
+        return redirect('/fileexchange')
     file = request.files['file']
     if file.filename == '':
         return redirect(request.url)
     if file:
         save_file(file)
-        return redirect('/#fileexchange')
-    return redirect('/#fileexchange')
+        return redirect('/fileexchange')
+    return redirect('/fileexchange')
 
 
 @app.route('/d/<path:filename>')

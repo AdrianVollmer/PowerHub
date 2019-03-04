@@ -39,28 +39,21 @@
     <h1>PowerHub</h1>
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item">
-            <a class="nav-link active" id="hub-tab" data-toggle="tab"
-                href="#hub" role="tab" aria-controls="hub"
-                aria-selected="true">Hub</a>
+            <a class="nav-link {% block hub_active %}{% endblock %}" id="hub-tab" href="/hub" role="tab"
+               aria-controls="hub" aria-selected="{% block hub_selected %}{% endblock %}">Hub</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="clipboard-tab" data-toggle="tab"
-                href="#clipboard" role="tab" aria-controls="clipboard"
-                aria-selected="false">Clipboard</a>
+            <a class="nav-link {% block clipboard_active %}{% endblock %}" id="clipboard-tab"
+                href="/clipboard" role="tab" aria-controls="clipboard" aria-selected="{% block clipboard_selected %}{% endblock %}">Clipboard</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="fileexchange-tab" data-toggle="tab"
-                href="#fileexchange" role="tab" aria-controls="fileexchange"
-                aria-selected="false">File Exchange</a>
+            <a class="nav-link {% block fileexchange_active %}{% endblock %}" id="fileexchange-tab" href="/fileexchange" role="tab" aria-controls="fileexchange"
+                aria-selected="{% block fileexchange_selected %}{% endblock %}">File Exchange</a>
         </li>
     </ul>
     <div class="tab-content" id="myTabContent">
         <div class="tab-pane fade show active" id="hub" role="tabpanel"
-            aria-labelledby="hub-tab">{% include 'hub.html' %}</div>
-        <div class="tab-pane fade" id="clipboard" role="tabpanel"
-        aria-labelledby="clipboard-tab">{% include 'clipboard.html' %}</div>
-        <div class="tab-pane fade" id="fileexchange" role="tabpanel"
-            aria-labelledby="fileexchange-tab">{% include 'fileexchange.html' %}</div>
+            aria-labelledby="tab">{% block content %}{% endblock %}</div>
     </div>
 </div>
 <script src="/js/jquery-3.3.1.min.js"></script>

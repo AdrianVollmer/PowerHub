@@ -7,7 +7,6 @@ def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
-    print(args.AUTH)
     if args.AUTH:
         user, pwd = args.AUTH.split(':')
         return username == user and password == pwd

@@ -1,3 +1,7 @@
+{% extends "index.html" %}
+{% block hub_active %}active{% endblock %}
+{% block hub_selected %}selected{% endblock %}
+{% block content %}
 <p>
 <h2>Hub<sup>
 <a href="#" title="What's this?" data-toggle="popover"
@@ -12,3 +16,4 @@ Have fun!"><span data-feather="help-circle"></span></a></sup>
     <p>Paste this in PowerShell:</p>
     <div class="code_div" contenteditable='true'><code>{{ dl_str }}</code></div>
 </p>
+{% endblock %}
