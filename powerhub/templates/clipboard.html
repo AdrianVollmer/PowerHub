@@ -28,7 +28,7 @@ non-persistent guestbook for transfering small code snippets, passwords,
               <div class="card-body">
                 <h5 class="card-title">{{c.time}}<a href="#"
                 class="card-link" onclick="deleteClip({{ loop.index }})">
-                    <span data-feather="trash-2"></span>
+                    <span data-feather="trash-2">delete</span>
                 </a></h5>
                 <h6 class="card-subtitle mb-2 text-muted">{{c.IP}}</h6>
                 <p class="card-text"><pre>{{ c.content }}</pre></p>
