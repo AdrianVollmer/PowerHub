@@ -18,12 +18,6 @@ app = Flask(__name__)
 @app.route('/')
 @requires_auth
 def index():
-    #  context = {
-    #      "dl_str": stager_str,
-    #      "clipboard": clipboard,
-    #      "files": get_filelist(),
-    #  }
-    #  return render_template("index.html", **context)
     return redirect('/hub')
 
 
@@ -32,8 +26,6 @@ def index():
 def hub():
     context = {
         "dl_str": stager_str,
-        "clipboard": cb,
-        "files": get_filelist(),
     }
     return render_template("hub.html", **context)
 
@@ -42,9 +34,7 @@ def hub():
 @requires_auth
 def clipboard():
     context = {
-        "dl_str": stager_str,
         "clipboard": cb,
-        "files": get_filelist(),
     }
     return render_template("clipboard.html", **context)
 
@@ -53,8 +43,6 @@ def clipboard():
 @requires_auth
 def fileexchange():
     context = {
-        "dl_str": stager_str,
-        "clipboard": cb,
         "files": get_filelist(),
     }
     return render_template("fileexchange.html", **context)
