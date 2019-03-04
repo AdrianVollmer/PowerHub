@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from operator import itemgetter
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 upload_dir = os.path.join(BASE_DIR, "upload")
 
@@ -21,10 +22,12 @@ def get_filelist():
         os.makedirs(upload_dir)
     onlyfiles = [f for f in os.listdir(upload_dir)
                  if os.path.isfile(os.path.join(upload_dir, f))]
-    return [{
+    result = [{
                 "name": f,
                 "size": os.path.getsize(os.path.join(upload_dir, f)),
                 "date": datetime.fromtimestamp(os.path.getmtime(
                             os.path.join(upload_dir, f)
                             )).strftime('%Y-%m-%d %H:%M:%S'),
             } for f in onlyfiles]
+    result = sorted(result, key=itemgetter('name'))
+    return result
