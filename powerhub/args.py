@@ -42,6 +42,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    '-c', '--disable-compression', default=False,
+    dest="NO_COMPRESS", action="store_true",
+    help="disables zip compression in case old powershell versions need \
+        to be supported"
+)
+
+parser.add_argument(
     '-u', '--uri-port', dest="URI_PORT", type=int,
     default=0,
     help="the port where the target can reach the server (default: LPORT)"

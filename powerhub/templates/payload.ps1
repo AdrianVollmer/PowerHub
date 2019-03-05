@@ -74,12 +74,10 @@ function Decrypt-Code {
 }
 
 function Unzip-Code {
-    [CmdletBinding()]
-        Param (
-                [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
-                [byte[]] $byteArray = $(Throw("-byteArray is required"))
-              )
-
+    Param ( [byte[]] $byteArray )
+{% if no_compress %}
+    $byteArray
+{% else %}
      $input = New-Object System.IO.MemoryStream( , $byteArray )
 	 $output = New-Object System.IO.MemoryStream
      $gzipStream = New-Object System.IO.Compression.GzipStream $input, ([IO.Compression.CompressionMode]::Decompress)
@@ -88,7 +86,9 @@ function Unzip-Code {
      $input.Close()
      [byte[]] $byteOutArray = $output.ToArray()
      $byteOutArray
+{% endif %}
 }
+
 
 function Import-HubModule {
 

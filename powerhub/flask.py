@@ -6,6 +6,7 @@ from powerhub.stager import modules, stager_str, callback_url
 from powerhub.upload import save_file, get_filelist, upload_dir
 from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
+from powerhub.args import args
 #  from powerhub.av_evasion import clean_ps1
 
 from datetime import datetime
@@ -89,13 +90,18 @@ def payload():
         "modules": modules,
         "callback_url": callback_url,
         "key": key,
+        "no_compress": args.NO_COMPRESS,
     }
     if 'm' in request.args:
         n = int(request.args.get('m'))
         if n < len(modules):
             modules[n].activate()
+            if args.NO_COMPRESS:
+                resp = b64encode(encrypt(modules[n].code, key)),
+            else:
+                resp = b64encode(encrypt(compress(modules[n].code), key)),
             result = Response(
-                b64encode(encrypt(compress(modules[n].code), key)),
+                resp,
                 content_type='text/plain; charset=utf-8'
             )
         else:
