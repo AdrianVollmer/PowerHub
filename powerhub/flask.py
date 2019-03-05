@@ -117,14 +117,12 @@ def payload():
 
 @app.route('/u', methods=["POST"])
 def upload():
-    if 'file' not in request.files:
-        return redirect('/fileexchange')
-    file = request.files['file']
-    if file.filename == '':
-        return redirect(request.url)
-    if file:
-        save_file(file)
-        return redirect('/fileexchange')
+    file_list = request.files.getlist("file[]")
+    for file in file_list:
+        if file.filename == '':
+            return redirect(request.url)
+        if file:
+            save_file(file)
     return redirect('/fileexchange')
 
 
