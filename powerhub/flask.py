@@ -110,7 +110,6 @@ def payload():
 
 
 @app.route('/u', methods=["POST"])
-@requires_auth
 def upload():
     if 'file' not in request.files:
         return redirect('/fileexchange')
