@@ -1,0 +1,17 @@
+<table class="table">
+    <thead>
+    <tr>
+        <th scope="col">Type</th>
+        <th scope="col">Name</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for m in modules %}
+    <tr>
+        <td>{{m.type}}</td>
+        <td>{{m.short_name}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    </thead>
+</table>

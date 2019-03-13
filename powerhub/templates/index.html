@@ -55,7 +55,11 @@
         <div class="tab-pane fade show active" id="hub" role="tabpanel"
             aria-labelledby="tab">{% block content %}{% endblock %}</div>
     </div>
+
+    {% include "messages.html" %}
 </div>
+
+
 <script src="/js/jquery-3.3.1.min.js"></script>
 <script>window.jQuery || document.write('<script src="/js/jquery-3.3.1.min.js"><\/script>')</script>
 <script src="/js/bootstrap.bundle.min.js"></script>

@@ -1,8 +1,8 @@
 from powerhub.args import args
 import os
-import base64
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 def load_powershell_scripts(directory):
     result = []
@@ -86,6 +86,7 @@ def import_modules():
 class Module(object):
     def __init__(self, name, type, code):
         self.name = name
+        self.short_name = os.path.basename(name)
         self.type = type
         self._code = code
         self.code = ""

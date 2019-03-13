@@ -1,18 +1,23 @@
 from flask import Flask, render_template, request, Response, redirect, \
-         send_from_directory
+         send_from_directory, flash
 
 from powerhub.clipboard import clipboard as cb
 from powerhub.stager import modules, stager_str, callback_url
 from powerhub.upload import save_file, get_filelist, upload_dir
 from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
+from powerhub.repos import repositories, install_repo
 #  from powerhub.av_evasion import clean_ps1
 
 from datetime import datetime
 from base64 import b64decode, b64encode
+import os
 
 
 app = Flask(__name__)
+app.secret_key = os.urandom(16)
+
+message_queue = []
 
 
 @app.route('/')
@@ -25,7 +30,10 @@ def index():
 @requires_auth
 def hub():
     context = {
+        "message_queue": message_queue,
         "dl_str": stager_str,
+        "modules": modules,
+        "repositories": list(repositories.keys()),
     }
     return render_template("hub.html", **context)
 
@@ -34,6 +42,7 @@ def hub():
 @requires_auth
 def clipboard():
     context = {
+        "message_queue": message_queue,
         "clipboard": cb,
     }
     return render_template("clipboard.html", **context)
@@ -43,6 +52,7 @@ def clipboard():
 @requires_auth
 def fileexchange():
     context = {
+        "message_queue": message_queue,
         "files": get_filelist(),
     }
     return render_template("fileexchange.html", **context)
@@ -130,6 +140,18 @@ def download_file(filename):
     return send_from_directory(upload_dir,
                                filename,
                                as_attachment=True)
+
+
+@app.route('/getrepo', methods=["POST"])
+@requires_auth
+def get_repo():
+    msg, msg_type = install_repo(
+        request.form['repo'],
+        request.form['custom-repo']
+    )
+    # possible types: success, info, danger, warning
+    flash(msg, msg_type)
+    return redirect('/hub')
 
 
 def debug():
