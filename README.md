@@ -31,11 +31,11 @@ The Clipboard
 -------------
 
 The clipboard functionality is meant for exchanging small snippets, such as
-hashes, passwords, one liners, and so forth. It's like an extremely basic
-etherpad.
+hashes, passwords, one-liners, and so forth. It's like an extremely basic
+etherpad or a guest book, but non-persistent.
 
-File Exchange
--------------
+The File Exchange
+-----------------
 
 The file exchange offers a way to transfer files via HTTP back to the host.
 Think [Droopy](https://github.com/stackp/Droopy).
@@ -43,7 +43,7 @@ Think [Droopy](https://github.com/stackp/Droopy).
 Usage
 =====
 
-PowerHub has two mandatory argument: the first is the callback host (can be
+PowerHub has two mandatory arguments: the first is the callback host (can be
 an IP address) and the second is either `--auth <user>:<pass>` or
 `--no-auth`. The latter disables basic authentication which is *not
 recommended*. This hostname is used by the stager to download the payload.
