@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash
 
 from powerhub.clipboard import clipboard as cb
-from powerhub.stager import modules, stager_str, callback_url
+from powerhub.stager import modules, stager_str, callback_url, import_modules
 from powerhub.upload import save_file, get_filelist, upload_dir
 from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
@@ -17,8 +17,6 @@ import os
 app = Flask(__name__)
 app.secret_key = os.urandom(16)
 
-message_queue = []
-
 
 @app.route('/')
 @requires_auth
@@ -30,7 +28,6 @@ def index():
 @requires_auth
 def hub():
     context = {
-        "message_queue": message_queue,
         "dl_str": stager_str,
         "modules": modules,
         "repositories": list(repositories.keys()),
@@ -42,7 +39,6 @@ def hub():
 @requires_auth
 def clipboard():
     context = {
-        "message_queue": message_queue,
         "clipboard": cb,
     }
     return render_template("clipboard.html", **context)
@@ -52,7 +48,6 @@ def clipboard():
 @requires_auth
 def fileexchange():
     context = {
-        "message_queue": message_queue,
         "files": get_filelist(),
     }
     return render_template("fileexchange.html", **context)
@@ -152,6 +147,17 @@ def get_repo():
     # possible types: success, info, danger, warning
     flash(msg, msg_type)
     return redirect('/hub')
+
+
+@app.route('/reload', methods=["POST"])
+@requires_auth
+def reload_modules():
+    try:
+        import_modules()
+        flash("Modules reloaded", "success")
+    except Exception as e:
+        flash("Error while reloading modules: %s" % str(e), "danger")
+    return render_template("messages.html")
 
 
 def debug():

@@ -8,29 +8,27 @@ module_dir = os.path.join(BASE_DIR, "modules")
 
 repositories = {
     "PowerSploit": "https://github.com/AdrianVollmer/PowerSploit.git",
-    "Bloodhound": "https://github.com/BloodHoundAD/BloodHound.git",
+    "BloodHound": "https://github.com/BloodHoundAD/BloodHound.git",
     "ASREPRoast": "https://github.com/HarmJ0y/ASREPRoast.git",
 }
 
 
 def install_repo(repo, custom_repo=None):
     if custom_repo:
-        result = install_repo_from_url(custom_repo)
+        return install_repo_from_url(custom_repo)
     else:
-        result = install_repo_from_url(repositories[repo])
-    return result
+        return install_repo_from_url(repositories[repo])
 
 
 def install_repo_from_url(url):
     parsed_url = urlparse(url)
     basename = os.path.basename(parsed_url.path)
     if basename.endswith('.git'):
-        result = git_clone(url)
+        return git_clone(url)
     elif basename.endswith('.ps1') or basename.endswith('.exe'):
-        result = download(url)
+        return download(url)
     else:
-        result = ("Unknown extension: %s" % url, "danger")
-    return result
+        return ("Unknown extension: %s" % url, "danger")
 
 
 def git_clone(url):
@@ -44,7 +42,7 @@ def git_clone(url):
                                  url, dest_dir],
                                 stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
-        return ("Error while cloning '%s': %s" % (url, str(e.output)),
+        return ("Error while cloning '%s': %s" % (url, e.output.decode()),
                 "danger")
     return ("Successfully cloned git repository: %s" % url, "success")
 
@@ -61,6 +59,6 @@ def download(url):
     filename = os.path.join(module_dir, extension, basename)
     if os.path.isfile(filename):
         return ("File already exists: %s" % filename, "danger")
-    with open(filename, 'w') as f:
+    with open(filename, 'wb') as f:
         f.write(data)
     return ("Successfully downloaded file: %s" % url, "success")

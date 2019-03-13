@@ -12,5 +12,14 @@ $(document).ready(function(){
     $('[data-toggle="popover"]').popover();
 });
 
-feather.replace();
 
+$('#reloadbutton').click(function(){
+    $.post({url: "reload", success: modules_loaded});
+});
+
+function modules_loaded(data){
+    var msg = $('<div>').html(data);
+    $('#ajaxmsg').append(msg);
+};
+
+feather.replace();

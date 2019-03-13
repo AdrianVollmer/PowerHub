@@ -2,7 +2,7 @@
 {% block hub_active %}active{% endblock %}
 {% block hub_selected %}selected{% endblock %}
 {% block content %}
-<p>
+<p id='mainp'>
 <h2>Hub<sup>
 <a href="#" title="What's this?" data-toggle="popover"
 data-trigger="focus" data-content="This is the Hub. Most of its functionality
@@ -24,6 +24,7 @@ There {% if modules|length == 1 %}is <strong>1</strong> module{% else %}are
 
 <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal"
     data-target=".bd-listmodules-modal-lg">List Modules</button>
+<button type="button" class="btn btn-info btn-sm" id='reloadbutton'>Reload modules</button>
 <button type="button" class="btn btn-primary btn-sm" data-toggle="modal"
     data-target=".bd-getmodules-modal-lg">Need more?</button>
 

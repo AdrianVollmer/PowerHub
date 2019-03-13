@@ -80,7 +80,8 @@ def import_modules():
     for i, m in enumerate(result):
         m.n = i
 
-    return result
+    global modules
+    modules = result
 
 
 class Module(object):
@@ -102,7 +103,7 @@ class Module(object):
         self.code = ""
 
 
-modules = import_modules()
+import_modules()
 
 callback_url = '%s://%s:%d/%s' % (
     args.PROTOCOL,
