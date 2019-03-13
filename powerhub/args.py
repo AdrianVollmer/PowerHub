@@ -54,18 +54,29 @@ parser.add_argument(
 )
 
 
-parser.add_argument(
+auth_group = parser.add_mutually_exclusive_group()
+
+auth_group.add_argument(
     '--auth', dest="AUTH", type=str,
     default="",
     help=("Define credentials for basic authentication in the form of \
           'user:pass'"))
 
 
+auth_group.add_argument(
+    '--no-auth', dest="NOAUTH", default=False, action="store_true",
+    help=("Disable basic authentication (not recommended)"))
+
 parser.add_argument(
     '-v', '--version', action='version', version='%(prog)s 0.2'
 )
 
 args = parser.parse_args()
+
+if not (args.AUTH or args.NOAUTH):
+    print("You need to supply either '--auth <user>:<pass>' (recommended)"
+          " or '--no-auth' on the command line")
+    exit(1)
 
 if args.URI_PORT == 0:
     args.URI_PORT = args.LPORT

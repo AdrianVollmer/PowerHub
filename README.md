@@ -43,9 +43,12 @@ Think [Droopy](https://github.com/stackp/Droopy).
 Usage
 =====
 
-PowerHub has one mandatory argument: the callback host (can be an IP
-address). This hostname is used by the stager to download the payload. If
-the callback port or path differ from the default, it can also be changed.
+PowerHub has two mandatory argument: the first is the callback host (can be
+an IP address) and the second is either `--auth <user>:<pass>` or
+`--no-auth`. The latter disables basic authentication which is *not
+recommended*. This hostname is used by the stager to download the payload.
+If the callback port or path differ from the default, it can also be
+changed.
 
 Read `./powerhub.py --help` for details.
 
