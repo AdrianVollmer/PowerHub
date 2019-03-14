@@ -27,6 +27,7 @@ $Modules = @()
 {% for m in modules %}
 $m = new-object System.Collections.Hashtable
 $m.add('name', '{{ m.name }}')
+$m.add('shortname', '{{ m.short_name }}')
 $m.add('type', '{{ m.type }}')
 $m.add('code', '')
 $m.add('n', {{ m.n }})
@@ -161,6 +162,9 @@ Load-HubModule loads a module.
 Number of the module, separated by commas. Can contain a range such as "1,4-8".
 Try a leading zero in case it is not working.
 
+Alternatively, provide a regular expression. PowerHub will then load all
+modules that match.
+
 .EXAMPLE
 
 Load-HubModule "3"
@@ -168,6 +172,15 @@ Load-HubModule "3"
 Description
 -----------
 Transfers the code of module #3 from the hub and imports it.
+
+.EXAMPLE
+
+Load-HubModule Mimikatz
+
+Description
+-----------
+Transfers the code of module 'Invoke-Mimikatz.ps1' (because the regular
+expression matches) from the hub and imports it.
 
 .EXAMPLE
 
@@ -196,7 +209,11 @@ Use the '-Verbose' option to print detailed information.
         $s
     )
 
-    $indices = Convert-IntStringToArray($s)
+    if ($s -match "^[0-9-,]+$") {
+        $indices = Convert-IntStringToArray($s)
+    } else {
+        $indices = $Modules | Where { $_.shortname -match $s } | % {$_.n}
+    }
 
     $K=new-object net.webclient;
     $K.proxy=[Net.WebRequest]::GetSystemWebProxy();

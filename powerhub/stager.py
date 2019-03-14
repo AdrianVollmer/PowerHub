@@ -3,6 +3,8 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+modules = []
+
 
 def load_powershell_scripts(directory):
     result = []
