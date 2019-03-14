@@ -49,8 +49,8 @@ parser.add_argument(
 
 parser.add_argument(
     '--uri-path', dest="URI_PATH", type=str,
-    default='ps',
-    help="the URI path where the target can reach the server (default: 'ps')"
+    default='',
+    help="the URI path where the target can reach the server (default: '')"
 )
 
 

