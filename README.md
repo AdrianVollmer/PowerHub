@@ -9,12 +9,13 @@ in particular code which may get flagged by endpoint protection.
 During an engagement where you have a test client available, one of the
 first things you want to do is run PowerSploit. So you need to download the
 files, messing with endpoint protection, disable the execution policy, etc.
-This provides an (almost) one-click-solution for this. Oh, and you can also
-run arbitrary binaries (PE and shell code) entirely in-memory using
-PowerSploit's modules.
+PowerHub provides an (almost) one-click-solution for this. Oh, and you can
+also run arbitrary binaries (PE and shell code) entirely in-memory using
+PowerSploit's modules, which is sometimes useful to bypass application
+whitelisting.
 
-Your loot (Kerberos tickets, passwords, etc.) can be easily transferred
-back either as a file or a text snippet. This also helps with collaboration
+Your loot (Kerberos tickets, passwords, etc.) can be easily transferred back
+either as a file or a text snippet. PowerHub also helps with collaboration
 in case you're a small team.
 
 How it works
