@@ -9,6 +9,10 @@ if not os.path.exists(upload_dir):
 
 
 def save_file(file):
+    """Save a file to the upload directory
+
+    If it already exists, append a counter.
+    """
     filename = os.path.join(upload_dir, str(file.filename))
     if os.path.isfile(filename):
         count = 1
@@ -19,6 +23,7 @@ def save_file(file):
 
 
 def get_filelist():
+    """Return a list of files in the upload directory"""
     onlyfiles = [f for f in os.listdir(upload_dir)
                  if os.path.isfile(os.path.join(upload_dir, f))]
     result = [{

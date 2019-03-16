@@ -7,10 +7,17 @@ MOD_DIR = os.path.join(
     'modules',
 )
 
-modules = []
+#  modules = []
 
 
-def load_modules(mod_type, filter=lambda x: True):
+def import_module_type(mod_type, filter=lambda x: True):
+    """Load modules of one type from file to memory
+
+    'filter' is applied to the basename of each file. The file will only be
+    added if it is returns True. 'mod_type' must be one of 'ps1', 'exe' or
+    'shellcode'.
+    """
+
     assert mod_type in ['ps1', 'exe', 'shellcode']
 
     directory = os.path.join(MOD_DIR, mod_type)
@@ -30,35 +37,44 @@ def load_modules(mod_type, filter=lambda x: True):
 
 
 def ensure_dir_exists(dirname):
+    """Creates a directory if it doesn't exist already
+
+    """
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
 
 def import_modules():
+    """Import all modules and returns them as a list
+
+    """
     ensure_dir_exists(MOD_DIR)
     ensure_dir_exists(os.path.join(MOD_DIR, 'ps1'))
     ensure_dir_exists(os.path.join(MOD_DIR, 'exe'))
     ensure_dir_exists(os.path.join(MOD_DIR, 'shellcode'))
 
-    ps_modules = load_modules(
+    ps_modules = import_module_type(
         'ps1',
         filter=lambda fname: "tests" not in fname and fname.endswith('.ps1')
     )
-    exe_modules = load_modules(
+    exe_modules = import_module_type(
         'exe',
         filter=lambda fname: fname.endswith('.exe'),
     )
-    shellcode_modules = load_modules('shellcode')
+    shellcode_modules = import_module_type('shellcode')
 
     result = ps_modules + exe_modules + shellcode_modules
     for i, m in enumerate(result):
         m.n = i
 
-    global modules
-    modules = result
+    return result
 
 
 class Module(object):
+    """Represents a module
+
+    """
+
     def __init__(self, name, type, code):
         self.name = name
         self.short_name = os.path.basename(name)
@@ -77,7 +93,7 @@ class Module(object):
         self.code = ""
 
 
-import_modules()
+modules = import_modules()
 
 callback_url = '%s://%s:%d/%s' % (
     args.PROTOCOL,

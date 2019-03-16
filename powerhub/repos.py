@@ -14,6 +14,7 @@ repositories = {
 
 
 def install_repo(repo, custom_repo=None):
+    """Download a repository; custom repositories have precedence"""
     if custom_repo:
         return install_repo_from_url(custom_repo)
     else:
@@ -21,6 +22,7 @@ def install_repo(repo, custom_repo=None):
 
 
 def install_repo_from_url(url):
+    """Determine the type of a module and install it accordingly"""
     parsed_url = urlparse(url)
     basename = os.path.basename(parsed_url.path)
     if basename.endswith('.git'):
@@ -32,6 +34,7 @@ def install_repo_from_url(url):
 
 
 def git_clone(url):
+    """Installs a git repository"""
     parsed_url = urlparse(url)
     basename = os.path.basename(parsed_url.path)
     dest_dir = os.path.join(module_dir, 'ps1', basename[:-4])
@@ -48,6 +51,7 @@ def git_clone(url):
 
 
 def download(url):
+    """Downloads a module that is not a git repository"""
     parsed_url = urlparse(url)
     basename = os.path.basename(parsed_url.path)
     extension = basename[-3:]

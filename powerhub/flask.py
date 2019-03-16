@@ -70,6 +70,7 @@ def send_img(path):
 @app.route('/clipboard/add', methods=["POST"])
 @requires_auth
 def add_clipboard():
+    """Add a clipboard entry"""
     content = request.form.get("content")
     cb.add(
         content,
@@ -82,6 +83,7 @@ def add_clipboard():
 @app.route('/clipboard/delete', methods=["POST"])
 @requires_auth
 def del_clipboard():
+    """Delete a clipboard entry"""
     n = int(request.form.get("n")) - 1
     cb.delete(n)
     return redirect('/')
@@ -89,6 +91,7 @@ def del_clipboard():
 
 @app.route('/m')
 def payload_m():
+    """Load a single module"""
     if 'm' not in request.args:
         return Response('error')
     n = int(request.args.get('m'))
@@ -150,6 +153,7 @@ def payload_l():
 
 @app.route('/u', methods=["POST"])
 def upload():
+    """Upload one or more files"""
     file_list = request.files.getlist("file[]")
     for file in file_list:
         if file.filename == '':
@@ -162,6 +166,7 @@ def upload():
 @app.route('/d/<path:filename>')
 @requires_auth
 def download_file(filename):
+    """Download a file"""
     return send_from_directory(upload_dir,
                                filename,
                                as_attachment=True)
@@ -170,6 +175,7 @@ def download_file(filename):
 @app.route('/getrepo', methods=["POST"])
 @requires_auth
 def get_repo():
+    """Download a specified repository"""
     msg, msg_type = install_repo(
         request.form['repo'],
         request.form['custom-repo']
@@ -182,9 +188,11 @@ def get_repo():
 @app.route('/reload', methods=["POST"])
 @requires_auth
 def reload_modules():
+    """Reload all modules from disk"""
     try:
-        import_modules()
-        flash("Modules reloaded", "success")
+        global modules
+        modules = import_modules()
+        flash("Modules reloaded (press F5 to see them)", "success")
     except Exception as e:
         flash("Error while reloading modules: %s" % str(e), "danger")
     return render_template("messages.html")
