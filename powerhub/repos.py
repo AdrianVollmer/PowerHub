@@ -7,7 +7,7 @@ from powerhub.upload import BASE_DIR
 module_dir = os.path.join(BASE_DIR, "modules")
 
 repositories = {
-    "PowerSploit": "https://github.com/AdrianVollmer/PowerSploit.git",
+    "AdrianVollmer/PowerSploit": "https://github.com/AdrianVollmer/PowerSploit.git",
     "BloodHound": "https://github.com/BloodHoundAD/BloodHound.git",
     "ASREPRoast": "https://github.com/HarmJ0y/ASREPRoast.git",
 }
