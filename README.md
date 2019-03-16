@@ -14,7 +14,8 @@ run arbitrary binaries (PE and shell code) entirely in-memory using
 PowerSploit's modules.
 
 Your loot (Kerberos tickets, passwords, etc.) can be easily transferred
-back either as a file or a text snippet.
+back either as a file or a text snippet. This also helps with collaboration
+in case you're a small team.
 
 How it works
 ============
