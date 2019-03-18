@@ -18,6 +18,11 @@ Your loot (Kerberos tickets, passwords, etc.) can be easily transferred back
 either as a file or a text snippet. PowerHub also helps with collaboration
 in case you're a small team.
 
+See it in action here:
+
+
+![PowerHub in action](https://github.com/AdrianVollmer/PowerHub/blob/master/img/inaction.png)
+
 How it works
 ============
 
