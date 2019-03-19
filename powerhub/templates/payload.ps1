@@ -282,6 +282,10 @@ Uploads files back to the hub via Cmdlet.
 
 PushTo-Hub kerberoast.txt, users.txt
 
+.EXAMPLE
+
+Get-ChildItem | PushTo-Hub -Name "directory-listing"
+
 Description
 -----------
 Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
