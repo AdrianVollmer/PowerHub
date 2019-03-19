@@ -294,11 +294,14 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
        [String[]]$Name,
 
        [Parameter(Mandatory=$False,ValueFromPipeline=$True)]
-       [String[]]$Stream
+       $Stream
     )
 
     begin { $result = @() }
     process {
+        $result = $result + $Stream
+    }
+    end {
         if ($Files) {
             ForEach ($file in $Files) {
                 $abspath = (Resolve-Path $file).path
@@ -312,16 +315,13 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
 
             }
         } else {
-            $result = $result + $Stream
-        }
-    }
-    end {
-        if ($result.length -eq 1 -and $result[0] -is [System.String]) {
-            Send-File $result[0] $Name
-        } else {
-            write-host $result
-            $Body = $result | ConvertTo-Json
-            Send-File $Body $Name
+            if ($result.length -eq 1 -and $result[0] -is [System.String]) {
+                Send-File $result[0] $Name
+            } else {
+                write-host $result
+                $Body = $result | ConvertTo-Json
+                Send-File $Body $Name
+            }
         }
     }
 }
