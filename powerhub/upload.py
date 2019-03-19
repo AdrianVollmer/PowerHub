@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from operator import itemgetter
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 upload_dir = os.path.join(BASE_DIR, "upload")
 
@@ -13,8 +14,8 @@ def save_file(file):
 
     If it already exists, append a counter.
     """
-    filename = os.path.join(upload_dir, str(file.filename))
-    if os.path.isfile(filename):
+    filename = os.path.join(upload_dir, os.path.basename(file.filename))
+    if os.path.exists(filename):
         count = 1
         while os.path.isfile("%s.%d" % (filename, count)):
             count += 1
