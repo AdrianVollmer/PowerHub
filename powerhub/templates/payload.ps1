@@ -289,13 +289,19 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
 
 function Help-PowerHub {
     Write-Host @"
-The following functions are available:
-  * List-HubModules
-  * Load-HubModule
-  * Run-Exe
-  * Run-Shellcode
-  * PushTo-Hub
+The following functions are available (some with short aliases):
+  * List-HubModules (lshm)
+  * Load-HubModule (lhm)
+  * Run-Exe (re)
+  * Run-Shellcode (rsh)
+  * PushTo-Hub (pth)
 
 Use 'Get-Help' to learn more about those functions.
 "@
 }
+
+try { New-Alias -Name pth -Value PushTo-Hub } catch { }
+try { New-Alias -Name lhm -Value Load-HubModule } catch { }
+try { New-Alias -Name lshm -Value List-HubModules } catch { }
+try { New-Alias -Name re -Value Run-Exe } catch { }
+try { New-Alias -Name rsh -Value Run-Shellcode } catch { }
