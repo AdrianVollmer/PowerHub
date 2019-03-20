@@ -22,7 +22,9 @@ non-persistent guestbook for transfering small code snippets, passwords,
         </div>
     </form>
     <div class="col">
-{% if clipboard %}
+{% if clipboard|length == 0 %}
+        <p>Clipboard is empty</p>
+{% else %}
         {% for c in clipboard %}
             <div class="card" id="card-{{loop.index}}">
               <div class="card-body">
@@ -35,8 +37,6 @@ non-persistent guestbook for transfering small code snippets, passwords,
               </div>
             </div>
         {% endfor %}
-{% else %}
-        <p>Clipboard is empty</p>
 {% endif %}
     </div>
 </p>

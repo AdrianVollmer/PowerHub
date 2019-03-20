@@ -14,6 +14,9 @@ class Clipboard(object):
         self.entries.pop(n)
         return
 
+    def __len__(self):
+        return len(self.entries)
+
 
 class ClipboardEntry(object):
     def __init__(self, content, time, IP):
