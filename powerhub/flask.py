@@ -3,7 +3,8 @@ from flask import Flask, render_template, request, Response, redirect, \
 from powerhub.clipboard import clipboard as cb
 from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, BASE_DIR
-from powerhub.upload import save_file, get_filelist, upload_dir
+from powerhub.upload import save_file, get_filelist
+from powerhub.directories import UPLOAD_DIR
 from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
@@ -171,7 +172,7 @@ def upload():
 @requires_auth
 def download_file(filename):
     """Download a file"""
-    return send_from_directory(upload_dir,
+    return send_from_directory(UPLOAD_DIR,
                                filename,
                                as_attachment=True)
 

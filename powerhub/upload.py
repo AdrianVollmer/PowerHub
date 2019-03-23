@@ -1,12 +1,7 @@
 import os
 from datetime import datetime
 from operator import itemgetter
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-upload_dir = os.path.join(BASE_DIR, "upload")
-
-if not os.path.exists(upload_dir):
-    os.makedirs(upload_dir)
+from powerhub.directories import UPLOAD_DIR
 
 
 def save_file(file):
@@ -14,7 +9,7 @@ def save_file(file):
 
     If it already exists, append a counter.
     """
-    filename = os.path.join(upload_dir, os.path.basename(file.filename))
+    filename = os.path.join(UPLOAD_DIR, os.path.basename(file.filename))
     if os.path.exists(filename):
         count = 1
         while os.path.isfile("%s.%d" % (filename, count)):
@@ -25,13 +20,13 @@ def save_file(file):
 
 def get_filelist():
     """Return a list of files in the upload directory"""
-    onlyfiles = [f for f in os.listdir(upload_dir)
-                 if os.path.isfile(os.path.join(upload_dir, f))]
+    onlyfiles = [f for f in os.listdir(UPLOAD_DIR)
+                 if os.path.isfile(os.path.join(UPLOAD_DIR, f))]
     result = [{
                 "name": f,
-                "size": os.path.getsize(os.path.join(upload_dir, f)),
+                "size": os.path.getsize(os.path.join(UPLOAD_DIR, f)),
                 "date": datetime.fromtimestamp(os.path.getmtime(
-                            os.path.join(upload_dir, f)
+                            os.path.join(UPLOAD_DIR, f)
                             )).strftime('%Y-%m-%d %H:%M:%S'),
             } for f in onlyfiles]
     result = sorted(result, key=itemgetter('name'))

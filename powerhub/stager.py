@@ -1,13 +1,6 @@
 from powerhub.args import args
+from powerhub.directories import BASE_DIR, MOD_DIR
 import os
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MOD_DIR = os.path.join(
-    BASE_DIR,
-    'modules',
-)
-
-#  modules = []
 
 
 def import_module_type(mod_type, filter=lambda x: True):
@@ -36,23 +29,10 @@ def import_module_type(mod_type, filter=lambda x: True):
     return result
 
 
-def ensure_dir_exists(dirname):
-    """Creates a directory if it doesn't exist already
-
-    """
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-
-
 def import_modules():
     """Import all modules and returns them as a list
 
     """
-    ensure_dir_exists(MOD_DIR)
-    ensure_dir_exists(os.path.join(MOD_DIR, 'ps1'))
-    ensure_dir_exists(os.path.join(MOD_DIR, 'exe'))
-    ensure_dir_exists(os.path.join(MOD_DIR, 'shellcode'))
-
     ps_modules = import_module_type(
         'ps1',
         filter=lambda fname: "tests" not in fname and fname.endswith('.ps1')

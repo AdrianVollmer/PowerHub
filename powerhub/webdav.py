@@ -1,11 +1,13 @@
 from cheroot import wsgi
 from wsgidav.wsgidav_app import WsgiDAVApp
+from powerhub.directories import WEBDAV_DIR
+
 
 config = {
     "host": "0.0.0.0",
     "port": 8001,
     "provider_mapping": {
-        "/": "webdav",
+        "/": WEBDAV_DIR,
         },
     "verbose": 1,
     }

@@ -2,12 +2,11 @@ import subprocess
 import os
 import urllib.request
 from urllib.parse import urlparse
-from powerhub.upload import BASE_DIR
-
-module_dir = os.path.join(BASE_DIR, "modules")
+from powerhub.directories import MOD_DIR
 
 repositories = {
-    "AdrianVollmer/PowerSploit": "https://github.com/AdrianVollmer/PowerSploit.git",
+    "AdrianVollmer/PowerSploit":
+    "https://github.com/AdrianVollmer/PowerSploit.git",
     "BloodHound": "https://github.com/BloodHoundAD/BloodHound.git",
     "ASREPRoast": "https://github.com/HarmJ0y/ASREPRoast.git",
 }
@@ -37,7 +36,7 @@ def git_clone(url):
     """Installs a git repository"""
     parsed_url = urlparse(url)
     basename = os.path.basename(parsed_url.path)
-    dest_dir = os.path.join(module_dir, 'ps1', basename[:-4])
+    dest_dir = os.path.join(MOD_DIR, 'ps1', basename[:-4])
     if os.path.isdir(dest_dir):
         return ("Directory already exists: %s" % dest_dir, "danger")
     try:
@@ -60,7 +59,7 @@ def download(url):
         data = response.read()
     except Exception as e:
         return ("Error while accessing URL: %s" % str(e), "danger")
-    filename = os.path.join(module_dir, extension, basename)
+    filename = os.path.join(MOD_DIR, extension, basename)
     if os.path.isfile(filename):
         return ("File already exists: %s" % filename, "danger")
     with open(filename, 'wb') as f:
