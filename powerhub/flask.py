@@ -2,9 +2,9 @@ from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash
 from powerhub.clipboard import clipboard as cb
 from powerhub.stager import modules, stager_str, callback_url, \
-        import_modules, BASE_DIR
+        import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
-from powerhub.directories import UPLOAD_DIR
+from powerhub.directories import UPLOAD_DIR, BASE_DIR
 from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
@@ -117,6 +117,7 @@ def payload_0():
     context = {
         "modules": modules,
         "callback_url": callback_url,
+        "webdav_url": webdav_url,
         "key": key,
         "method_name": method_name,
     }

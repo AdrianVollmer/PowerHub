@@ -1,4 +1,5 @@
 $CALLBACK_URL = "{{callback_url}}"
+$WEBDAV_URL = "{{webdav_url}}"
 $KEY = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 
 Write-Host @"

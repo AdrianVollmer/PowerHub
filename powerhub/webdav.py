@@ -3,7 +3,7 @@ import threading
 from cheroot import wsgi
 from wsgidav.wsgidav_app import WsgiDAVApp
 from powerhub.directories import WEBDAV_PUBLIC, WEBDAV_RO, WEBDAV_BLACKHOLE, \
-        BLACKHOLE_DIR
+        BLACKHOLE_DIR, WEBDAV_DIR
 from powerhub.args import args
 import time
 from watchdog.observers import Observer
@@ -25,16 +25,19 @@ config = {
     #: Used by SimpleDomainController only
     "simple_dc": {"user_mapping": {"*": True}},
     "provider_mapping": {
-        "/ro": {
+        "/webdav/ro": {
             "root": WEBDAV_RO,
             "readonly": True,
             "auth": "anonymous",
         },
-        "/public": {
+        "/webdav/public": {
             "root": WEBDAV_PUBLIC,
         },
-        "/blackhole": {
+        "/webdav/blackhole": {
             "root": WEBDAV_BLACKHOLE,
+        },
+        "/webdav": {
+            "root": WEBDAV_DIR,
         }
     },
     "verbose": 1,

