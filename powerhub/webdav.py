@@ -1,11 +1,12 @@
 from cheroot import wsgi
 from wsgidav.wsgidav_app import WsgiDAVApp
 from powerhub.directories import WEBDAV_DIR
+from powerhub.args import args
 
 
 config = {
-    "host": "0.0.0.0",
-    "port": 8001,
+    "host": args.LHOST,
+    "port": args.WEBDAV_PORT,
     "provider_mapping": {
         "/": WEBDAV_DIR,
         },
@@ -19,9 +20,12 @@ server_args = {
     "wsgi_app": app,
     }
 server = wsgi.Server(**server_args)
-try:
-    server.start()
-except KeyboardInterrupt:
-    print("Caught Ctrl-C, shutting down...")
-finally:
-    server.stop()
+
+
+def run_webdav():
+    try:
+        server.start()
+    except KeyboardInterrupt:
+        print("Caught Ctrl-C, shutting down...")
+    finally:
+        server.stop()

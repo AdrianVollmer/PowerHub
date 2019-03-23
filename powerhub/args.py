@@ -13,6 +13,16 @@ parser.add_argument(
     help="the local port to listen on (default: 8000)"
 )
 
+parser.add_argument(
+    '-wp',
+    '--webdav-port',
+    default=8001,
+    dest="WEBDAV_PORT",
+    type=int,
+    help="the local port to listen on (default: 8001)"
+)
+
+
 # TODO currently not supported
 #  parser.add_argument(
 #      '-s',
