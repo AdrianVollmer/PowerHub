@@ -58,9 +58,8 @@ class MyHandler(FileSystemEventHandler):
 
 
 def watch_blackhole_folder():
-    event_handler = MyHandler()
     observer = Observer()
-    observer.schedule(event_handler, path=WEBDAV_BLACKHOLE, recursive=False)
+    observer.schedule(MyHandler(), path=WEBDAV_BLACKHOLE, recursive=False)
     observer.start()
 
     try:
