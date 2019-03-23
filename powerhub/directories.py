@@ -18,16 +18,21 @@ def ensure_dir_exists(dirname):
         os.makedirs(dirname)
 
 
-ensure_dir_exists(UPLOAD_DIR)
-ensure_dir_exists(WEBDAV_DIR)
-ensure_dir_exists(MOD_DIR)
-ensure_dir_exists(BLACKHOLE_DIR)
-ensure_dir_exists(os.path.join(MOD_DIR, 'ps1'))
-ensure_dir_exists(os.path.join(MOD_DIR, 'exe'))
-ensure_dir_exists(os.path.join(MOD_DIR, 'shellcode'))
-ensure_dir_exists(WEBDAV_RO)
-ensure_dir_exists(WEBDAV_BLACKHOLE)
-ensure_dir_exists(WEBDAV_PUBLIC)
+directories = [
+    UPLOAD_DIR,
+    WEBDAV_DIR,
+    MOD_DIR,
+    BLACKHOLE_DIR,
+    os.path.join(MOD_DIR, 'ps1'),
+    os.path.join(MOD_DIR, 'exe'),
+    os.path.join(MOD_DIR, 'shellcode'),
+    WEBDAV_RO,
+    WEBDAV_BLACKHOLE,
+    WEBDAV_PUBLIC,
+]
+
+map(ensure_dir_exists, directories)
+
 os.chmod(WEBDAV_RO, 0o555)
 os.chmod(WEBDAV_BLACKHOLE, 0o222)
 os.chmod(WEBDAV_PUBLIC, 0o755)
