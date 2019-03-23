@@ -29,10 +29,12 @@ directories = [
     WEBDAV_RO,
     WEBDAV_BLACKHOLE,
     WEBDAV_PUBLIC,
+    BLACKHOLE_DIR,
 ]
 
-map(ensure_dir_exists, directories)
+for d in directories:
+    ensure_dir_exists(d)
 
-os.chmod(WEBDAV_RO, 0o555)
-os.chmod(WEBDAV_BLACKHOLE, 0o222)
-os.chmod(WEBDAV_PUBLIC, 0o755)
+#  os.chmod(WEBDAV_RO, 0o555)
+#  os.chmod(WEBDAV_BLACKHOLE, 0o755)
+#  os.chmod(WEBDAV_PUBLIC, 0o755)
