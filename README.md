@@ -87,6 +87,9 @@ allows for anonymous login and it contains three folders:
   will immediately be moved to the `blackhole` directory in the script's
   root directory.
 
+The dependencies for the WebDAV service are `wsgidav` (installable via
+`pip3`), `cheroot` and `watchdog`.
+
 Usage
 =====
 
