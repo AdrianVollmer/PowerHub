@@ -77,8 +77,9 @@ The file exchange offers a way to transfer files via HTTP back to the host.
 Think [Droopy](https://github.com/stackp/Droopy).
 
 If you have the necessary Python modules installed, a WebDAV service is also
-started. You can mount it on the target as a network drive (default S:). It
-allows for anonymous login and it contains three folders:
+started. You can mount it on the target as a network drive with
+`Mount-WebDAV` (as 'S:' by default). It allows for anonymous login and it
+contains three folders:
 
 * `public` with read/write access for everyone
 * `ro` with *read only* access for everyone -- maybe you can bypass a weak
