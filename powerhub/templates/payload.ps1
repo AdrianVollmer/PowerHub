@@ -333,6 +333,16 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
 $global:WebdavLetter = $Null
 
 function Mount-Webdav {
+<#
+.SYNOPSIS
+
+Mount the Webdav drive.
+
+.PARAMETER Letter
+
+The letter the mounted drive will receive (default: 'S')
+
+#>
     Param(
         [parameter(Mandatory=$False)]
         [String]$Letter = "S"
@@ -345,9 +355,19 @@ function Mount-Webdav {
 }
 
 function Unmount-Webdav {
-    $netout = & net use ${Letter}: /delete 2>&1 | Out-Null
-    if (!$?) {
-        throw "Error while executing 'net use': $netout"
+<#
+.SYNOPSIS
+
+Unmount the Webdav drive.
+
+#>
+    If (${WebdavLetter}) {
+        $netout = & net use ${WebdavLetter}: /delete 2>&1 | Out-Null
+        if (!$?) {
+            throw "Error while executing 'net use': $netout"
+        }
+    } else {
+        throw "No Webdav drive mounted"
     }
 }
 

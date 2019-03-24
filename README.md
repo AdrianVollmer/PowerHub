@@ -76,6 +76,17 @@ The File Exchange
 The file exchange offers a way to transfer files via HTTP back to the host.
 Think [Droopy](https://github.com/stackp/Droopy).
 
+If you have the necessary Python modules installed, a WebDAV service is also
+started. You can mount it on the target as a network drive (default S:). It
+allows for anonymous login and it contains three folders:
+
+* `public` with read/write access for everyone
+* `ro` with *read only* access for everyone -- maybe you can bypass a weak
+  anti virus with this
+* `blackhole` for dropping sensitive data. Any file placed here via WebDAV
+  will immediately be moved to the `blackhole` directory in the script's
+  root directory.
+
 Usage
 =====
 
