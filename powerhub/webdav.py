@@ -38,6 +38,7 @@ config = {
         },
         "/webdav": {
             "root": WEBDAV_DIR,
+            "readonly": True,
         }
     },
     "verbose": 1,
