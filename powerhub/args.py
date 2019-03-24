@@ -41,12 +41,6 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-n', '--noisy', default=True, dest="NOISY",
-    action="store_false",
-    help="allow noisy actions like loading mimikatz"
-)
-
-parser.add_argument(
     dest="URI_HOST", type=str,
     help="the hostname where the target can reach the server"
 )
