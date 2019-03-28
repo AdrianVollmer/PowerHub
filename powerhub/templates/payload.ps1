@@ -251,7 +251,12 @@ function Send-File {
        [String[]]$FileName
     )
 
-    if (-not $FileName) { $FileName = Get-Date -Format o}
+    if ($FileName) {
+        # remove path
+        $FileName = (Get-Item $Filename).Name
+    } else {
+        $FileName = Get-Date -Format o
+    }
 
     $boundary = [System.Guid]::NewGuid().ToString()
     $LF = "`r`n"
