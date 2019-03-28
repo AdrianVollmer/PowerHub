@@ -53,12 +53,12 @@ function Decrypt-Code {
 
 function Decrypt-String {
     param(
-        [String]$string,
+        [System.String]$string
   	)
-    $string = [System.Convert]::FromBase64String($string)
-    $string = Decrypt-Code $string $KEY
-    $string = [System.Text.Encoding]::ASCII.GetString($string)
-    $string
+    $result = [System.Convert]::FromBase64String($string)
+    $result = Decrypt-Code $result $KEY
+    $result = [System.Text.Encoding]::ASCII.GetString($result)
+    $result
 }
 
 $method = Decrypt-String "{{string0}}"
