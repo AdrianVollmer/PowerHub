@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import powerhub.flask
-from powerhub.args import args
+from powerhub.args import args, ssl_context
 try:
     from powerhub.webdav import run_webdav
 except ImportError as e:
@@ -17,4 +17,5 @@ if __name__ == "__main__":
         ).start()
     except NameError:
         pass
-    powerhub.flask.app.run(debug=False, port=args.LPORT, host=args.LHOST)
+    powerhub.flask.app.run(debug=False, port=args.LPORT, host=args.LHOST,
+                           ssl_context=ssl_context)

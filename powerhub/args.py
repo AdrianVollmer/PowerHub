@@ -23,15 +23,21 @@ parser.add_argument(
 )
 
 
-# TODO currently not supported
-#  parser.add_argument(
-#      '-s',
-#      '--ssl',
-#      default=False,
-#      dest="SSL",
-#      action="store_true",
-#      help="use SSL"
-#  )
+parser.add_argument(
+    '-k',
+    '--key-file',
+    dest="SSL_KEY",
+    default=None,
+    help="path to a file containing an RSA key in PEM format"
+)
+
+parser.add_argument(
+    '-c',
+    '--cert-file',
+    dest="SSL_CERT",
+    default=None,
+    help="path to a file containing an X.509 certificate in PEM format"
+)
 
 parser.add_argument(
     '-l', '--lhost', default='0.0.0.0',
@@ -85,8 +91,15 @@ if not (args.AUTH or args.NOAUTH):
 if args.URI_PORT == 0:
     args.URI_PORT = args.LPORT
 
-args.PROTOCOL = 'http'
-#  if args.SSL:
-#      args.PROTOCOL = 'https'
-#  else:
-#      args.PROTOCOL = 'http'
+if ((args.SSL_KEY and not args.SSL_CERT)
+        or (args.SSL_CERT and not args.SSL_KEY)):
+    print("If you supply one of SSL_CERT or SSL_KEY you must also supply "
+          "the other")
+    exit(1)
+
+if args.SSL_KEY:
+    ssl_context = (args.SSL_CERT, args.SSL_KEY)
+    args.PROTOCOL = 'https'
+else:
+    ssl_context = None
+    args.PROTOCOL = 'http'
