@@ -2,14 +2,6 @@ $CALLBACK_URL = "{{callback_url}}"
 $WEBDAV_URL = "{{webdav_url}}"
 $KEY = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 
-Write-Host @"
-  _____   _____  _  _  _ _______  ______ _     _ _     _ ______
- |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
- |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
-                            written by Adrian Vollmer, 2018-2019
-Run 'Help-PowerHub' for help
-"@
-
 function Decrypt-Code {
     # RC4
     param(
