@@ -6,6 +6,7 @@ Write-Host @"
 Run 'Help-PowerHub' for help
 "@
 
+$WEBDAV_URL = "{{webdav_url}}"
 $ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
 
