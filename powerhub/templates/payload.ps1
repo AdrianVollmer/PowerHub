@@ -266,7 +266,11 @@ function Send-File {
 
     if ($FileName) {
         # remove path
-        $FileName = (Get-Item $Filename).Name
+        try {
+            $FileName = (Get-Item $Filename).Name
+        } catch [System.Management.Automation.ItemNotFoundException] {
+            $FileName = $FileName.Replace('^.', '').Replace('\', '_')
+        }
     } else {
         $FileName = Get-Date -Format o
     }
