@@ -145,6 +145,7 @@ def payload_1():
     context = {
         "modules": modules,
         "webdav_url": webdav_url,
+        "symbol_name": symbol_name,
     }
     result = render_template(
                     "payload.ps1",
