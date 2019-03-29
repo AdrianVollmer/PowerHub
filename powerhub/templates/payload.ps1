@@ -6,6 +6,11 @@ Write-Host @"
 Run 'Help-PowerHub' for help
 "@
 
+$CALLBACK_URL = ${{symbol_name("CALLBACK_URL")}}
+$KEY = ${{symbol_name("KEY")}}
+Set-Alias -Name Decrypt-Code -Value {{symbol_name("Decrypt-Code")}}
+
+$WEBDAV_URL = "{{webdav_url}}"
 $ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
 
