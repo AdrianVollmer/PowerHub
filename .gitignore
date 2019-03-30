@@ -3,3 +3,4 @@ upload
 modules
 webdav
 blackhole
+*.pem
