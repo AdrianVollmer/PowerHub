@@ -14,15 +14,15 @@ you need to place or symlink the modules in the 'module' directory first.
 Have fun!"><span data-feather="help-circle"></span></a></sup>
 </h2>
     <p>Paste this in PowerShell:</p>
-    <div class="code_div" contenteditable='true'><code>{{ dl_str }}</code></div>
-    <div class="custom-control custom-checkbox">
+    <div class="code_div" contenteditable='true'><code id='dlcradle'>{{ dl_str }}</code></div>
+    <div class="custom-control custom-checkbox dlcradle-options">
       <input type="checkbox" class="custom-control-input" id="need-proxy" checked>
-      <label class="custom-control-label" for="defaultChecked2">I need a proxy</label>
+      <label class="custom-control-label" for="need-proxy">I need a proxy</label>
     </div>
       {% if SSL %}
-    <div class="custom-control custom-checkbox">
-      <input type="checkbox" class="custom-control-input" id="need-proxy" checked>
-      <label class="custom-control-label" for="defaultChecked2">Force
+    <div class="custom-control custom-checkbox dlcradle-options">
+      <input type="checkbox" class="custom-control-input" id="need-tlsv12" checked>
+      <label class="custom-control-label" for="need-tlsv12">Force
           TLSv1.2 on the client</label>
     </div>
       {% endif %}
