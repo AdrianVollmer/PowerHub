@@ -9,6 +9,7 @@ from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
+from powerhub.args import args
 
 from datetime import datetime
 from base64 import b64decode, b64encode
@@ -32,6 +33,7 @@ def hub():
         "dl_str": stager_str,
         "modules": modules,
         "repositories": list(repositories.keys()),
+        "SSL": args.SSL_KEY is not None,
     }
     return render_template("hub.html", **context)
 

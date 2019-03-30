@@ -15,9 +15,18 @@ Have fun!"><span data-feather="help-circle"></span></a></sup>
 </h2>
     <p>Paste this in PowerShell:</p>
     <div class="code_div" contenteditable='true'><code>{{ dl_str }}</code></div>
+    <div class="custom-control custom-checkbox">
+      <input type="checkbox" class="custom-control-input" id="need-proxy" checked>
+      <label class="custom-control-label" for="defaultChecked2">I need a proxy</label>
+    </div>
+      {% if SSL %}
+    <div class="custom-control custom-checkbox">
+      <input type="checkbox" class="custom-control-input" id="need-proxy" checked>
+      <label class="custom-control-label" for="defaultChecked2">Force
+          TLSv1.2 on the client</label>
+    </div>
+      {% endif %}
     <hr>
-    <p class="card-text"></p>
-
 <p>
 There {% if modules|length == 1 %}is <strong>1</strong> module{% else %}are
 <strong>{{ modules|length }}</strong> modules{% endif %} available.</p>
@@ -100,8 +109,6 @@ There {% if modules|length == 1 %}is <strong>1</strong> module{% else %}are
     </div>
   </div>
 </div>
-
-
 
 </p>
 {% endblock %}
