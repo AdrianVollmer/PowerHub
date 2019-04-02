@@ -78,7 +78,7 @@ auth_group.add_argument(
     help=("Disable basic authentication (not recommended)"))
 
 parser.add_argument(
-    '-v', '--version', action='version', version='%(prog)s 0.2'
+    '-v', '--version', action='version', version='%(prog)s 1.0'
 )
 
 args = parser.parse_args()
