@@ -82,7 +82,7 @@ callback_url = '%s://%s:%d/%s' % (
     args.URI_PATH+'/' if args.URI_PATH else '',
 )
 
-webdav_url = '%s://%s:%d/webdav' % (
+webdav_url = '%s://%s:%d' % (
     args.PROTOCOL,
     args.URI_HOST,
     args.WEBDAV_PORT,

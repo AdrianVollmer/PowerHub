@@ -25,18 +25,18 @@ config = {
     #: Used by SimpleDomainController only
     "simple_dc": {"user_mapping": {"*": True}},
     "provider_mapping": {
-        "/webdav/ro": {
+        "/ro": {
             "root": WEBDAV_RO,
             "readonly": True,
             "auth": "anonymous",
         },
-        "/webdav/public": {
+        "/public": {
             "root": WEBDAV_PUBLIC,
         },
-        "/webdav/blackhole": {
+        "/blackhole": {
             "root": WEBDAV_BLACKHOLE,
         },
-        "/webdav": {
+        "/": {
             "root": WEBDAV_DIR,
             "readonly": True,
         }

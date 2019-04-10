@@ -1,6 +1,8 @@
 notes
 upload
 modules
-webdav
+webdav/ro
+webdav/blackhole
+webdav/public
 blackhole
 *.pem
