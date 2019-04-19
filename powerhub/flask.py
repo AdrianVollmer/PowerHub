@@ -9,6 +9,7 @@ from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
+from powerhub.receiver import ReverseShell
 from powerhub.args import args
 
 from datetime import datetime
@@ -39,6 +40,17 @@ def hub():
         "SSL": args.SSL_KEY is not None,
     }
     return render_template("hub.html", **context)
+
+
+@app.route('/receiver')
+@requires_auth
+def receiver():
+    context = {
+        "dl_str": stager_str(need_proxy, need_tlsv12),
+        "SSL": args.SSL_KEY is not None,
+        "shells": [ReverseShell(), ReverseShell()],
+    }
+    return render_template("receiver.html", **context)
 
 
 @app.route('/clipboard')
@@ -245,7 +257,7 @@ def debug():
 def reverse_shell():
     """Spawn a reverse shell"""
     context = {
-        "dl_cradle": stager_str(need_proxy=False).replace('$K', '$R'),
+        "dl_cradle": stager_str().replace('$K', '$R'),
         "IP": args.URI_HOST,
         "PORT": "4444",
     }

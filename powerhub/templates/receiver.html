@@ -1,0 +1,54 @@
+{% extends "index.html" %}
+{% block receiver_active %}active{% endblock %}
+{% block receiver_selected %}selected{% endblock %}
+{% block content %}
+<p>
+<h2>Receiver
+    <sup>
+        <a href="#"
+           title="What's this?"
+           data-toggle="popover"
+           data-trigger="focus"
+           data-content="Your reverse shells are managed here.">
+           <span data-feather="help-circle"></span>
+        </a>
+    </sup>
+</h2>
+</p>
+<div class="container">
+{% if shells %}
+<div id="accordion">
+    {% for s in shells %}
+  <div class="card">
+    <div class="card-header" id="heading-{{s.id}}">
+      <h5 class="mb-0">
+        <a id="shell-header-{{s.id}}"
+           data-html="true"
+           data-toggle="popover"
+           data-trigger="hover"
+           data-content="{% include 'shell-details.html' %}">
+           <span class="btn btn-link"
+                 id="shell-header-{{s.id}}"
+                 data-toggle="collapse"
+                 data-target="#collapse-{{s.id}}"
+                 aria-expanded="true"
+                 aria-controls="collapse-{{s.id}}">
+                 {{s.description}}
+           </span>
+        </a>
+      </h5>
+    </div>
+    <div id="collapse-{{s.id}}"
+         class="collapse"
+         aria-labelledby="heading-{{s.id}}"
+         data-parent="#accordion">
+      <div class="card-body">
+          {% include 'shell-details.html' %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+</div>
+{% endblock %}

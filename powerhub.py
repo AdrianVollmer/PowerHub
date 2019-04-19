@@ -18,7 +18,7 @@ if __name__ == "__main__":
     except NameError:
         pass
     powerhub.flask.app.run(
-        debug=False,
+        debug=True,
         port=args.LPORT,
         host=args.LHOST,
         ssl_context=ssl_context
