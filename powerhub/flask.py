@@ -9,7 +9,7 @@ from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
-from powerhub.receiver import ReverseShell
+from powerhub.receiver import shells
 from powerhub.args import args
 
 from datetime import datetime
@@ -48,7 +48,7 @@ def receiver():
     context = {
         "dl_str": stager_str(need_proxy, need_tlsv12),
         "SSL": args.SSL_KEY is not None,
-        "shells": [ReverseShell(), ReverseShell()],
+        "shells": shells,
     }
     return render_template("receiver.html", **context)
 
