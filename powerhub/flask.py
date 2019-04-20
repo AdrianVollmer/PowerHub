@@ -9,7 +9,7 @@ from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
-from powerhub.receiver import shells
+from powerhub.receiver import ShellReceiver
 from powerhub.args import args
 
 from datetime import datetime
@@ -19,6 +19,8 @@ import os
 
 app = Flask(__name__)
 app.secret_key = os.urandom(16)
+
+shell_receiver = ShellReceiver()
 
 need_proxy = True
 need_tlsv12 = (args.SSL_KEY is not None)
@@ -48,7 +50,7 @@ def receiver():
     context = {
         "dl_str": stager_str(need_proxy, need_tlsv12),
         "SSL": args.SSL_KEY is not None,
-        "shells": shells,
+        "shells": shell_receiver.shells,
     }
     return render_template("receiver.html", **context)
 
