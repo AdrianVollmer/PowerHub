@@ -11,7 +11,8 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    "ID", type='str',
+    "ID",
+    type=str,
     help="ID of the shell you want to interact with"
 )
 
@@ -22,7 +23,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_address = ('127.0.0.1', 18157)
 sock.connect(server_address)
 
-sock.send(args.ID.decode())
+sock.send(args.ID.encode())
 
 write_socks = []
 
@@ -51,4 +52,4 @@ while True:
     }
     p = ShellPacket(T_DICT, json)
     _, w, _ = select.select([], [sock], [])
-    w[0].write(p.serialize())
+    w[0].send(p.serialize())

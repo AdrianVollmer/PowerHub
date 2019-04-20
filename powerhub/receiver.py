@@ -179,11 +179,11 @@ class ShellPacket(object):
     def serialize(self):
         """Return a byte string of the ShellPacket"""
 
-        buffer = json.dumps(self.json).decode()
+        buffer = json.dumps(self.json).encode()
         packet_length = len(buffer)
         packet_type = T_JSON
         header = struct.pack('>HI', packet_type, packet_length)
-        return (header + buffer).encode()
+        return (header + buffer)
 
     def __getitem__(self, key):
         return self.json[key]
