@@ -17,7 +17,9 @@
 </h2>
 </p>
 <div class="container">
-{% if shells %}
+{% if shells|length == 0 %}
+No shells received yet.
+{% else %}
 <div id="accordion">
     {% for s in shells %}
   <div class="card">
@@ -50,8 +52,6 @@
   </div>
   {% endfor %}
 </div>
-{% else %}
-No shells received yet.
 {% endif %}
 </div>
 {% endblock %}

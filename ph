@@ -30,13 +30,20 @@ write_socks = []
 
 def listen():
     global write_socks
-    r, _, _ = select.select([sock], [], [])
-    for s in r:
-        header = s.recv(6)
-        packet_type, packet_length = struct.unpack('>HI', header)
-        body = s.recv(packet_length)
-        p = ShellPacket(packet_type, body)
-        print(p.shell_string(), end='')
+    while True:
+        r, _, _ = select.select([sock], [], [])
+        for s in r:
+            try:
+                header = s.recv(6)
+            except Exception as e:
+                print(str(e))
+                return
+            if not header:
+                return
+            packet_type, packet_length = struct.unpack('>HI', header)
+            body = s.recv(packet_length)
+            p = ShellPacket(packet_type, body)
+            print(p.shell_string(), end='')
 
 
 threading.Thread(
@@ -45,11 +52,15 @@ threading.Thread(
 ).start()
 
 while True:
-    command = input()
-    json = {
-        "msg_type": "COMMAND",
-        "data": command,
-    }
-    p = ShellPacket(T_DICT, json)
-    _, w, _ = select.select([], [sock], [])
-    w[0].send(p.serialize())
+    try:
+        command = input()
+        json = {
+            "msg_type": "COMMAND",
+            "data": command,
+        }
+        p = ShellPacket(T_DICT, json)
+        _, w, _ = select.select([], [sock], [])
+        w[0].send(p.serialize())
+    except Exception as e:
+        print(str(e))
+        break

