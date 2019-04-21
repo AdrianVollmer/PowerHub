@@ -2,7 +2,6 @@
 import powerhub.flask
 from powerhub.args import args, ssl_context
 try:
-    import foo
     from powerhub.webdav import run_webdav
 except ImportError as e:
     print(str(e))
