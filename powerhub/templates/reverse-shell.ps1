@@ -162,7 +162,6 @@ function Invoke-PowerShellTcp
             $output = $x.CompletionMatches.CompletionText
             if ($output) {
                 # make sure to only send a single string, never an array
-                write-host $output.gettype()
                 if ($output.GetType() -eq [System.Object[]]) {
                     if ( $packet.n -gt $output.length ) {
                         $output = ""
