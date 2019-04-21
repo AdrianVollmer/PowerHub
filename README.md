@@ -1,8 +1,9 @@
 PowerHub
 ========
 
-PowerHub is a web application which aids a pentester in transferring files,
-in particular code which may get flagged by endpoint protection.
+PowerHub is a convenient post exploitation tool which aids a pentester in
+transferring files, in particular code which may get flagged by endpoint
+protection.
 
 ![PowerHub Webapp](https://github.com/AdrianVollmer/PowerHub/blob/master/img/powerhub-webapp.png)
 
@@ -57,8 +58,9 @@ can be executed directly from memory with
 `Invoke-ReflectivePEInjection`.
 
 Modules have to be placed in `./modules` and can be either PowerShell
-scripts, PE executables, or shell code. You can load them on the target via
-PowerShell with `Load-HubModule`. Run `Help-PowerHub` for more information.
+scripts, .NET or PE executables, or shell code. You can load them on the
+target via PowerShell with `Load-HubModule`. Run `Help-PowerHub` for more
+information.
 
 PowerHub on the attacker system simply looks for `*.ps1` or `*.exe` files.
 They need to be in their respective directory, though, so `exe` files need
