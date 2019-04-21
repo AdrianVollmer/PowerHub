@@ -80,7 +80,7 @@ function Invoke-PowerShellTcp
     function Get-ShellPrompt {
         @{
             "msg_type" = "PROMPT"
-            "data" = 'PS ' + (Get-Location).Path + '> '
+            "data" = (prompt)
         }
     }
 
