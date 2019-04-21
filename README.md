@@ -15,8 +15,12 @@ PowerSploit's modules, which is sometimes useful to bypass application
 whitelisting.
 
 Your loot (Kerberos tickets, passwords, etc.) can be easily transferred back
-either as a file or a text snippet. PowerHub also helps with collaboration
-in case you're a small team.
+either as a file or a text snippet, via the command line or the web
+interface. PowerHub also helps with collaboration in case you're a small
+team.
+
+On top of that, PowerHub comes with a powerful reverse PowerShell, making
+it suitable for any kind of post-exploitation action.
 
 Here is a simple example (grab information about local groups with PowerView
 and transfer it back):
@@ -42,7 +46,7 @@ PS C:\Users\avollmer> pth groups.json
 How it works
 ============
 
-The web application is made with Flask and consists of three parts.
+The web application is made with Flask and consists of four parts.
 
 The Hub
 -------
@@ -62,6 +66,18 @@ to be in `modules/exe` (or at least symlinked), and so forth. The `*.ps1`
 files are imported on the target via `[Scriptblock]::Create()`.
 
 A simple interface to install modules is provided for your convenience.
+
+The Receiver
+------------
+
+The receiver catches incoming reverse shells and lists them here. Each shell
+receives a random ID consisting of an eight digit hex string. You can
+interact with it by executing the accompanying script: `./ph <ID>`.
+
+This lands you inside a PowerShell instance. It's a _nice_ shell, too: It
+supports colors, a history, tab completion, it respects your terminal's
+column count and accidentally pressing CTRL+C is not a big deal - simply
+reconnect to it.
 
 The Clipboard
 -------------
