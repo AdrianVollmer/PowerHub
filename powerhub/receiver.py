@@ -1,10 +1,14 @@
 import json
+import os
 import random
 import select
 import socket
 import struct
 import threading
 from datetime import datetime as dt
+
+import logging
+log = logging.getLogger(__name__)
 
 T_JSON = 0
 T_DICT = 1
@@ -13,6 +17,7 @@ T_DICT = 1
 class ReverseShell(threading.Thread):
     # a random string
     SHELL_HELLO = bytes([0x21, 0x9e, 0x10, 0x55, 0x75, 0x6a, 0x1a, 0x6b])
+    signal_pipe = os.pipe()
 
     def __init__(self, sock, key=None):
         super(ReverseShell, self).__init__()
@@ -29,26 +34,34 @@ class ReverseShell(threading.Thread):
         self.details["peer_port"] = port
         self.description = ("[%(id)s] %(user)s@%(hostname)s "
                             "(%(peer_host)s:%(peer_port)d)") % self.details
-        self.read_socks = [self.rsock]
+        self.read_socks = [self.rsock, self.signal_pipe[0]]
         self.write_socks = []
         self.queue = {
             self.rsock: []
         }
         self.active = True
+        log.info("%s - %s - Reverse Shell caught" % (
+                    host,
+                    self.details["id"],
+                    ))
 
     def set_lsock(self, sock):
-        #  if not self.lsock:
-        #      raise Exception  # already occupied
+        if self.lsock:
+            raise Exception  # already occupied
         self.lsock = sock
-        self.read_socks = [self.rsock, self.lsock]
+        self.read_socks = [self.rsock, self.lsock, self.signal_pipe[0]]
         self.queue[self.lsock] = []
         self.deliver_backlog()
 
     def unset_lsock(self):
         self.queue.pop(self.lsock)
         self.read_socks.remove(self.lsock)
-        self.write_socks.remove(self.lsock)
+        if self.lsock in self.write_socks:
+            self.write_socks.remove(self.lsock)
+        host, port = self.lsock.getpeername()
         self.lsock = None
+        log.debug("%s - %s - Connection to local shell lost" %
+                  (host, self.details["id"]))
 
     def get_shell_hello(self):
         r, _, _ = select.select([self.rsock], [], [])
@@ -96,6 +109,7 @@ class ReverseShell(threading.Thread):
 
         self.queue[sock].append(packet)
         self.write_socks.append(sock)
+        os.write(self.signal_pipe[1], b"x")
 
     def deliver_backlog(self):
         """Delivers packets which haven't been delivered yet to local
@@ -124,11 +138,20 @@ class ReverseShell(threading.Thread):
 
     def run(self):
         while self.active:
-            r, w, _ = select.select(self.read_socks, self.write_socks, [], 3)
+            r, w, _ = select.select(self.read_socks, self.write_socks, [], 5)
             for s in r:
-                if not self.read_shell_packet(s):
-                    self.active = False
-                    break
+                if s == self.signal_pipe[0]:
+                    # this was only a signal to interrupt the select block,
+                    # do nothing
+                    os.read(s, 1024)
+                else:
+                    if not self.read_shell_packet(s):
+                        if s == self.lsock:
+                            self.unset_lsock()
+                            break
+                        elif s == self.rsock:
+                            self.active = False
+                            break
             for s in w:
                 for p in self.queue[s]:
                     self.write_shell_packet(p, s)
@@ -243,13 +266,16 @@ class ShellReceiver(object):
             id = connection.recv(8)
             if not id:
                 break
-            #  peer_shell = [s for s in self.shells if s.details["id"] ==
-            #                id.decode()]
-            #  if not peer_shell:
-            #      connection.close()
-            #      raise Exception
-            #  if len(peer_shell) > 1:
-            #      connection.close()
-            #      raise Exception
-            #  peer_shell[0].set_lsock(connection)
-            self.shells[0].set_lsock(connection)
+            peer_shell = [s for s in self.shells if s.details["id"] ==
+                          id.decode()]
+            if not peer_shell:
+                connection.close()
+                raise Exception
+            if len(peer_shell) > 1:
+                connection.close()
+                raise Exception
+            peer_shell[0].set_lsock(connection)
+            log.info("%s - %s - Connected local and reverse shell" % (
+                        addr[0],
+                        id.decode(),
+                        ))
