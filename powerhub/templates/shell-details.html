@@ -1,7 +1,12 @@
 <div>
-    fsfsdlkfj
-    <ul>
-        <li>Foo</li>
-        <li>Bar</li>
-    </ul>
+<table class='table'>
+  <tbody>
+{% for key, val in s.details.items() %}
+    <tr>
+      <th scope='row'>{{key}}</th>
+      <td>{{val}}</td>
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
 </div>
