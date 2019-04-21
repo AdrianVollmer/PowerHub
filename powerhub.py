@@ -8,6 +8,16 @@ except ImportError as e:
     print("You have unmet dependencies. WebDAV won't be available. "
           "Consult the README.")
 import threading
+import sys
+import logging
+
+FORMAT = '%(asctime)-15s %(message)s'
+logging.basicConfig(
+    stream=sys.stdout,
+    level=logging.INFO,
+    format=FORMAT,
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 if __name__ == "__main__":
     try:
@@ -17,6 +27,14 @@ if __name__ == "__main__":
         ).start()
     except NameError:
         pass
+    threading.Thread(
+        target=powerhub.flask.shell_receiver.run_receiver,
+        daemon=True,
+    ).start()
+    threading.Thread(
+        target=powerhub.flask.shell_receiver.run_provider,
+        daemon=True,
+    ).start()
     powerhub.flask.app.run(
         debug=False,
         port=args.LPORT,

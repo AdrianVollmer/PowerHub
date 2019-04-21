@@ -43,6 +43,10 @@
                aria-controls="hub" aria-selected="{% block hub_selected %}{% endblock %}">Hub</a>
         </li>
         <li class="nav-item">
+            <a class="nav-link {% block receiver_active %}{% endblock %}" id="receiver-tab" href="/receiver" role="tab"
+               aria-controls="receiver" aria-selected="{% block receiver_selected %}{% endblock %}">Receiver</a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link {% block clipboard_active %}{% endblock %}" id="clipboard-tab"
                 href="/clipboard" role="tab" aria-controls="clipboard" aria-selected="{% block clipboard_selected %}{% endblock %}">Clipboard</a>
         </li>
