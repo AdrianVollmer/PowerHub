@@ -96,11 +96,16 @@ class ReverseShell(threading.Thread):
         p = ShellPacket(packet_type, body)
         self.log.append(p)
         if s == self.rsock:
+            sender = "reverse shell"
             self.t_sign_of_life = dt.now()
             if self.lsock:
                 self.deliver(p, self.lsock)
         else:
+            sender = "local shell"
             self.deliver(p, self.rsock)
+        host, port = s.getpeername()
+        log.debug("%s - %s - From %s: %s" % (host, self.details["id"],
+                  sender, p))
         return p
 
     def deliver(self, packet, sock):
@@ -145,13 +150,17 @@ class ReverseShell(threading.Thread):
                     # do nothing
                     os.read(s, 1024)
                 else:
-                    if not self.read_shell_packet(s):
-                        if s == self.lsock:
-                            self.unset_lsock()
-                            break
-                        elif s == self.rsock:
-                            self.active = False
-                            break
+                    try:
+                        if not self.read_shell_packet(s):
+                            if s == self.lsock:
+                                self.unset_lsock()
+                                break
+                            elif s == self.rsock:
+                                self.active = False
+                                break
+                    except ConnectionResetError:
+                        self.unset_lsock()
+                        break
             for s in w:
                 for p in self.queue[s]:
                     self.write_shell_packet(p, s)
@@ -194,6 +203,9 @@ class ShellPacket(object):
 
     def __getitem__(self, key):
         return self.json[key]
+
+    def __str__(self):
+        return json.dumps(self.json)
 
     def shell_string(self):
         if self["msg_type"] == "OUTPUT":

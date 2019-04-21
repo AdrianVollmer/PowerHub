@@ -151,9 +151,7 @@ function Invoke-PowerShellTcp
         [void]$PowerShell.AddScript($data)
         $output = ( $PowerShell.Invoke() | Out-String -Width $packet.width)
 
-        if ($?) {
-            Write-ShellPacket @{ "msg_type" = "OUTPUT"; "data" = $output } $stream
-        }
+        Write-ShellPacket @{ "msg_type" = "OUTPUT"; "data" = "$output" } $stream
 
         Get-OutputStreams $PowerShell.Streams $packet.width | % { Write-ShellPacket $_ $stream }
 
