@@ -58,10 +58,9 @@ class ReverseShell(threading.Thread):
         self.read_socks.remove(self.lsock)
         if self.lsock in self.write_socks:
             self.write_socks.remove(self.lsock)
-        host, port = self.lsock.getpeername()
         self.lsock = None
-        log.debug("%s - %s - Connection to local shell lost" %
-                  (host, self.details["id"]))
+        log.debug("%s - Connection to local shell lost" %
+                  (self.details["id"]))
 
     def get_shell_hello(self):
         r, _, _ = select.select([self.rsock], [], [])
@@ -209,6 +208,8 @@ class ShellPacket(object):
 
     def shell_string(self):
         if self["msg_type"] == "OUTPUT":
+            return self["data"]
+        if self["msg_type"] == "TABCOMPL":
             return self["data"]
         if self["msg_type"] == "STREAM_INFORMATION":
             return self["data"] + "\n"

@@ -56,9 +56,51 @@ def listen():
                 prompt = p["data"]
             elif p["msg_type"] in ["OUTPUT", "STREAM_EXCEPTION"]:
                 os.write(out_pipe[1], p.shell_string().encode())
+            elif p["msg_type"] in ["TABCOMPL"]:
+                os.write(out_pipe[1], b"_" + p.shell_string().encode())
             elif p["data"]:
                 print(p.shell_string(), end='')
                 sys.stdout.flush()
+
+
+def send_packet(p):
+    _, w, _ = select.select([], [sock], [])
+    w[0].send(p.serialize())
+    r, _, _ = select.select([out_pipe[0]], [], [], 10)
+    response = b''
+    while True and r:
+        try:
+            data = os.read(r[0], 1024)
+            response += data
+        except OSError:
+            break
+    return response
+
+
+def send_command(command):
+    json = {
+        "msg_type": "COMMAND",
+        "data": command,
+        "width": columns,
+    }
+    p = ShellPacket(T_DICT, json)
+    response = send_packet(p)
+    print(response.decode(), end='')
+
+
+def complete(text, n):
+    #  print(text, n)
+    json = {
+        "msg_type": "TABCOMPL",
+        "data": text,
+        "n": n,
+    }
+    p = ShellPacket(T_DICT, json)
+    response = send_packet(p)
+    # there is potential for optimisation: transfer the list immediately
+    if response == b"_":
+        return None
+    return response.decode()[1:]
 
 
 threading.Thread(
@@ -68,28 +110,15 @@ threading.Thread(
 
 
 readline.parse_and_bind('tab: complete')
+old_delims = readline.get_completer_delims()
+readline.set_completer_delims(old_delims.replace('-', ''))
+readline.set_completer(complete)
 while True:
     try:
         rows, columns = os.popen('stty size', 'r').read().split()
 
         command = input(prompt)
-        json = {
-            "msg_type": "COMMAND",
-            "data": command,
-            "width": columns,
-        }
-        p = ShellPacket(T_DICT, json)
-        _, w, _ = select.select([], [sock], [])
-        w[0].send(p.serialize())
-        r, _, _ = select.select([out_pipe[0]], [], [], 10)
-        response = b''
-        while True and r:
-            try:
-                data = os.read(r[0], 1024)
-                response += data
-            except OSError:
-                break
-        print(response.decode(), end='')
+        send_command(command)
     except Exception as e:
         print(str(e))
         break

