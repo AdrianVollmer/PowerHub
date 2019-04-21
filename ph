@@ -55,7 +55,7 @@ def listen():
             if p["msg_type"] == "PROMPT":
                 prompt = p["data"]
             elif p["msg_type"] in ["OUTPUT", "STREAM_EXCEPTION"]:
-                os.write(out_pipe[1], p.shell_string().encode())
+                os.write(out_pipe[1], b'_' + p.shell_string().encode())
             elif p["msg_type"] in ["TABCOMPL"]:
                 os.write(out_pipe[1], b"_" + p.shell_string().encode())
             elif p["data"]:
@@ -66,7 +66,7 @@ def listen():
 def send_packet(p):
     _, w, _ = select.select([], [sock], [])
     w[0].send(p.serialize())
-    r, _, _ = select.select([out_pipe[0]], [], [], 10)
+    r, _, _ = select.select([out_pipe[0]], [], [], 1)
     response = b''
     while True and r:
         try:
@@ -84,7 +84,7 @@ def send_command(command):
         "width": columns,
     }
     p = ShellPacket(T_DICT, json)
-    response = send_packet(p)
+    response = send_packet(p)[1:]
     print(response.decode(), end='')
 
 
