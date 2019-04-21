@@ -139,10 +139,10 @@ class ReverseShell(threading.Thread):
 
 class ShellPacket(object):
     class bcolors:
-        VERBOSE = '\033[95m'
-        WARNING = '\033[94m'
-        ERROR = '\033[92m'
-        DEBUG = '\033[93m'
+        VERBOSE = '\033[33m'
+        WARNING = '\033[1;92m'
+        ERROR = '\033[31m'
+        DEBUG = '\033[92m'
         ENDC = '\033[0m'
         BOLD = '\033[1m'
         UNDERLINE = '\033[4m'
@@ -174,11 +174,10 @@ class ShellPacket(object):
         return self.json[key]
 
     def shell_string(self):
-        if self["msg_type"] in [
-            "OUTPUT",
-            "STREAM_INFORMATION",
-        ]:
-            return self["data"] + '\n'
+        if self["msg_type"] == "OUTPUT":
+            return self["data"]
+        if self["msg_type"] == "STREAM_INFORMATION":
+            return self["data"] + "\n"
         elif self["msg_type"] == "PROMPT":
             return self["data"]
         elif self["msg_type"] == "STREAM_VERBOSE":
@@ -187,7 +186,7 @@ class ShellPacket(object):
                 self["data"],
                 self.bcolors.ENDC,
             )
-        elif self["msg_type"] == "STREAM_ERROR":
+        elif self["msg_type"] in ["STREAM_EXCEPTION", "STREAM_ERROR"]:
             return "%s%s%s\n" % (
                 self.bcolors.ERROR,
                 self["data"],
