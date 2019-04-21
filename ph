@@ -2,6 +2,7 @@
 import socket
 import select
 import struct
+import sys
 import threading
 import argparse
 from powerhub.receiver import ShellPacket, T_DICT
@@ -43,7 +44,9 @@ def listen():
             packet_type, packet_length = struct.unpack('>HI', header)
             body = s.recv(packet_length)
             p = ShellPacket(packet_type, body)
-            print(p.shell_string(), end='')
+            if p["data"]:
+                print(p.shell_string(), end='')
+                sys.stdout.flush()
 
 
 threading.Thread(

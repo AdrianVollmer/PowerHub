@@ -71,13 +71,16 @@ class ReverseShell(threading.Thread):
 
         s.send(p.serialize())
         p.set_delivered()
-        self.queue[s].remove(p)
 
     def read_shell_packet(self, s):
         """Deserialize byte string and instantiate ShellPacket"""
         header = s.recv(6)
+        if not header:
+            return None
         packet_type, packet_length = struct.unpack('>HI', header)
-        body = s.recv(packet_length)
+        body = b''
+        while len(body) < packet_length:
+            body += s.recv(packet_length)
         p = ShellPacket(packet_type, body)
         self.log.append(p)
         if s == self.rsock:
@@ -122,13 +125,16 @@ class ReverseShell(threading.Thread):
 
     def run(self):
         while self.active:
-            r, w, _ = select.select(self.read_socks, self.write_socks, [], 1)
+            r, w, _ = select.select(self.read_socks, self.write_socks, [], 3)
             for s in r:
-                self.read_shell_packet(s)
+                if not self.read_shell_packet(s):
+                    self.active = False
+                    break
             for s in w:
                 for p in self.queue[s]:
                     self.write_shell_packet(p, s)
-                w.remove(s)
+                self.queue[s] = []
+                self.write_socks.remove(s)
 
 
 class ShellPacket(object):
@@ -148,33 +154,12 @@ class ShellPacket(object):
             self.json = body
         else:
             raise Exception
+        if not self.json["data"]:
+            self.json["data"] = ""
         self.delivered = False
 
     def set_delivered(self):
         self.delivered = True
-
-    #  def process_shell_packet(self):
-    #      j = self.json
-    #      if j["msg_type"] == "SHELL_HELLO":
-    #          self.process_shell_hello(self.p)
-    #      elif j["msg_type"] == "OUTPUT":
-    #          self.process_output(self.p)
-    #      elif j["msg_type"] in [
-    #          "STREAM_INFORMATION",
-    #          "STREAM_VERBOSE",
-    #          "STREAM_WARNING",
-    #          "STREAM_ERROR",
-    #          "STREAM_PROGRESS",
-    #          "STREAM_DEBUG",
-    #      ]:
-    #          self.process_output(self.p, streammsg_type=j["msg_type"])
-    #      elif j["msg_type"] == "PROMPT":
-    #          pass
-    #      elif j["msg_type"] == "HEARTBEAT":
-    #          # do nothing, is just for updating t_sign_of_life
-    #          pass
-    #      else:
-    #          raise Exception
 
     def serialize(self):
         """Return a byte string of the ShellPacket"""
@@ -247,7 +232,6 @@ class ShellReceiver(object):
             connection, addr = self.rsock.accept()
             rs = ReverseShell(connection)
             self.shells.append(rs)
-            print(self.shells)
             rs.start()
 
     def run_provider(self, host='127.0.0.1', port=18157):
@@ -259,12 +243,15 @@ class ShellReceiver(object):
             connection, addr = self.lsock.accept()
             r, _, _ = select.select([connection], [], [])
             id = connection.recv(8)
-            peer_shell = [s for s in self.shells if s.details["id"] ==
-                          id.decode()]
-            if not peer_shell:
-                connection.close()
-                raise Exception
-            if len(peer_shell) > 1:
-                connection.close()
-                raise Exception
-            peer_shell[0].set_lsock(connection)
+            if not id:
+                break
+            #  peer_shell = [s for s in self.shells if s.details["id"] ==
+            #                id.decode()]
+            #  if not peer_shell:
+            #      connection.close()
+            #      raise Exception
+            #  if len(peer_shell) > 1:
+            #      connection.close()
+            #      raise Exception
+            #  peer_shell[0].set_lsock(connection)
+            self.shells[0].set_lsock(connection)
