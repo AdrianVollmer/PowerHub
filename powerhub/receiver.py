@@ -58,7 +58,6 @@ class ReverseShell(threading.Thread):
             p = self.read_shell_packet(self.rsock)
             self.shell_type = 'smart'
             self.details.update(p["data"])
-            print(self.details)
         else:
             self.shell_type = 'dumb'
             for key in ["user", "host", "ps_version", "os_version",

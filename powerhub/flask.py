@@ -47,7 +47,6 @@ def hub():
 @app.route('/receiver')
 @requires_auth
 def receiver():
-    print(shell_receiver.__dict__)
     context = {
         "dl_str": stager_str(need_proxy, need_tlsv12),
         "SSL": args.SSL_KEY is not None,
