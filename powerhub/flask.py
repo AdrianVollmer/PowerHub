@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash
+from werkzeug.serving import WSGIRequestHandler, _log
 from powerhub.clipboard import clipboard as cb
 from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, webdav_url
@@ -13,7 +14,7 @@ from powerhub.receiver import ShellReceiver
 from powerhub.args import args
 
 from datetime import datetime
-from base64 import b64decode, b64encode
+from base64 import b64encode
 import os
 
 
@@ -24,6 +25,14 @@ shell_receiver = ShellReceiver()
 
 need_proxy = True
 need_tlsv12 = (args.SSL_KEY is not None)
+
+app = Flask(__name__)
+
+
+class MyRequestHandler(WSGIRequestHandler):
+    def log(self, type, message, *args):
+        # don't log datetime again
+        _log(type, '%s %s\n' % (self.address_string(), message % args))
 
 
 @app.route('/')

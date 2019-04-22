@@ -39,5 +39,6 @@ if __name__ == "__main__":
         debug=False,
         port=args.LPORT,
         host=args.LHOST,
-        ssl_context=ssl_context
+        ssl_context=ssl_context,
+        request_handler=powerhub.flask.MyRequestHandler,
     )
