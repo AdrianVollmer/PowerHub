@@ -124,7 +124,7 @@ readline.set_completer_delims(old_delims.replace('-', ''))
 readline.set_completer(complete)
 while True:
     rows, columns = os.popen('stty size', 'r').read().split()
-    #  completions = {}
+    completions = {}
 
     command = input(prompt)
     send_command(command)
