@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import fcntl
+import json
 import readline
 import os
 import socket
@@ -57,7 +58,7 @@ def listen():
             elif p["msg_type"] in ["OUTPUT", "STREAM_EXCEPTION"]:
                 os.write(out_pipe[1], b'_' + p.shell_string().encode())
             elif p["msg_type"] in ["TABCOMPL"]:
-                os.write(out_pipe[1], b"_" + p.shell_string().encode())
+                os.write(out_pipe[1], p.shell_string().encode())
             elif p["data"]:
                 print(p.shell_string(), end='')
                 sys.stdout.flush()
@@ -88,19 +89,27 @@ def send_command(command):
     print(response.decode(), end='')
 
 
+completions = {}
+
+
 def complete(text, n):
-    #  print(text, n)
-    json = {
+    global completions
+    packet = {
         "msg_type": "TABCOMPL",
         "data": text,
         "n": n,
     }
-    p = ShellPacket(T_DICT, json)
-    response = send_packet(p)
-    # there is potential for optimisation: transfer the list immediately
-    if response == b"_":
+    if text in completions:
+        response = completions[text]
+    else:
+        p = ShellPacket(T_DICT, packet)
+        response = send_packet(p).decode()
+        response = json.loads(response)
+        completions[text] = response
+    try:
+        return response[n]
+    except KeyError:
         return None
-    return response.decode()[1:]
 
 
 threading.Thread(
@@ -114,11 +123,8 @@ old_delims = readline.get_completer_delims()
 readline.set_completer_delims(old_delims.replace('-', ''))
 readline.set_completer(complete)
 while True:
-    try:
-        rows, columns = os.popen('stty size', 'r').read().split()
+    rows, columns = os.popen('stty size', 'r').read().split()
+    #  completions = {}
 
-        command = input(prompt)
-        send_command(command)
-    except Exception as e:
-        print(str(e))
-        break
+    command = input(prompt)
+    send_command(command)

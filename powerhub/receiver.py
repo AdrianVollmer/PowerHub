@@ -210,7 +210,7 @@ class ShellPacket(object):
         if self["msg_type"] == "OUTPUT":
             return self["data"]
         if self["msg_type"] == "TABCOMPL":
-            return self["data"]
+            return json.dumps(self["data"])
         if self["msg_type"] == "STREAM_INFORMATION":
             return self["data"] + "\n"
         elif self["msg_type"] == "PROMPT":
