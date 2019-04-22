@@ -1,4 +1,4 @@
 Flask
 cheroot
-wsgidav==3.0.0
+wsgidav>=3.0.0
 watchdog
