@@ -32,11 +32,4 @@ function modules_loaded(data){
     $('#ajaxmsg').append(msg);
 };
 
-$('[data-toggle=popover]').popover({
-   content: $('#popover-content').html(),
-   html: true
-}).hover(function() {
-   $(this).popover('show');
-});
-
 feather.replace();

