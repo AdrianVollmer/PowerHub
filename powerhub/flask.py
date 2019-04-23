@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, Response, redirect, \
-         send_from_directory, flash
+         send_from_directory, flash, make_response
 from werkzeug.serving import WSGIRequestHandler, _log
 from powerhub.clipboard import clipboard as cb
 from powerhub.stager import modules, stager_str, callback_url, \
@@ -271,13 +271,28 @@ def reverse_shell():
 
 
 @app.route('/shell-log', methods=["GET"])
-@requires_auth
 def shell_log():
     shell_id = request.args['id']
+    if 'content' in request.args:
+        content = request.args['content']
+    else:
+        content = 'html'
     shell = [s for s in shell_receiver.shells if s.details['id'] == shell_id]
     if len(shell) == 1:
         log = shell[0].get_log()
-        return render_template("shell-log.html", log=log)
+        context = {
+            'log': log,
+            'content': content,
+        }
+        if content == 'html':
+            return render_template("shell-log.html", **context)
+        elif content == 'raw':
+            response = make_response(render_template("shell-log.html",
+                                     **context))
+            response.headers['Content-Disposition'] = \
+                'attachment; filename=' + shell_id + ".log"
+            response.headers['content-type'] = 'text/plain; charset=utf-8'
+            return response
     else:
         flash("Shell not found: %s" % shell_id, "danger")
         return render_template("messages.html")
