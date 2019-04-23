@@ -47,7 +47,7 @@ class ReverseShell(threading.Thread):
 
     def set_lsock(self, sock):
         if self.lsock:
-            raise Exception  # already occupied
+            self.unset_lsock()
         self.lsock = sock
         self.read_socks = [self.rsock, self.lsock, self.signal_pipe[0]]
         self.queue[self.lsock] = []
@@ -58,8 +58,12 @@ class ReverseShell(threading.Thread):
         self.read_socks.remove(self.lsock)
         if self.lsock in self.write_socks:
             self.write_socks.remove(self.lsock)
+        try:
+            self.lsock.close()
+        except Exception:
+            log.exception("Exception while closing connection")
         self.lsock = None
-        log.debug("%s - Connection to local shell lost" %
+        log.debug("%s - Connection to local shell closed" %
                   (self.details["id"]))
 
     def get_shell_hello(self):
