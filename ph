@@ -133,6 +133,8 @@ if not args.MODE == 'default':
 # in powershell, '-' is not a completion delimiter
 old_delims = readline.get_completer_delims()
 readline.set_completer_delims(old_delims.replace('-', ''))
+# PS is case insensitive
+readline.parse_and_bind('set completion-ignore-case On')
 readline.set_completer(complete)
 while True:
     rows, columns = os.popen('stty size', 'r').read().split()
