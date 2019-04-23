@@ -268,3 +268,16 @@ def reverse_shell():
     ).encode()
     result = b64encode(encrypt(result, key))
     return Response(result, content_type='text/plain; charset=utf-8')
+
+
+@app.route('/shell-log', methods=["GET"])
+@requires_auth
+def shell_log():
+    shell_id = request.args['id']
+    shell = [s for s in shell_receiver.shells if s.details['id'] == shell_id]
+    if len(shell) == 1:
+        log = shell[0].get_log()
+        return render_template("shell-log.html", log=log)
+    else:
+        flash("Shell not found: %s" % shell_id, "danger")
+        return render_template("messages.html")

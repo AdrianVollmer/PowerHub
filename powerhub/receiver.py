@@ -137,7 +137,7 @@ class ReverseShell(threading.Thread):
 
         result = ""
         for p in self.log:
-            result.append(p.shell_string())
+            result += p.shell_string()
         return result
 
     def run(self):
