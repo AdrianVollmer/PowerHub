@@ -130,6 +130,7 @@ threading.Thread(
 readline.parse_and_bind('tab: complete')
 if not args.MODE == 'default':
     readline.parse_and_bind('set editing-mode %s' % args.MODE)
+# in powershell, '-' is not a completion delimiter
 old_delims = readline.get_completer_delims()
 readline.set_completer_delims(old_delims.replace('-', ''))
 readline.set_completer(complete)
