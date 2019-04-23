@@ -22,6 +22,15 @@ parser.add_argument(
     help="ID of the shell you want to interact with"
 )
 
+parser.add_argument(
+    "-m", "--edit-mode",
+    dest='MODE',
+    default='default',
+    choices=["vi", "emacs", "default"],
+    help="use a special edit mode (default: %(default)s)"
+)
+
+
 args = parser.parse_args()
 
 
@@ -119,6 +128,8 @@ threading.Thread(
 
 
 readline.parse_and_bind('tab: complete')
+if not args.MODE == 'default':
+    readline.parse_and_bind('set editing-mode %s' % args.MODE)
 old_delims = readline.get_completer_delims()
 readline.set_completer_delims(old_delims.replace('-', ''))
 readline.set_completer(complete)
