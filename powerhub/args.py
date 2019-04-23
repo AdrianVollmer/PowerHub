@@ -19,7 +19,7 @@ parser.add_argument(
     default=8001,
     dest="WEBDAV_PORT",
     type=int,
-    help="the local port to listen on (default: 8001)"
+    help="the local port to listen on for the webdav server (default: 8001)"
 )
 
 
@@ -37,6 +37,22 @@ parser.add_argument(
     dest="SSL_CERT",
     default=None,
     help="path to a file containing an X.509 certificate in PEM format"
+)
+
+parser.add_argument(
+    '-rp', '--receiver-port', default=3333,
+    dest="REC_PORT",
+    type=int,
+    help="the local bind address to listen on for the receiver "
+         "(default: %(default)s)"
+)
+
+parser.add_argument(
+    '-rh', '--receiver-host', default='0.0.0.0',
+    dest="REC_HOST",
+    type=str,
+    help="the local %port to listen on for the receiver "
+         "(default: %(default)s)"
 )
 
 parser.add_argument(

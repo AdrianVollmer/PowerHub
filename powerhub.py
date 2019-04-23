@@ -29,6 +29,7 @@ if __name__ == "__main__":
         pass
     threading.Thread(
         target=powerhub.flask.shell_receiver.run_receiver,
+        args=(args.REC_HOST, args.REC_PORT,),
         daemon=True,
     ).start()
     threading.Thread(
