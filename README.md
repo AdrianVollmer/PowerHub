@@ -77,9 +77,9 @@ receives a random ID consisting of an eight digit hex string. You can
 interact with it by executing the accompanying script: `./ph <ID>`.
 
 This lands you inside a PowerShell instance. It's a _nice_ shell, too: It
-supports colors, a history, tab completion, it respects your terminal's
-column count and accidentally pressing CTRL+C is not a big deal - simply
-reconnect to it.
+supports colors, a history, tab completion, vim/emacs edit modes, it
+respects your terminal's column count and accidentally pressing CTRL+C is
+not a big deal - simply reconnect to it.
 
 The Clipboard
 -------------
