@@ -160,11 +160,22 @@ class ReverseShell(threading.Thread):
                     except ConnectionResetError:
                         self.unset_lsock()
                         break
+                    except Exception:
+                        log.exception(
+                            "Exception caught while reading shell packets"
+                        )
+                        break
             for s in w:
-                for p in self.queue[s]:
-                    self.write_shell_packet(p, s)
-                self.queue[s] = []
-                self.write_socks.remove(s)
+                try:
+                    for p in self.queue[s]:
+                        self.write_shell_packet(p, s)
+                    self.queue[s] = []
+                    self.write_socks.remove(s)
+                except Exception:
+                    log.exception(
+                        "Exception caught while writing shell packets"
+                    )
+                    break
 
 
 class ShellPacket(object):
