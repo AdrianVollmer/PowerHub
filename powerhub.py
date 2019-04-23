@@ -38,6 +38,7 @@ if __name__ == "__main__":
     ).start()
     powerhub.flask.app.run(
         debug=args.DEBUG,
+        use_reloader=False,
         port=args.LPORT,
         host=args.LHOST,
         ssl_context=ssl_context,
