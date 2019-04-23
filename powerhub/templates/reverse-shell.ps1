@@ -105,7 +105,7 @@ function Invoke-PowerShellTcp
         $Streams.Information.MessageData | % { $result+=(@{ "msg_type" = "STREAM_INFORMATION"; "data" = $_.Message }) }
 
         $Streams.ClearStreams()
-        $result
+        $result | ? { $_.data }
     }
 
     #Connect back if the reverse switch is used.
