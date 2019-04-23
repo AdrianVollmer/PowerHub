@@ -97,11 +97,11 @@ function Invoke-PowerShellTcp
                 })
         }
         $error.clear()
-        $Streams.Error.MessageData | % { $result+=(@{ "msg_type" = "STREAM_ERROR"; "data" = $_.Message }) }
-        $Streams.Warning.MessageData | % { $result+=(@{ "msg_type" = "STREAM_WARNING"; "data" = $_.Message }) }
-        $Streams.Verbose.MessageData | % { $result+=(@{ "msg_type" = "STREAM_VERBOSE"; "data" = $_.Message }) }
-        $Streams.Debug.MessageData | % { $result+=(@{ "msg_type" = "STREAM_DEBUG"; "data" = $_.Message }) }
-        $Streams.Progress.MessageData | % { $result+=(@{ "msg_type" = "STREAM_PROGRESS"; "data" = $_.Message }) }
+        $result+=(@{ "msg_type" = "STREAM_ERROR"; "data" = $Streams.Error })
+        $Streams.Warning | % { $result+=(@{ "msg_type" = "STREAM_WARNING"; "data" = $_.Message }) }
+        $Streams.Verbose | % { $result+=(@{ "msg_type" = "STREAM_VERBOSE"; "data" = $_.Message }) }
+        $Streams.Debug | % { $result+=(@{ "msg_type" = "STREAM_DEBUG"; "data" = $_.Message }) }
+        $result += (@{ "msg_type" = "STREAM_PROGRESS"; "data" = $Streams.Progress })
         $Streams.Information.MessageData | % { $result+=(@{ "msg_type" = "STREAM_INFORMATION"; "data" = $_.Message }) }
 
         $Streams.ClearStreams()
