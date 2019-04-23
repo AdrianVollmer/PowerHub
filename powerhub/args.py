@@ -63,6 +63,9 @@ parser.add_argument(
     help="the URI path where the target can reach the server (default: '')"
 )
 
+parser.add_argument(
+    '-d', '--debug', dest="DEBUG", default=False, action="store_true",
+    help=("Show debug messages"))
 
 auth_group = parser.add_mutually_exclusive_group()
 

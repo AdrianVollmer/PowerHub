@@ -14,7 +14,7 @@ import logging
 FORMAT = '%(asctime)-15s %(message)s'
 logging.basicConfig(
     stream=sys.stdout,
-    level=logging.DEBUG,
+    level=logging.DEBUG if args.DEBUG else logging.INFO,
     format=FORMAT,
     datefmt="%Y-%m-%d %H:%M:%S",
 )
