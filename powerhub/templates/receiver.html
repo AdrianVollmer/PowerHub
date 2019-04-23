@@ -43,6 +43,18 @@ No shells received yet.
            </span>
         </a>
         <div style="display: none;" id="popover-content-{{s["details"].id}}">{% include 'shell-tooltip.html' %}</div>
+        <div class="btn-group float-right" role="group" aria-label="Control Shell">
+          <button type="button"
+                  href="/shell-log?id={{s["details"].id}}"
+                  id="shell-log-{{s["details"].id}}"
+                  data-remote="false"
+                  data-toggle="modal"
+                  data-target="#shell-log-modal-{{s["details"].id}}"
+                  class="btn btn-primary">View Log</button>
+          <button type="button"
+                  id="shell-kill-{{s["details"].id}}"
+                  class="btn btn-danger">Kill Shell</button>
+        </div>
       </h5>
     </div>
     <div id="collapse-{{s["details"].id}}"
@@ -51,6 +63,29 @@ No shells received yet.
          data-parent="#accordion">
       <div class="card-body">
           {% include 'shell-details.html' %}
+      </div>
+    </div>
+  </div>
+  <div class="modal fade shell-log-modal"
+       id="shell-log-modal-{{s["details"].id}}"
+       tabindex="-1"
+       role="dialog"
+       aria-labelledby="Shell Log"
+       aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Log</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        </div>
+        <div class="modal-body">
+          ...
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <a type="button" class="btn btn-secondary"
+              href="/shell-log?id={{s["details"].id}}&content=raw">Save...</a>
+        </div>
       </div>
     </div>
   </div>

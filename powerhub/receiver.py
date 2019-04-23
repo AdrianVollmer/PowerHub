@@ -137,7 +137,14 @@ class ReverseShell(threading.Thread):
 
         result = ""
         for p in self.log:
-            result.append(p.shell_string())
+            if p["msg_type"] in [
+                "COMMAND",
+                "PROMPT",
+                "OUTPUT",
+            ] or (p["msg_type"].startswith("STREAM_") and p["data"]):
+                result += p.shell_string(colors=False)
+                if p["msg_type"] in ["COMMAND"]:
+                    result += "\n"
         return result
 
     def run(self):
@@ -217,8 +224,8 @@ class ShellPacket(object):
     def __str__(self):
         return json.dumps(self.json)
 
-    def shell_string(self):
-        if self["msg_type"] == "OUTPUT":
+    def shell_string(self, colors=True):
+        if self["msg_type"] in ["OUTPUT", "COMMAND"]:
             return self["data"]
         if self["msg_type"] == "TABCOMPL":
             return json.dumps(self["data"])
@@ -228,27 +235,27 @@ class ShellPacket(object):
             return self["data"]
         elif self["msg_type"] == "STREAM_VERBOSE":
             return "%s%s%s\n" % (
-                self.bcolors.VERBOSE,
+                self.bcolors.VERBOSE if colors else "",
                 self["data"],
-                self.bcolors.ENDC,
+                self.bcolors.ENDC if colors else "",
             )
         elif self["msg_type"] in ["STREAM_EXCEPTION", "STREAM_ERROR"]:
             return "%s%s%s\n" % (
-                self.bcolors.ERROR,
+                self.bcolors.ERROR if colors else "",
                 self["data"],
-                self.bcolors.ENDC,
+                self.bcolors.ENDC if colors else "",
             )
         elif self["msg_type"] == "STREAM_WARNING":
             return "%s%s%s\n" % (
-                self.bcolors.WARNING,
+                self.bcolors.WARNING if colors else "",
                 self["data"],
-                self.bcolors.ENDC,
+                self.bcolors.ENDC if colors else "",
             )
         elif self["msg_type"] == "STREAM_DEBUG":
             return "%s%s%s\n" % (
-                self.bcolors.DEBUG,
+                self.bcolors.DEBUG if colors else "",
                 self["data"],
-                self.bcolors.ENDC,
+                self.bcolors.ENDC if colors else "",
             )
         elif self["msg_type"] == "SHELL_HELLO":
             result = ""
