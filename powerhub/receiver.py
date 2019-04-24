@@ -166,6 +166,8 @@ class ReverseShell(threading.Thread):
                                 self.unset_lsock()
                                 break
                             elif s == self.rsock:
+                                log.info("Connection to reverse shell lost")
+                                self.rsock.close()
                                 self.active = False
                                 break
                     except ConnectionResetError:
