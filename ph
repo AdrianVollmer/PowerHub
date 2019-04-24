@@ -40,51 +40,72 @@ sock.connect(server_address)
 
 sock.send(args.ID.encode())
 
-out_pipe = os.pipe()
-fcntl.fcntl(out_pipe[0], fcntl.F_SETFL, os.O_NONBLOCK)
+signal_pipe = os.pipe()
+fcntl.fcntl(signal_pipe[0], fcntl.F_SETFL, os.O_NONBLOCK)
 write_socks = []
 
 prompt = "> "
+queue = []
+
+
+def flush_queue():
+    global prompt, queue
+    for p in queue:
+        mtype = p["msg_type"]
+        if mtype == "PROMPT":
+            prompt = p["data"]
+            j = {"msg_type": "INT_QUEUE_FLUSHED"}
+            os.write(signal_pipe[1], json.dumps(j).encode())
+        elif mtype in [
+            "OUTPUT",
+        ] or mtype.startswith("STREAM_"):
+            print(p.shell_string(), end='')
+            sys.stdout.flush()
+    queue = []
 
 
 def listen():
-    global write_socks, prompt
+    global write_socks, prompt, queue
     while True:
         r, _, _ = select.select([sock], [], [])
         for s in r:
-            try:
-                header = s.recv(6)
-            except Exception as e:
-                print(str(e))
-                return
-            if not header:
-                return
-            packet_type, packet_length = struct.unpack('>HI', header)
-            body = s.recv(packet_length)
-            p = ShellPacket(packet_type, body)
-            if p["msg_type"] == "PROMPT":
-                prompt = p["data"]
-            elif p["msg_type"] in ["OUTPUT", "STREAM_EXCEPTION"]:
-                os.write(out_pipe[1], b'_' + p.shell_string().encode())
-            elif p["msg_type"] in ["TABCOMPL"]:
-                os.write(out_pipe[1], p.shell_string().encode())
-            elif p["data"]:
-                print(p.shell_string(), end='')
-                sys.stdout.flush()
+            p = recv_packet(s)
+            queue.append(p)
+            if p["msg_type"] == "TABCOMPL":
+                os.write(signal_pipe[1], p.serialize())
+            elif p["msg_type"] == "PROMPT":
+                flush_queue()
 
 
-def send_packet(p):
+def send_packet(p, return_response=False):
+    try:
+        while True:
+            os.read(signal_pipe[0], 1024)  # clear the signal pipe
+    except BlockingIOError:
+        pass
     _, w, _ = select.select([], [sock], [])
     w[0].send(p.serialize())
-    r, _, _ = select.select([out_pipe[0]], [], [], 1)
-    response = b''
-    while True and r:
-        try:
-            data = os.read(r[0], 1024)
-            response += data
-        except OSError:
-            break
-    return response
+    if return_response:
+        r, _, _ = select.select([signal_pipe[0]], [], [], 3)
+        for s in r:
+            p = recv_packet(s)
+        return p
+    else:
+        r, _, _ = select.select([signal_pipe[0]], [], [], 3)
+        os.read(r[0], 1024)
+
+
+def recv_packet(sock):
+    if isinstance(sock, socket.socket):
+        header = sock.recv(6)
+        packet_type, packet_length = struct.unpack('>HI', header)
+        body = sock.recv(packet_length)
+    else:
+        header = os.read(sock, 6)
+        packet_type, packet_length = struct.unpack('>HI', header)
+        body = os.read(sock, packet_length)
+    p = ShellPacket(packet_type, body)
+    return p
 
 
 def send_command(command):
@@ -94,11 +115,7 @@ def send_command(command):
         "width": columns,
     }
     p = ShellPacket(T_DICT, json)
-    response = send_packet(p)[1:]
-    print(response.decode(), end='')
-
-
-completions = {}
+    send_packet(p)
 
 
 def complete(text, n):
@@ -112,8 +129,8 @@ def complete(text, n):
         response = completions[text]
     else:
         p = ShellPacket(T_DICT, packet)
-        response = send_packet(p).decode()
-        response = json.loads(response)
+        p = send_packet(p, return_response=True)
+        response = p["data"]
         completions[text] = response
     try:
         return response[n]
@@ -136,6 +153,7 @@ readline.set_completer_delims(old_delims.replace('-', ''))
 # PS is case insensitive
 readline.parse_and_bind('set completion-ignore-case On')
 readline.set_completer(complete)
+
 while True:
     rows, columns = os.popen('stty size', 'r').read().split()
     completions = {}
