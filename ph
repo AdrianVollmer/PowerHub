@@ -46,6 +46,7 @@ write_socks = []
 
 prompt = "> "
 queue = []
+active = True
 
 
 def flush_queue():
@@ -66,7 +67,7 @@ def flush_queue():
 
 def listen():
     global write_socks, prompt, queue
-    while True:
+    while active:
         r, _, _ = select.select([sock], [], [])
         for s in r:
             p = recv_packet(s)
@@ -98,6 +99,9 @@ def send_packet(p, return_response=False):
 def recv_packet(sock):
     if isinstance(sock, socket.socket):
         header = sock.recv(6)
+        if not header:
+            print("Connection closed")
+            os._exit(0)
         packet_type, packet_length = struct.unpack('>HI', header)
         body = sock.recv(packet_length)
     else:
@@ -158,5 +162,26 @@ while True:
     rows, columns = os.popen('stty size', 'r').read().split()
     completions = {}
 
-    command = input(prompt)
-    send_command(command)
+    try:
+        command = input(prompt)
+    except KeyboardInterrupt:
+        got_decision = False
+        while not got_decision:
+            decision = input(
+                "\nDo you want to [E]xit, [s]tay, or [k]ill the shell? "
+            )
+            if decision.lower() == 's':
+                command = ""
+                break
+            elif decision.lower() == 'e':
+                active = False
+                exit(0)
+            elif decision.lower() == 'k':
+                packet = {"msg_type": "KILL", "data": ""}
+                p = ShellPacket(T_DICT, packet)
+                send_packet(p)
+                exit(0)
+            else:
+                print("What do you mean? Please enter e, s or k.")
+    if command:
+        send_command(command)
