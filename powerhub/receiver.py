@@ -300,19 +300,16 @@ class ShellReceiver(object):
         while True:
             connection, addr = self.lsock.accept()
             r, _, _ = select.select([connection], [], [])
-            id = connection.recv(8)
+            id = connection.recv(8).decode()
             if not id:
                 break
             peer_shell = [s for s in self.shells if s.details["id"] ==
-                          id.decode()]
+                          id]
             if not peer_shell:
+                log.error("No shell with ID %s found" % id)
                 connection.close()
-                raise Exception
-            if len(peer_shell) > 1:
-                connection.close()
-                raise Exception
             peer_shell[0].set_lsock(connection)
             log.info("%s - %s - Connected local and reverse shell" % (
                         addr[0],
-                        id.decode(),
+                        id,
                         ))

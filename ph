@@ -59,6 +59,7 @@ def flush_queue():
             os.write(signal_pipe[1], json.dumps(j).encode())
         elif mtype in [
             "OUTPUT",
+            "SHELL_HELLO",
         ] or mtype.startswith("STREAM_"):
             print(p.shell_string(), end='')
             sys.stdout.flush()
