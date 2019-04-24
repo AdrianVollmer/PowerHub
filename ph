@@ -93,7 +93,8 @@ def send_packet(p, return_response=False):
         return p
     else:
         r, _, _ = select.select([signal_pipe[0]], [], [], 3)
-        os.read(r[0], 1024)
+        if r:
+            os.read(r[0], 1024)
 
 
 def recv_packet(sock):
