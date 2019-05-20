@@ -40,7 +40,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-rp', '--receiver-port', default=3333,
+    '-P', '--receiver-port', default=3333,
     dest="REC_PORT",
     type=int,
     help="the local bind address to listen on for the receiver "
@@ -48,7 +48,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-rh', '--receiver-host', default='0.0.0.0',
+    '-H', '--receiver-host', default='0.0.0.0',
     dest="REC_HOST",
     type=str,
     help="the local %port to listen on for the receiver "
