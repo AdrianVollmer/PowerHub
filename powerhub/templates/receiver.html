@@ -49,7 +49,7 @@ No shells received yet.
                   id="shell-log-{{s["details"].id}}"
                   data-remote="false"
                   data-toggle="modal"
-                  data-target="#shell-log-modal-{{s["details"].id}}"
+                  data-target="#shell-log-modal"
                   class="btn btn-primary">View Log</button>
           <button type="button"
                   id="shell-kill-{{s["details"].id}}"
@@ -66,30 +66,30 @@ No shells received yet.
       </div>
     </div>
   </div>
-  <div class="modal fade shell-log-modal"
-       id="shell-log-modal-{{s["details"].id}}"
-       tabindex="-1"
-       role="dialog"
-       aria-labelledby="Shell Log"
-       aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-      <div class="modal-content">
+  {% endfor %}
+<div class="modal fade"
+     id="shell-log-modal"
+     tabindex="-1"
+     role="dialog"
+     aria-labelledby="Shell Log"
+     aria-hidden="true">
+      <div class="modal-dialog modal-xl" style='height: 80%'>
+        <div class="modal-content" style='height: 80%'>
         <div class="modal-header">
           <h4 class="modal-title">Log</h4>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" style="overflow-y: auto;">
           ...
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
           <a type="button" class="btn btn-secondary"
-              href="/shell-log?id={{s["details"].id}}&content=raw">Save...</a>
+              href="/shell-log?id=ID&content=raw">Save...</a>
         </div>
       </div>
     </div>
   </div>
-  {% endfor %}
 </div>
 {% endif %}
 </div>

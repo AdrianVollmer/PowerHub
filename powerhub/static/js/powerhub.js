@@ -32,9 +32,10 @@ function modules_loaded(data){
     $('#ajaxmsg').append(msg);
 };
 
-$(".shell-log-modal").on("show.bs.modal", function(e) {
-    var link = $(e.relatedTarget);
-    $(this).find(".modal-body").load(link.attr("href"));
+$("#shell-log-modal").on("show.bs.modal", function(e) {
+    var link = $(e.relatedTarget).attr("href");
+    $(this).find(".modal-body").load(link);
+    $(this).find(".modal-footer a").attr("href", link+"&content=raw");
 });
 
 feather.replace();
