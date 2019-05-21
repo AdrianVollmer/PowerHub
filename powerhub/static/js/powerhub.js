@@ -18,10 +18,20 @@ function deleteClip(n) {
      $("#card-" + n.toString()).remove();
 }
 
-$(document).ready(function(){
-    $('[data-toggle="popover"]').popover();
+$(function() {
+$('[data-toggle="popover"]').popover(
+     {
+         html: true,
+         sanitize: false,
+         content: function () {
+             var id = $(this).attr('data-shellid');
+             var result = $('#popover-content-' + id + " table").html();
+             console.log(result);
+             return result;
+         }
+    }
+);
 });
-
 
 $('#reloadbutton').click(function(){
     $.post({url: "reload", success: modules_loaded});

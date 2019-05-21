@@ -1,10 +1,10 @@
 <div>
-<table class='table'>
+<table class='table table-sm'>
   <tbody>
 {% for key, val in s.details.items() %}
-    <tr>
+    <tr style="vertical-align: top;">
       <th scope='row'>{{key}}</th>
-      <td>{{val}}</td>
+      <td style="padding-left: 15pt;">{{val}}</td>
     </tr>
 {% endfor %}
   </tbody>
