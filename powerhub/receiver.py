@@ -95,7 +95,7 @@ class ReverseShell(threading.Thread):
         packet_type, packet_length = struct.unpack('>HI', header)
         body = b''
         while len(body) < packet_length:
-            body += s.recv(packet_length)
+            body += s.recv(packet_length-len(body))
         p = ShellPacket(packet_type, body)
         self.log.append(p)
         if s == self.rsock:
@@ -203,7 +203,10 @@ class ShellPacket(object):
 
     def __init__(self, packet_type, body):
         if packet_type == T_JSON:
-            self.json = json.loads(body.decode())
+            try:
+                self.json = json.loads(body.decode())
+            except Exception:
+                print(body.decode())
         elif packet_type == T_DICT:
             self.json = body
         else:
