@@ -26,8 +26,6 @@ shell_receiver = ShellReceiver()
 need_proxy = True
 need_tlsv12 = (args.SSL_KEY is not None)
 
-app = Flask(__name__)
-
 
 class MyRequestHandler(WSGIRequestHandler):
     def log(self, type, message, *args):
@@ -204,7 +202,7 @@ def dlcradle():
     global need_proxy, need_tlsv12
     need_proxy = request.args['proxy'] == 'true'
     need_tlsv12 = request.args['tlsv12'] == 'true'
-    return stager_str(need_proxy, need_tlsv12)
+    return stager_str(need_proxy=need_proxy, need_tlsv12=need_tlsv12)
 
 
 @app.route('/u', methods=["POST"])
