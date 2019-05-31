@@ -1,3 +1,7 @@
+env
+venv
+.env
+.venv
 notes
 upload
 modules
@@ -6,3 +10,4 @@ webdav/blackhole
 webdav/public
 blackhole
 *.pem
+*.pyc
