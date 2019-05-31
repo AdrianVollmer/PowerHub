@@ -204,7 +204,7 @@ def dlcradle():
     global need_proxy, need_tlsv12
     need_proxy = request.args['proxy'] == 'true'
     need_tlsv12 = request.args['tlsv12'] == 'true'
-    return stager_str(need_proxy, need_tlsv12)
+    return stager_str(need_proxy=need_proxy, need_tlsv12=need_tlsv12)
 
 
 @app.route('/u', methods=["POST"])
