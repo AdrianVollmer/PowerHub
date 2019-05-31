@@ -26,8 +26,6 @@ shell_receiver = ShellReceiver()
 need_proxy = True
 need_tlsv12 = (args.SSL_KEY is not None)
 
-app = Flask(__name__)
-
 
 class MyRequestHandler(WSGIRequestHandler):
     def log(self, type, message, *args):
