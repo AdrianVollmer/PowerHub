@@ -81,9 +81,12 @@ function Invoke-PowerShellTcp
         }
     }
     function Get-ShellPrompt {
+        $PowerShell.Commands.Clear()
+        [void]$PowerShell.AddScript("prompt")
+        $prompt = ( $PowerShell.Invoke() )
         @{
             "msg_type" = "PROMPT"
-            "data" = (prompt)
+            "data" = ($prompt[0])
         }
     }
 
