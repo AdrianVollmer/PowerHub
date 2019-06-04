@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, Response, redirect, \
-         send_from_directory, flash, make_response
+         send_from_directory, flash, make_response, abort
 from werkzeug.serving import WSGIRequestHandler, _log
 from powerhub.clipboard import clipboard as cb
 from powerhub.stager import modules, stager_str, callback_url, \
@@ -221,9 +221,12 @@ def upload():
 @requires_auth
 def download_file(filename):
     """Download a file"""
-    return send_from_directory(UPLOAD_DIR,
-                               filename,
-                               as_attachment=True)
+    try:
+        return send_from_directory(UPLOAD_DIR,
+                                   filename,
+                                   as_attachment=True)
+    except PermissionError:
+        abort(403)
 
 
 @app.route('/getrepo', methods=["POST"])
