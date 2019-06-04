@@ -44,13 +44,13 @@ class ReverseShell(threading.Thread):
 
     def set_lsock(self, sock):
         if self.lsock:
-            self.unset_lsock()
+            self.kill()
         self.lsock = sock
         self.read_socks = [self.rsock, self.lsock, self.signal_pipe[0]]
         self.queue[self.lsock] = []
         self.deliver_backlog()
 
-    def unset_lsock(self):
+    def kill(self):
         self.queue.pop(self.lsock)
         self.read_socks.remove(self.lsock)
         if self.lsock in self.write_socks:
@@ -164,7 +164,7 @@ class ReverseShell(threading.Thread):
                     try:
                         if not self.read_shell_packet(s):
                             if s == self.lsock:
-                                self.unset_lsock()
+                                self.kill()
                                 break
                             elif s == self.rsock:
                                 log.info("Connection to reverse shell lost")
@@ -172,7 +172,7 @@ class ReverseShell(threading.Thread):
                                 self.active = False
                                 break
                     except ConnectionResetError:
-                        self.unset_lsock()
+                        self.kill()
                         break
                     except Exception:
                         log.exception(
@@ -293,6 +293,10 @@ class ShellReceiver(object):
         while True:
             connection, addr = self.rsock.accept()
             rs = ReverseShell(connection)
+            stale_shells = [s for s in self.shells
+                            if s.details["id"] == rs.details["id"]]
+            for s in stale_shells:
+                s.kill()
             self.shells.append(rs)
             rs.start()
 
