@@ -166,6 +166,8 @@ while True:
 
     try:
         command = input(prompt)
+        if command:
+            send_command(command)
     except KeyboardInterrupt:
         got_decision = False
         while not got_decision:
@@ -185,5 +187,3 @@ while True:
                 exit(0)
             else:
                 print("What do you mean? Please enter e, s or k.")
-    if command:
-        send_command(command)
