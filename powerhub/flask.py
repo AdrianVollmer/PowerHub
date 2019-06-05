@@ -1,6 +1,13 @@
+from base64 import b64encode
+from datetime import datetime
+import os
+import shutil
+from tempfile import TemporaryDirectory
+
 from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash, make_response, abort
 from werkzeug.serving import WSGIRequestHandler, _log
+
 from powerhub.clipboard import clipboard as cb
 from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, webdav_url
@@ -12,10 +19,6 @@ from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
 from powerhub.receiver import ShellReceiver
 from powerhub.args import args
-
-from datetime import datetime
-from base64 import b64encode
-import os
 
 
 app = Flask(__name__)
@@ -227,6 +230,19 @@ def download_file(filename):
                                    as_attachment=True)
     except PermissionError:
         abort(403)
+
+
+@app.route('/d-all')
+@requires_auth
+def download_all():
+    """Download archive of all uploaded files"""
+    tmp_dir = TemporaryDirectory()
+    file_name = "powerhub_upload_export_" + \
+                datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    shutil.make_archive(os.path.join(tmp_dir.name, file_name), "zip", UPLOAD_DIR)
+    return send_from_directory(tmp_dir.name,
+                               file_name + ".zip",
+                               as_attachment=True)
 
 
 @app.route('/getrepo', methods=["POST"])
