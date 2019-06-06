@@ -212,12 +212,16 @@ def dlcradle():
 def upload():
     """Upload one or more files"""
     file_list = request.files.getlist("file[]")
+    noredirect = "noredirect" in request.args
     for file in file_list:
         if file.filename == '':
             return redirect(request.url)
         if file:
             save_file(file)
-    return redirect('/fileexchange')
+    if noredirect:
+        return ""
+    else:
+        return redirect('/fileexchange')
 
 
 @app.route('/d/<path:filename>')
