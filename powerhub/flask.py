@@ -243,7 +243,9 @@ def download_all():
     tmp_dir = TemporaryDirectory()
     file_name = "powerhub_upload_export_" + \
                 datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    shutil.make_archive(os.path.join(tmp_dir.name, file_name), "zip", UPLOAD_DIR)
+    shutil.make_archive(os.path.join(tmp_dir.name, file_name),
+                        "zip",
+                        UPLOAD_DIR)
     return send_from_directory(tmp_dir.name,
                                file_name + ".zip",
                                as_attachment=True)
