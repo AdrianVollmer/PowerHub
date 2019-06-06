@@ -15,24 +15,23 @@
         </a>
     </sup>
 </h2>
-<div class="row">
-<form action="u" method="POST" enctype="multipart/form-data"
-    class="col-sm-auto">
-  <div class="form-group">
-    <label class="btn btn-default btn-file">
-        <input value="file"
-               name="file[]"
-               type="file"
-               multiple="multiple"
-               class="form-control-file"
-               id="exampleFormControlFile1">
-    </label>
-    <input type=submit value=Upload class="submitButton btn btn-primary btn-sm">
+<div class="row mb-4">
+  <form action="u" method="POST" enctype="multipart/form-data"
+        class="col-sm-auto form-inline">
+    <div class="form-group">
+      <input value="file"
+             name="file[]"
+             type="file"
+             multiple="multiple"
+             class="form-control-file btn btn-default btn-file btn-sm" />
+    </div>
+    <div class="form-group">
+      <input type=submit value=Upload class="submitButton btn btn-primary btn-sm" />
+    </div>
+  </form>
+  <div class="col-sm text-right">
+      <a href="/d-all" class="btn btn-secondary btn-sm flush-right"><span class="align-baseline" data-feather="download"></span> Download all</a>
   </div>
-</form>
-<div class="col-sm text-right">
-    <a href="/d-all" class="btn btn-secondary btn-sm flush-right"><span class="align-baseline" data-feather="download"></span> Download all</a>
-</div>
 </div>
 </p>
 <div class="container">
