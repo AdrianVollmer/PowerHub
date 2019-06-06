@@ -50,13 +50,19 @@ class ReverseShell(threading.Thread):
         self.queue[self.lsock] = []
         self.deliver_backlog()
 
+    def is_stale(self):
+        now = dt.now()
+        return (now-self.t_sign_of_life).total_seconds() > 30
+
     def kill(self):
+        self.active = False
         self.queue.pop(self.lsock)
         self.read_socks.remove(self.lsock)
         if self.lsock in self.write_socks:
             self.write_socks.remove(self.lsock)
         try:
             self.lsock.close()
+            self.rsock.close()
         except Exception:
             log.exception("Exception while closing connection")
         self.lsock = None
@@ -168,8 +174,7 @@ class ReverseShell(threading.Thread):
                                 break
                             elif s == self.rsock:
                                 log.info("Connection to reverse shell lost")
-                                self.rsock.close()
-                                self.active = False
+                                self.kill()
                                 break
                     except ConnectionResetError:
                         self.kill()
