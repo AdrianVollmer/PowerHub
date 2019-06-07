@@ -1,6 +1,10 @@
 <div>
 <table class='table table-sm'>
   <tbody>
+    <tr style="vertical-align: top;">
+      <th scope='row'>Last seen:</th>
+      <td style="padding-left: 15pt;">{{ s.last_seen() }}</td>
+    </tr>
 {% for key, val in s.details.items() %}
     <tr style="vertical-align: top;">
       <th scope='row'>{{key}}</th>

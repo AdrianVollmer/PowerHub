@@ -24,7 +24,7 @@ No shells received yet.
 {% else %}
 <div id="accordion">
     {% for s in shells %}
-  <div class="card">
+  <div class="card{% if s.is_stale() %} faded{% endif %}">
     <div class="card-header" id="heading-{{s["details"].id}}">
       <h5 class="mb-0">
         <a id="shell-header-{{s["details"].id}}"
@@ -55,7 +55,7 @@ No shells received yet.
           <button type="button"
                   id="shell-kill-{{s["details"].id}}"
                   class="btn btn-danger">Kill Shell</button>
-        </div>
+        </div>{% if s.is_stale() %} (stale){% endif %}
       </h5>
     </div>
     <div id="collapse-{{s["details"].id}}"
