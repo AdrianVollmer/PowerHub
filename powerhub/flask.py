@@ -63,7 +63,7 @@ def receiver():
                              need_proxy=need_proxy,
                              need_tlsv12=need_tlsv12),
         "SSL": args.SSL_KEY is not None,
-        "shells": shell_receiver.shells,
+        "shells": shell_receiver.active_shells(),
     }
     return render_template("receiver.html", **context)
 
@@ -302,9 +302,9 @@ def shell_log():
         content = request.args['content']
     else:
         content = 'html'
-    shell = [s for s in shell_receiver.shells if s.details['id'] == shell_id]
+    shell = shell_receiver.get_shell_by_id(shell_id)
     if len(shell) == 1:
-        log = shell[0].get_log()
+        log = shell.get_log()
         context = {
             'log': log,
             'content': content,
@@ -326,6 +326,6 @@ def shell_log():
 @app.route('/kill-shell', methods=["POST"])
 def shell_kill():
     shell_id = request.form.get("shellid")
-    shell = [s for s in shell_receiver.shells if s.details['id'] == shell_id]
-    shell[0].kill()
+    shell = shell_receiver.get_shell_by_id(shell_id)
+    shell.kill()
     return ""
