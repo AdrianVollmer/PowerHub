@@ -54,6 +54,9 @@ class ReverseShell(threading.Thread):
         now = dt.now()
         return (now-self.t_sign_of_life).total_seconds() > 30
 
+    def last_seen(self):
+        return str(self.t_sign_of_life)
+
     def kill(self):
         self.active = False
         self.queue.pop(self.lsock)
