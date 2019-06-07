@@ -103,7 +103,10 @@ class ReverseShell(threading.Thread):
         while len(body) < packet_length:
             body += s.recv(packet_length-len(body))
         p = ShellPacket(packet_type, body)
-        self.log.append(p)
+        if p['msg_type'] == "PONG":
+            log.debug("%s - Pong" % (self.details["id"]))
+        else:
+            self.log.append(p)
         if s == self.rsock:
             sender = "reverse shell"
             self.t_sign_of_life = dt.now()
@@ -133,11 +136,7 @@ class ReverseShell(threading.Thread):
         """Delivers packets which haven't been delivered yet to local
         socket"""
 
-        backlog = [x for x in self.log if
-                   not x.delivered
-                   and not x["msg_type"] == "HEARTBEAT"]
-        # heartbeats don't need to be delivered to local socket, they are
-        # only for updating t_sign_of_life
+        backlog = [x for x in self.log if not x.delivered]
         if backlog:
             for p in backlog:
                 self.deliver(p, self.lsock)
@@ -160,6 +159,13 @@ class ReverseShell(threading.Thread):
                 if p["msg_type"] in ["COMMAND"]:
                     result += "\n"
         return result
+
+    def ping(self, s):
+        now = dt.now()
+        if (now-self.t_sign_of_life).total_seconds() > 10:
+            log.debug("%s - Ping" % (self.details["id"]))
+            p = ShellPacket(T_DICT, {"msg_type": "PING", "data": ""})
+            self.write_shell_packet(p, s)
 
     def run(self):
         while self.active:
@@ -187,17 +193,20 @@ class ReverseShell(threading.Thread):
                             "Exception caught while reading shell packets"
                         )
                         break
-            for s in w:
-                try:
+            try:
+                if not w:
+                    if not self.queue[s]:
+                        self.ping(s)
+                for s in w:
                     for p in self.queue[s]:
                         self.write_shell_packet(p, s)
-                    self.queue[s] = []
+                        self.queue.remove(p)
                     self.write_socks.remove(s)
-                except Exception:
-                    log.exception(
-                        "Exception caught while writing shell packets"
-                    )
-                    break
+            except Exception:
+                log.exception(
+                    "Exception caught while writing shell packets"
+                )
+                break
 
 
 class ShellPacket(object):
