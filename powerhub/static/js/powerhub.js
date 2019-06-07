@@ -26,7 +26,6 @@ $('[data-toggle="popover"]').popover(
          content: function () {
              var id = $(this).attr('data-shellid');
              var result = $('#popover-content-' + id + " table").html();
-             console.log(result);
              return result;
          }
     }
@@ -46,6 +45,15 @@ $("#shell-log-modal").on("show.bs.modal", function(e) {
     var link = $(e.relatedTarget).attr("href");
     $(this).find(".modal-body").load(link);
     $(this).find(".modal-footer a").attr("href", link+"&content=raw");
+});
+
+$('.kill-shell').click(function(){
+    var id = $(this).closest('.card').find('.shell-tooltip').attr('data-shellid');
+    $.post({
+        url: "kill-shell",
+        data: {"shellid": id},
+        success: function() { location.reload(); },
+    });
 });
 
 feather.replace();

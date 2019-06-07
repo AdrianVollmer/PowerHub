@@ -42,9 +42,21 @@ class ReverseShell(threading.Thread):
                     self.details["id"],
                     ))
 
+    def unset_lsock(self):
+        if not self.lsock:
+            return None
+        self.queue.pop(self.lsock)
+        self.read_socks.remove(self.lsock)
+        if self.lsock in self.write_socks:
+            self.write_socks.remove(self.lsock)
+        self.lsock.close()
+        self.lsock = None
+        log.debug("%s - Connection to local shell closed" %
+                  (self.details["id"]))
+
     def set_lsock(self, sock):
         if self.lsock:
-            self.kill()
+            self.unset_lsock()
         self.lsock = sock
         self.read_socks = [self.rsock, self.lsock, self.signal_pipe[0]]
         self.queue[self.lsock] = []
@@ -58,19 +70,9 @@ class ReverseShell(threading.Thread):
         return str(self.t_sign_of_life)
 
     def kill(self):
-        self.active = False
-        self.queue.pop(self.lsock)
-        self.read_socks.remove(self.lsock)
-        if self.lsock in self.write_socks:
-            self.write_socks.remove(self.lsock)
-        try:
-            self.lsock.close()
-            self.rsock.close()
-        except Exception:
-            log.exception("Exception while closing connection")
-        self.lsock = None
-        log.debug("%s - Connection to local shell closed" %
-                  (self.details["id"]))
+        log.info("%s - Killing shell" % (self.details["id"]))
+        p = ShellPacket(T_DICT, {"msg_type": "KILL", "data": ""})
+        self.write_shell_packet(p, self.rsock)
 
     def get_shell_hello(self):
         r, _, _ = select.select([self.rsock], [], [])
@@ -105,6 +107,11 @@ class ReverseShell(threading.Thread):
         p = ShellPacket(packet_type, body)
         if p['msg_type'] == "PONG":
             log.debug("%s - Pong" % (self.details["id"]))
+        elif p['msg_type'] == "KILL" and p['data'] == "confirm":
+            log.info("%s - Shell has died" % (self.details["id"]))
+            self.active = False
+            self.unset_lsock()
+            return p
         else:
             self.log.append(p)
         if s == self.rsock:
@@ -179,15 +186,14 @@ class ReverseShell(threading.Thread):
                     try:
                         if not self.read_shell_packet(s):
                             if s == self.lsock:
-                                self.kill()
+                                self.unset_lsock
                                 break
                             elif s == self.rsock:
                                 log.info("Connection to reverse shell lost")
-                                self.kill()
+                                self.unset_lsock()
                                 break
                     except ConnectionResetError:
-                        self.kill()
-                        break
+                        return None
                     except Exception:
                         log.exception(
                             "Exception caught while reading shell packets"
@@ -313,7 +319,7 @@ class ShellReceiver(object):
             stale_shells = [s for s in self.shells
                             if s.details["id"] == rs.details["id"]]
             for s in stale_shells:
-                s.kill()
+                s.unset_lsock()
             self.shells.append(rs)
             rs.start()
 

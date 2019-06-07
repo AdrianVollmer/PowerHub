@@ -321,3 +321,11 @@ def shell_log():
     else:
         flash("Shell not found: %s" % shell_id, "danger")
         return render_template("messages.html")
+
+
+@app.route('/kill-shell', methods=["POST"])
+def shell_kill():
+    shell_id = request.form.get("shellid")
+    shell = [s for s in shell_receiver.shells if s.details['id'] == shell_id]
+    shell[0].kill()
+    return ""
