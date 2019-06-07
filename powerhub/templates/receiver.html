@@ -55,6 +55,9 @@ No shells received yet.
           <button type="button"
                   id="shell-kill-{{s["details"].id}}"
                   class="btn btn-danger kill-shell">Kill Shell</button>
+          <button type="button"
+                  id="shell-forget-{{s["details"].id}}"
+                  class="btn btn-secondary kill-shell">Forget</button>
         </div>{% if s.is_stale() %} (stale){% endif %}
       </h5>
     </div>
