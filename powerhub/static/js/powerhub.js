@@ -56,4 +56,11 @@ $('.kill-shell').click(function(){
     });
 });
 
+$('#kill-all').click(function(){
+    $.post({
+        url: "kill-all",
+        success: function() { location.reload(); },
+    });
+});
+
 feather.replace();

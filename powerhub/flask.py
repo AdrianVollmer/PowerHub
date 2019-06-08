@@ -329,3 +329,10 @@ def shell_kill():
     shell = shell_receiver.get_shell_by_id(shell_id)
     shell.kill()
     return ""
+
+
+@app.route('/kill-all', methods=["POST"])
+def shell_kill_all():
+    for shell in shell_receiver.active_shells():
+        shell.kill()
+    return ""
