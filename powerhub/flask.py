@@ -40,9 +40,8 @@ def run_flask_app():
     app.run(
         debug=args.DEBUG,
         use_reloader=False,
-        port=args.LPORT,
-        host=args.LHOST,
-        ssl_context=ssl_context,
+        port=args.FLASK_PORT,
+        host='127.0.0.1',
         request_handler=MyRequestHandler,
     )
 
