@@ -56,6 +56,15 @@ $('.kill-shell').click(function(){
     });
 });
 
+$('.forget-shell').click(function(){
+    var id = $(this).closest('.card').find('.shell-tooltip').attr('data-shellid');
+    $.post({
+        url: "forget-shell",
+        data: {"shellid": id},
+        success: function() { location.reload(); },
+    });
+});
+
 $('#kill-all').click(function(){
     $.post({
         url: "kill-all",

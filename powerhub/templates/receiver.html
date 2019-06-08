@@ -62,10 +62,10 @@ No shells received yet.
                   id="shell-forget-{{s["details"].id}}"
                   data-toggle="popover" data-trigger="hover" data-placement="top"
                   data-content="Forget about the shell in case you can't
-                  kill it for some reason, maybe because it went stale. You
-                  won't be able to interact with it afterwards until it
-                  connects back."
-                  class="btn btn-secondary kill-shell">Forget</button>
+                  kill it for some reason, maybe because it went stale. It
+                  will not be killed, but you also won't be able to interact
+                  with it afterwards until it connects back."
+                  class="btn btn-secondary forget-shell">Forget</button>
         </div>{% if s.is_stale() %} (stale){% endif %}
       </h5>
     </div>

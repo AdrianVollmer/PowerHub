@@ -331,6 +331,13 @@ def shell_kill():
     return ""
 
 
+@app.route('/forget-shell', methods=["POST"])
+def shell_forget():
+    shell_id = request.form.get("shellid")
+    shell_receiver.forget_shell(shell_id)
+    return ""
+
+
 @app.route('/kill-all', methods=["POST"])
 def shell_kill_all():
     for shell in shell_receiver.active_shells():

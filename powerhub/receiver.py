@@ -350,3 +350,7 @@ class ShellReceiver(object):
 
     def active_shells(self):
         return [s for s in self.shells if s.active]
+
+    def forget_shell(self, shell_id):
+        shell = self.get_shell_by_id(shell_id)
+        self.shells.remove(shell)
