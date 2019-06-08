@@ -22,8 +22,9 @@
 {% if shells|length == 0 %}
 No shells received yet.
 {% else %}
-<div id="accordion">
-    {% for s in shells %}{% if s.active %}
+<div id="accordion" class='row'>
+    {% for s in shells %}
+    <div class='col'>
   <div class="card{% if s.is_stale() %} faded{% endif %}">
     <div class="card-header" id="heading-{{s["details"].id}}">
       <h5 class="mb-0">
@@ -54,7 +55,17 @@ No shells received yet.
                   class="btn btn-primary">View Log</button>
           <button type="button"
                   id="shell-kill-{{s["details"].id}}"
+                  data-toggle="popover" data-trigger="hover" data-placement="top"
+                  data-content="Kill the remote process"
                   class="btn btn-danger kill-shell">Kill Shell</button>
+          <button type="button"
+                  id="shell-forget-{{s["details"].id}}"
+                  data-toggle="popover" data-trigger="hover" data-placement="top"
+                  data-content="Forget about the shell in case you can't
+                  kill it for some reason, maybe because it went stale. It
+                  will not be killed, but you also won't be able to interact
+                  with it afterwards until it connects back."
+                  class="btn btn-secondary forget-shell">Forget</button>
         </div>{% if s.is_stale() %} (stale){% endif %}
       </h5>
     </div>
@@ -67,7 +78,8 @@ No shells received yet.
       </div>
     </div>
   </div>
-  {% endif %}{% endfor %}
+  </div>
+  {% endfor %}
 <div class="modal fade"
      id="shell-log-modal"
      tabindex="-1"
@@ -90,6 +102,15 @@ No shells received yet.
         </div>
       </div>
     </div>
+  </div>
+</div>
+</br>
+<div class="row">
+  <div class="col text-right">
+      <button type="button" id="kill-all" class="btn btn-danger"
+              data-toggle="popover" data-trigger="hover" data-placement="top"
+              data-content="Kill all shells"
+      >Kill All</button>
   </div>
 </div>
 {% endif %}
