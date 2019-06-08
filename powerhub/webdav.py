@@ -10,7 +10,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 config = {
-    "host": args.LHOST,
+    "host": '127.0.0.1',
     "port": args.WEBDAV_PORT,
     "dir_browser": {"enable": True},
     "http_authenticator": {

@@ -2,3 +2,4 @@ Flask
 cheroot
 wsgidav>=3.0.0
 watchdog
+twisted>=18.9.0
