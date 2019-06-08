@@ -58,9 +58,14 @@ No shells received yet.
                   class="btn btn-primary">View Log</button>
           <button type="button"
                   id="shell-kill-{{s["details"].id}}"
+                  data-toggle="popover" data-trigger="hover" data-placement="top"
+                  data-content="Kill the remote process"
                   class="btn btn-danger kill-shell">Kill Shell</button>
           <button type="button"
                   id="shell-forget-{{s["details"].id}}"
+                  data-toggle="popover" data-trigger="hover" data-placement="top"
+                  data-content="Forget about the shell in case you can't
+                  kill it for some reason"
                   class="btn btn-secondary kill-shell">Forget</button>
         </div>{% if s.is_stale() %} (stale){% endif %}
       </h5>
