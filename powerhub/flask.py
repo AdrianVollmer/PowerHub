@@ -303,24 +303,20 @@ def shell_log():
     else:
         content = 'html'
     shell = shell_receiver.get_shell_by_id(shell_id)
-    if len(shell) == 1:
-        log = shell.get_log()
-        context = {
-            'log': log,
-            'content': content,
-        }
-        if content == 'html':
-            return render_template("shell-log.html", **context)
-        elif content == 'raw':
-            response = make_response(render_template("shell-log.html",
-                                     **context))
-            response.headers['Content-Disposition'] = \
-                'attachment; filename=' + shell_id + ".log"
-            response.headers['content-type'] = 'text/plain; charset=utf-8'
-            return response
-    else:
-        flash("Shell not found: %s" % shell_id, "danger")
-        return render_template("messages.html")
+    log = shell.get_log()
+    context = {
+        'log': log,
+        'content': content,
+    }
+    if content == 'html':
+        return render_template("shell-log.html", **context)
+    elif content == 'raw':
+        response = make_response(render_template("shell-log.html",
+                                 **context))
+        response.headers['Content-Disposition'] = \
+            'attachment; filename=' + shell_id + ".log"
+        response.headers['content-type'] = 'text/plain; charset=utf-8'
+        return response
 
 
 @app.route('/kill-shell', methods=["POST"])
