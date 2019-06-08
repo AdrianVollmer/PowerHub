@@ -300,10 +300,11 @@ class ShellPacket(object):
 
 
 class ShellReceiver(object):
-    def __init__(self):
+    def __init__(self, push_notification=None):
         self.rsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.rsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.shells = []
+        self.push_notification = push_notification
 
         self.lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.lsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -322,6 +323,10 @@ class ShellReceiver(object):
                 s.unset_lsock()
             self.shells.append(rs)
             rs.start()
+            if self.push_notification:
+                self.push_notification('info',
+                                       'Reverse shell caught from %s:%d' % addr
+                                       )
 
     def run_provider(self, host='127.0.0.1', port=18157):
         """Provides a service where you can interact with caught shells"""
