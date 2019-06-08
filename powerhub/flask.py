@@ -43,6 +43,17 @@ class MyRequestHandler(WSGIRequestHandler):
         _log(type, '%s %s\n' % (self.address_string(), message % args))
 
 
+def run_flask_app():
+    app.run(
+        debug=args.DEBUG,
+        use_reloader=False,
+        port=args.LPORT,
+        host=args.LHOST,
+        ssl_context=ssl_context,
+        request_handler=MyRequestHandler,
+    )
+
+
 @app.route('/')
 @requires_auth
 def index():
