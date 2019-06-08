@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import powerhub.flask
+import powerhub.reverseproxy
 from powerhub.args import args
 try:
     from powerhub.webdav import run_webdav
@@ -19,21 +20,22 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
+
+def start_thread(f, *args):
+    threading.Thread(
+        target=f,
+        args=(*args,),
+        daemon=True,
+    ).start()
+
+
 if __name__ == "__main__":
     try:
-        threading.Thread(
-            target=run_webdav,
-            daemon=True,
-        ).start()
+        start_thread(run_webdav)
     except NameError:
         pass
-    threading.Thread(
-        target=powerhub.flask.shell_receiver.run_receiver,
-        args=(args.REC_HOST, args.REC_PORT,),
-        daemon=True,
-    ).start()
-    threading.Thread(
-        target=powerhub.flask.shell_receiver.run_provider,
-        daemon=True,
-    ).start()
-    powerhub.flask.run_flask_app()
+    start_thread(powerhub.flask.shell_receiver.run_receiver,
+                 args.REC_HOST, args.REC_PORT)
+    start_thread(powerhub.flask.shell_receiver.run_provider)
+    start_thread(powerhub.flask.run_flask_app)
+    powerhub.reverseproxy.reactor.run()

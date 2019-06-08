@@ -7,19 +7,39 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     '-p',
     '--lport',
-    default=8000,
+    default=8080,
     dest="LPORT",
     type=int,
-    help="the local port to listen on (default: 8000)"
+    help="the local HTTP port to listen on (default: %(default)s)"
 )
+
+parser.add_argument(
+    '-sp',
+    '--ssl-port',
+    default=8443,
+    dest="SSL_PORT",
+    type=int,
+    help="the local HTTPS port to listen on (default: %(default)s)"
+)
+
+parser.add_argument(
+    '-fp',
+    '--flask-port',
+    default=5000,
+    dest="FLASK_PORT",
+    type=int,
+    help="the local port to listen on for the Flask app (default: %(default)s)"
+)
+
 
 parser.add_argument(
     '-wp',
     '--webdav-port',
-    default=8001,
+    default=5001,
     dest="WEBDAV_PORT",
     type=int,
-    help="the local port to listen on for the webdav server (default: 8001)"
+    help="the local port to listen on for the webdav server "
+         "(default: %(default)s)"
 )
 
 
@@ -59,7 +79,8 @@ parser.add_argument(
     '-l', '--lhost', default='0.0.0.0',
     dest="LHOST",
     type=str,
-    help="the local bind address to listen on (default: '0.0.0.0')"
+    help="the local bind address to listen on for the HTTP and HTTPS "
+         "services (default: %(default)s)"
 )
 
 parser.add_argument(

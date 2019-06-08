@@ -19,7 +19,7 @@ from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
 from powerhub.receiver import ShellReceiver
-from powerhub.args import args, ssl_context
+from powerhub.args import args
 
 
 app = Flask(__name__)
@@ -47,9 +47,8 @@ def run_flask_app():
     app.run(
         debug=args.DEBUG,
         use_reloader=False,
-        port=args.LPORT,
-        host=args.LHOST,
-        ssl_context=ssl_context,
+        port=args.FLASK_PORT,
+        host='127.0.0.1',
         request_handler=MyRequestHandler,
     )
 
@@ -357,8 +356,3 @@ def shell_kill_all():
     for shell in shell_receiver.active_shells():
         shell.kill()
     return ""
-
-
-@socketio.on('connect', namespace='/push-notifications')
-def subscribe():
-    pass
