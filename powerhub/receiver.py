@@ -114,8 +114,7 @@ class ReverseShell(threading.Thread):
             self.active = False
             self.unset_lsock()
             return p
-        elif p['msg_type'] in ['COMMAND', 'OUTPUT', 'PROMPT']:
-            self.append_to_log(p)
+        self.append_to_log(p)
         if s == self.rsock:
             sender = "reverse shell"
             self.t_sign_of_life = dt.now()
@@ -136,13 +135,14 @@ class ReverseShell(threading.Thread):
     def append_to_log(self, p):
         """Append the packet to log and write to file"""
         self.log.append(p)
-        timestamp = str(self.created).replace(" ", "_")
-        filename = "shell_%s_%s.txt" % (timestamp, self.details["id"])
-        filename = os.path.join(XDG_DATA_HOME, filename)
-        with open(filename, 'a+') as f:
-            f.write(p.shell_string(colors=False))
-            if p["msg_type"] == "COMMAND":
-                f.write("\n")
+        if p.is_printable():
+            timestamp = str(self.created).replace(" ", "_")
+            filename = "shell_%s_%s.txt" % (timestamp, self.details["id"])
+            filename = os.path.join(XDG_DATA_HOME, filename)
+            with open(filename, 'a+') as f:
+                f.write(p.shell_string(colors=False))
+                if p["msg_type"] == "COMMAND":
+                    f.write("\n")
 
     def deliver(self, packet, sock):
         """Puts a packet in the queue belonging to the socket it should be
@@ -170,11 +170,7 @@ class ReverseShell(threading.Thread):
 
         result = ""
         for p in self.log:
-            if p["msg_type"] in [
-                "COMMAND",
-                "PROMPT",
-                "OUTPUT",
-            ] or (p["msg_type"].startswith("STREAM_") and p["data"]):
+            if p.is_printable():
                 result += p.shell_string(colors=False)
                 if p["msg_type"] in ["COMMAND"]:
                     result += "\n"
@@ -199,7 +195,7 @@ class ReverseShell(threading.Thread):
                     try:
                         if not self.read_shell_packet(s):
                             if s == self.lsock:
-                                self.unset_lsock
+                                self.unset_lsock()
                                 break
                             elif s == self.rsock:
                                 log.info("Connection to reverse shell lost")
@@ -218,7 +214,7 @@ class ReverseShell(threading.Thread):
                 for s in w:
                     for p in self.queue[s]:
                         self.write_shell_packet(p, s)
-                        self.queue[s].remove(p)
+                    self.queue[s] = []
                     self.write_socks.remove(s)
             except Exception:
                 log.exception(
@@ -309,6 +305,13 @@ class ShellPacket(object):
             return result
         else:
             return ""
+
+    def is_printable(self):
+        return self["msg_type"] in [
+            "COMMAND",
+            "PROMPT",
+            "OUTPUT",
+        ] or (self["msg_type"].startswith("STREAM_") and self["data"])
 
 
 class ShellReceiver(object):
