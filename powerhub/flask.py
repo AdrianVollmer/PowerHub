@@ -3,18 +3,23 @@ from datetime import datetime
 import os
 import shutil
 from tempfile import TemporaryDirectory
-import logging
 
 from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash, make_response, abort
+try:
+    from xflask_sqlalchemy import SQLAlchemy
+except ImportError:
+    print("You have unmet dependencies. The clipboard "
+          "won't be persistent. Consult the README.")
+
 from werkzeug.serving import WSGIRequestHandler, _log
 from flask_socketio import SocketIO  # , emit
 
-from powerhub.clipboard import clipboard as cb
+from powerhub.clipboard import init_clipboard
 from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
-from powerhub.directories import UPLOAD_DIR, BASE_DIR
+from powerhub.directories import UPLOAD_DIR, BASE_DIR, XDG_DATA_HOME
 from powerhub.tools import encrypt, compress, key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
@@ -22,12 +27,23 @@ from powerhub.obfuscation import symbol_name
 from powerhub.receiver import ShellReceiver
 from powerhub.args import args
 
+import logging
+log = logging.getLogger(__name__)
+
+_db_filename = os.path.join(XDG_DATA_HOME, "powerhub_db.sqlite")
 
 app = Flask(__name__)
 app.config.update(
     DEBUG=args.DEBUG,
     SECRET_KEY=os.urandom(16),
+    SQLALCHEMY_DATABASE_URI='sqlite:///' + _db_filename,
 )
+try:
+    db = SQLAlchemy(app)
+except NameError:
+    db = None
+cb = init_clipboard(db=db)
+
 socketio = SocketIO(
     app,
     async_mode="threading",
@@ -35,7 +51,6 @@ socketio = SocketIO(
 
 logging.getLogger('socketio').setLevel(logging.ERROR)
 logging.getLogger('engineio').setLevel(logging.ERROR)
-log = logging.getLogger(__name__)
 
 
 def push_notification(type, msg, title, subtitle=""):
