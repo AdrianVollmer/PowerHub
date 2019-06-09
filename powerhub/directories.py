@@ -8,6 +8,9 @@ WEBDAV_RO = os.path.join(WEBDAV_DIR, 'ro')
 WEBDAV_BLACKHOLE = os.path.join(WEBDAV_DIR, 'blackhole')
 WEBDAV_PUBLIC = os.path.join(WEBDAV_DIR, 'public')
 BLACKHOLE_DIR = os.path.join(BASE_DIR, 'blackhole')
+_HOME = os.path.expanduser('~')
+XDG_DATA_HOME = os.environ.get('XDG_DATA_HOME') or \
+            os.path.join(_HOME, '.local', 'share', 'powerhub')
 
 
 def ensure_dir_exists(dirname):
@@ -20,6 +23,7 @@ def ensure_dir_exists(dirname):
 
 directories = [
     UPLOAD_DIR,
+    XDG_DATA_HOME,
     WEBDAV_DIR,
     MOD_DIR,
     BLACKHOLE_DIR,

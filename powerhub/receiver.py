@@ -5,6 +5,7 @@ import socket
 import struct
 import threading
 from datetime import datetime as dt
+from powerhub.directories import XDG_DATA_HOME
 
 import logging
 log = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ class ReverseShell(threading.Thread):
         self.key = key
         self.log = []
         self.get_shell_hello()
+        self.created = dt.now()
         host, port = sock.getpeername()
         self.details["peer_host"] = host
         self.details["peer_port"] = port
@@ -112,8 +114,8 @@ class ReverseShell(threading.Thread):
             self.active = False
             self.unset_lsock()
             return p
-        else:
-            self.log.append(p)
+        elif p['msg_type'] in ['COMMAND', 'OUTPUT', 'PROMPT']:
+            self.append_to_log(p)
         if s == self.rsock:
             sender = "reverse shell"
             self.t_sign_of_life = dt.now()
@@ -130,6 +132,17 @@ class ReverseShell(threading.Thread):
                     p
                     ))
         return p
+
+    def append_to_log(self, p):
+        """Append the packet to log and write to file"""
+        self.log.append(p)
+        timestamp = str(self.created).replace(" ", "_")
+        filename = "shell_%s_%s.txt" % (timestamp, self.details["id"])
+        filename = os.path.join(XDG_DATA_HOME, filename)
+        with open(filename, 'a+') as f:
+            f.write(p.shell_string(colors=False))
+            if p["msg_type"] == "COMMAND":
+                f.write("\n")
 
     def deliver(self, packet, sock):
         """Puts a packet in the queue belonging to the socket it should be
@@ -200,13 +213,12 @@ class ReverseShell(threading.Thread):
                         )
                         break
             try:
-                if not w:
+                for s in w:
                     if not self.queue[s]:
                         self.ping(s)
-                for s in w:
                     for p in self.queue[s]:
                         self.write_shell_packet(p, s)
-                        self.queue.remove(p)
+                        self.queue[s].remove(p)
                     self.write_socks.remove(s)
             except Exception:
                 log.exception(
