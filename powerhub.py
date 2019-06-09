@@ -27,10 +27,7 @@ log = logging.getLogger(__name__)
 
 def signal_handler(sig, frame):
     log.info("CTRL-C caught, exiting...")
-    try:
-        powerhub.reverseproxy.reactor.stop()
-    except Exception:
-        pass
+    powerhub.reverseproxy.reactor.stop()
 
 
 def start_thread(f, *args):
