@@ -10,15 +10,27 @@ except ImportError as e:
           "Consult the README.")
 import threading
 import sys
+import signal
 import logging
 
+
 FORMAT = '%(asctime)-15s %(message)s'
+
 logging.basicConfig(
     stream=sys.stdout,
     level=logging.DEBUG if args.DEBUG else logging.INFO,
     format=FORMAT,
     datefmt="%Y-%m-%d %H:%M:%S",
 )
+log = logging.getLogger(__name__)
+
+
+def signal_handler(sig, frame):
+    log.info("CTRL-C caught, exiting...")
+    try:
+        powerhub.reverseproxy.reactor.stop()
+    except Exception:
+        pass
 
 
 def start_thread(f, *args):
@@ -30,6 +42,7 @@ def start_thread(f, *args):
 
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler)
     try:
         start_thread(run_webdav)
     except NameError:
