@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash, make_response, abort
 try:
-    from xflask_sqlalchemy import SQLAlchemy
+    from flask_sqlalchemy import SQLAlchemy
 except ImportError:
     print("You have unmet dependencies. The clipboard "
           "won't be persistent. Consult the README.")
