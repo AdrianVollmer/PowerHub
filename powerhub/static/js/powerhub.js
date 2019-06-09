@@ -72,4 +72,19 @@ $('#kill-all').click(function(){
     });
 });
 
+var socket;
+$(document).ready(function(){
+    // start up the SocketIO connection to the server
+    socket = io.connect('//' + document.domain + ':' + location.port + '/push-notifications');
+    // this is a callback that triggers when the 'push' event is emitted by the server.
+    socket.on('push', function(msg) {
+        var toast = $('#toast-container div').eq(0).clone(true).appendTo('#toast-container');
+        toast.find('.toast-title').text(msg.title);
+        toast.find('.toast-subtitle').text(msg.subtitle);
+        toast.find('.toast-body').text(msg.msg);
+        $('#toast-container .toast').last().toast('show');
+        console.log(toast);
+    });
+});
+
 feather.replace();
