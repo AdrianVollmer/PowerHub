@@ -49,8 +49,8 @@ socketio = SocketIO(
     async_mode="threading",
 )
 
-logging.getLogger('socketio').setLevel(logging.ERROR)
-logging.getLogger('engineio').setLevel(logging.ERROR)
+need_proxy = True
+need_tlsv12 = (args.SSL_KEY is not None)
 
 
 def push_notification(type, msg, title, subtitle=""):
@@ -65,9 +65,6 @@ def push_notification(type, msg, title, subtitle=""):
 
 shell_receiver = ShellReceiver(push_notification=push_notification)
 
-need_proxy = True
-need_tlsv12 = (args.SSL_KEY is not None)
-
 
 class MyRequestHandler(WSGIRequestHandler):
     def log(self, type, message, *args):
@@ -76,18 +73,12 @@ class MyRequestHandler(WSGIRequestHandler):
 
 
 def run_flask_app():
-    #  app.run(
-    #      debug=args.DEBUG,
-    #      port=args.FLASK_PORT,
-    #      host='127.0.0.1',
-    #      use_reloader=False,
-    #      request_handler=MyRequestHandler,
-    #  )
     socketio.run(
         app,
         port=args.FLASK_PORT,
         host='127.0.0.1',
         use_reloader=False,
+        request_handler=MyRequestHandler,
     )
 
 
