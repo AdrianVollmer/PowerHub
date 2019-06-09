@@ -70,7 +70,7 @@ class ReverseShell(threading.Thread):
         return (now-self.t_sign_of_life).total_seconds() > 30
 
     def last_seen(self):
-        return str(self.t_sign_of_life)
+        return str(self.t_sign_of_life).split('.')[0]
 
     def kill(self):
         log.info("%s - Killing shell" % (self.details["id"]))
