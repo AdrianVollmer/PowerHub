@@ -213,9 +213,9 @@ class ReverseShell(threading.Thread):
                         )
                         break
             try:
+                if not w:
+                    self.ping(self.rsock)
                 for s in w:
-                    if not self.queue[s]:
-                        self.ping(s)
                     for p in self.queue[s]:
                         self.write_shell_packet(p, s)
                         self.queue[s].remove(p)
