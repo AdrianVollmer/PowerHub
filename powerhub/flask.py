@@ -3,11 +3,12 @@ from datetime import datetime
 import os
 import shutil
 from tempfile import TemporaryDirectory
+import logging
 
 from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash, make_response, abort
 from werkzeug.serving import WSGIRequestHandler, _log
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO  # , emit
 
 from powerhub.clipboard import clipboard as cb
 from powerhub.stager import modules, stager_str, callback_url, \
@@ -23,12 +24,28 @@ from powerhub.args import args
 
 
 app = Flask(__name__)
-app.secret_key = os.urandom(16)
-socketio = SocketIO(app)
+app.config.update(
+    DEBUG=args.DEBUG,
+    SECRET_KEY=os.urandom(16),
+)
+socketio = SocketIO(
+    app,
+    async_mode="threading",
+)
+
+logging.getLogger('socketio').setLevel(logging.ERROR)
+logging.getLogger('engineio').setLevel(logging.ERROR)
+log = logging.getLogger(__name__)
 
 
-def push_notification(type, msg):
-    socketio.emit('push', {'type': type, 'msg': msg})
+def push_notification(type, msg, title, subtitle=""):
+    socketio.emit('push',
+                  {
+                      'msg': msg,
+                      'title': title,
+                      'subtitle': subtitle,
+                  },
+                  namespace="/push-notifications")
 
 
 shell_receiver = ShellReceiver(push_notification=push_notification)
@@ -44,12 +61,18 @@ class MyRequestHandler(WSGIRequestHandler):
 
 
 def run_flask_app():
-    app.run(
-        debug=args.DEBUG,
-        use_reloader=False,
+    #  app.run(
+    #      debug=args.DEBUG,
+    #      port=args.FLASK_PORT,
+    #      host='127.0.0.1',
+    #      use_reloader=False,
+    #      request_handler=MyRequestHandler,
+    #  )
+    socketio.run(
+        app,
         port=args.FLASK_PORT,
         host='127.0.0.1',
-        request_handler=MyRequestHandler,
+        use_reloader=False,
     )
 
 
@@ -356,3 +379,8 @@ def shell_kill_all():
     for shell in shell_receiver.active_shells():
         shell.kill()
     return ""
+
+
+@socketio.on('connect', namespace="/push-notifications")
+def test_connect():
+    log.debug("Websockt client connected")
