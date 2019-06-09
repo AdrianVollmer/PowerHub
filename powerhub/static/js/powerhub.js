@@ -82,8 +82,11 @@ $(document).ready(function(){
         toast.find('.toast-title').text(msg.title);
         toast.find('.toast-subtitle').text(msg.subtitle);
         toast.find('.toast-body').text(msg.msg);
+        $('#toast-container .toast').last().on('hidden.bs.toast', function () {
+            // remove the toast from the dom tree after it faded out
+            $(this).remove();
+        });
         $('#toast-container .toast').last().toast('show');
-        console.log(toast);
     });
 });
 
