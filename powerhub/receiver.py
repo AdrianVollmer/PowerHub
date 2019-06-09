@@ -5,6 +5,7 @@ import socket
 import struct
 import threading
 from datetime import datetime as dt
+import email.utils as eut
 from powerhub.directories import XDG_DATA_HOME
 
 import logging
@@ -27,7 +28,7 @@ class ReverseShell(threading.Thread):
         self.key = key
         self.log = []
         self.get_shell_hello()
-        self.created = dt.now()
+        self.created = dt(*eut.parsedate(self.details["created"])[:6])
         host, port = sock.getpeername()
         self.details["peer_host"] = host
         self.details["peer_port"] = port
@@ -136,7 +137,8 @@ class ReverseShell(threading.Thread):
         """Append the packet to log and write to file"""
         self.log.append(p)
         if p.is_printable():
-            timestamp = str(self.created).replace(" ", "_")
+            timestamp = self.created
+            timestamp = str(timestamp).replace(" ", "_")
             filename = "shell_%s_%s.txt" % (timestamp, self.details["id"])
             filename = os.path.join(XDG_DATA_HOME, filename)
             with open(filename, 'a+') as f:

