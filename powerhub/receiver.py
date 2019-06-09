@@ -324,9 +324,11 @@ class ShellReceiver(object):
             self.shells.append(rs)
             rs.start()
             if self.push_notification:
-                self.push_notification('info',
-                                       'Reverse shell caught from %s:%d' % addr
-                                       )
+                self.push_notification(
+                    'info',
+                    'Reverse shell caught from %s:%d' % addr,
+                    'Receiver',
+                )
 
     def run_provider(self, host='127.0.0.1', port=18157):
         """Provides a service where you can interact with caught shells"""
