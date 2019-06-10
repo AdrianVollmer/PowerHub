@@ -178,6 +178,22 @@ def del_all_clipboard():
     return ""
 
 
+@app.route('/clipboard/export', methods=["GET"])
+@requires_auth
+def export_clipboard():
+    """Export all clipboard entries"""
+    result = ""
+    for e in list(cb.entries.values()):
+        headline = "%s (%s)\r\n" % (e.time, e.IP)
+        result += headline
+        result += "="*(len(headline)-2) + "\r\n"
+        result += e.content + "\r\n"*2
+    return Response(
+        result,
+        content_type='text/plain; charset=utf-8'
+    )
+
+
 @app.route('/m')
 def payload_m():
     """Load a single module"""
