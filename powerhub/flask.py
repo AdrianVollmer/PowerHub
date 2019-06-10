@@ -85,7 +85,7 @@ def run_flask_app():
 @app.route('/')
 @requires_auth
 def index():
-    return redirect('/hub')
+    return redirect('//%s:%s/hub' % (args.URI_HOST, args.URI_PORT))
 
 
 @app.route('/hub')
@@ -157,7 +157,7 @@ def add_clipboard():
         str(datetime.utcnow()).split('.')[0],
         request.remote_addr
     )
-    return redirect('/clipboard')
+    return redirect('//%s:%s/clipboard' % (args.URI_HOST, args.URI_PORT))
 
 
 @app.route('/clipboard/delete', methods=["POST"])
@@ -166,7 +166,7 @@ def del_clipboard():
     """Delete a clipboard entry"""
     n = int(request.form.get("n")) - 1
     cb.delete(n)
-    return redirect('/')
+    return ""
 
 
 @app.route('/m')
@@ -267,7 +267,8 @@ def upload():
     if noredirect:
         return ""
     else:
-        return redirect('/fileexchange')
+        return redirect('//%s:%s/fileexchange' %
+                        (args.URI_HOST, args.URI_PORT))
 
 
 @app.route('/d/<path:filename>')
@@ -307,7 +308,7 @@ def get_repo():
     )
     # possible types: success, info, danger, warning
     flash(msg, msg_type)
-    return redirect('/hub')
+    return redirect('//%s:%s/hub' % (args.URI_HOST, args.URI_PORT))
 
 
 @app.route('/reload', methods=["POST"])
