@@ -13,10 +13,11 @@ function toggleDiv(id) {
     div.style.display = div.style.display == "none" ? "block" : "none";
 }
 
-function deleteClip(n) {
-     $.post("clipboard/delete", {n: n});
-     $("#card-" + n.toString()).remove();
-}
+$('.delete-clipboard').click(function(){
+    var id = $(this).attr('data-id');
+     $.post("clipboard/delete", {id: id});
+     $("#card-" + id).remove();
+});
 
 $(function() {
 $('[data-toggle="popover"]').popover(

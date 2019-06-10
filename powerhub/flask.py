@@ -118,7 +118,7 @@ def receiver():
 @requires_auth
 def clipboard():
     context = {
-        "clipboard": cb,
+        "clipboard": list(cb.entries.values()),
     }
     return render_template("clipboard.html", **context)
 
@@ -164,8 +164,8 @@ def add_clipboard():
 @requires_auth
 def del_clipboard():
     """Delete a clipboard entry"""
-    n = int(request.form.get("n")) - 1
-    cb.delete(n)
+    id = int(request.form.get("id"))
+    cb.delete(id)
     return ""
 
 
