@@ -11,7 +11,8 @@ non-persistent guestbook for transfering small code snippets, passwords,
     hashes, and so forth."><span data-feather="help-circle"></span></a>
     </sup>
 </h2>
-    <form action="clipboard/add" method="post" id="clipform" class='col'>
+    <div class="col">
+    <form action="clipboard/add" method="post" id="clipform" class='row'>
         <div class="input-group mb-3">
           <textarea id="clipboard-area" rows="4" cols="80" name="content"
               form="clipform" class="form-control"
@@ -21,12 +22,20 @@ non-persistent guestbook for transfering small code snippets, passwords,
           </div>
         </div>
     </form>
-    <div class="col">
 {% if clipboard|length == 0 %}
         <p>Clipboard is empty</p>
 {% else %}
+    <div class="row mb-3">
+      <div class="col-sm text-right">
+          <a href="#" class="btn btn-danger btn-sm flush-right"
+             id="clipboard-delete-all">Delete all</a>
+          <a href="/clipboard/export" class="btn btn-secondary btn-sm flush-right">
+              <span class="align-baseline" data-feather="download"></span> Export
+          </a>
+      </div>
+    </div>
         {% for c in clipboard %}
-            <div class="card" id="card-{{c.id}}">
+            <div class="card row" id="card-{{c.id}}">
               <div class="card-body">
                 <h5 class="card-title">{{c.time}}
                   <sup>
