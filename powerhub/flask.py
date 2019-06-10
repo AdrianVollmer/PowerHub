@@ -169,6 +169,15 @@ def del_clipboard():
     return ""
 
 
+@app.route('/clipboard/del-all', methods=["POST"])
+@requires_auth
+def del_all_clipboard():
+    """Delete all clipboard entries"""
+    for id in list(cb.entries.keys()):
+        cb.delete(id)
+    return ""
+
+
 @app.route('/m')
 def payload_m():
     """Load a single module"""
