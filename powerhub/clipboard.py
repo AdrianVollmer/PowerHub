@@ -68,16 +68,16 @@ def init_clipboard_with_db(db):
             e = Entry(content=content, time=time, IP=IP)
             db.session.add(e)
             db.session.commit()
-            self.update()
-            return e
+            self.entries.append(e)
+            return None
 
         def delete(self, n):
             e = self.entries[n]
-            db.session.delete(e)
+            e_ = db.session.merge(e)
+            db.session.delete(e_)
             db.session.commit()
-            self.entries = Entry.query.all()
-            self.update()
-            return
+            self.entries.remove(e)
+            return None
 
         def __len__(self):
             return len(self.entries)
