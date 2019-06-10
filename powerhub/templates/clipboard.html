@@ -26,12 +26,15 @@ non-persistent guestbook for transfering small code snippets, passwords,
         <p>Clipboard is empty</p>
 {% else %}
         {% for c in clipboard %}
-            <div class="card" id="card-{{loop.index}}">
+            <div class="card" id="card-{{c.id}}">
               <div class="card-body">
-                  <h5 class="card-title">{{c.time}}<sup><a href="#"
-                class="card-link" onclick="deleteClip({{ loop.index }})">
-                    <span data-feather="trash-2">delete</span>
-                          </a></sup></h5>
+                <h5 class="card-title">{{c.time}}
+                  <sup>
+                    <a href="#" class="card-link delete-clipboard" data-id="{{c.id}}">
+                        <span data-feather="trash-2">delete</span>
+                    </a>
+                  </sup>
+                </h5>
                 <h6 class="card-subtitle mb-2 text-muted">{{c.IP}}</h6>
                 <p class="card-text"><pre>{{ c.content }}</pre></p>
               </div>
