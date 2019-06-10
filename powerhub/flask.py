@@ -154,7 +154,7 @@ def add_clipboard():
     content = request.form.get("content")
     cb.add(
         content,
-        datetime.utcnow(),
+        str(datetime.utcnow()).split('.')[0],
         request.remote_addr
     )
     return redirect('/clipboard')
