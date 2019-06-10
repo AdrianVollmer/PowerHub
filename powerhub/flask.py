@@ -37,6 +37,7 @@ app.config.update(
     DEBUG=args.DEBUG,
     SECRET_KEY=os.urandom(16),
     SQLALCHEMY_DATABASE_URI='sqlite:///' + _db_filename,
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
 try:
     db = SQLAlchemy(app)
