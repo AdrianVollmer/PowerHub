@@ -4,6 +4,7 @@
 import os
 import tempfile
 import sys
+import re
 
 import pytest
 
@@ -45,6 +46,32 @@ def test_clipboard_page(flask_app):
     assert b"Export" in response.data
 
 
+def test_clipboard_add_del(flask_app):
+    import cgi
+    content = '<strong>NO HTML</strong> allowed here'
+    response = flask_app.get('/clipboard').data.decode()
+    entry_count = response.count('card-text')
+    test_count = response.count(cgi.escape(content))
+    response = flask_app.post('/clipboard/add', data={
+        'content': content,
+    }, follow_redirects=False)
+    assert response.status == '302 FOUND'
+    response = flask_app.get('/clipboard').data.decode()
+    new_entry_count = response.count('card-text')
+    new_test_count = response.count(cgi.escape(content))
+    assert cgi.escape(content) in response
+    assert entry_count == new_entry_count - 1
+    assert test_count == new_test_count - 1
+
+    # delete
+    e_id = re.findall(r'data-id="([0-9]+)"', response)[-1]
+    response = flask_app.post('/clipboard/delete', data={
+        'id': e_id,
+    }, follow_redirects=False)
+    response = flask_app.get('/clipboard').data.decode()
+    assert ('data-id="%s"' % e_id) not in response
+
+
 def test_fileexchange_page(flask_app):
     from powerhub.directories import UPLOAD_DIR
     f = tempfile.NamedTemporaryFile("w+", dir=UPLOAD_DIR)
@@ -56,3 +83,21 @@ def test_fileexchange_page(flask_app):
     assert "File Exchange" in response
     assert os.path.basename(f.name) in response
     assert "<td>%d</td>" % size in response
+
+#  TODO:
+#      * setup temporary database
+#      * retrieve download cradle
+#      * stager generation
+#      * test proxy including ssl
+#      * test webdav
+#      * basic authentication
+#      * parsing
+#      * reverse shell
+#      * upload function
+
+#  def test_argparse(capsys):
+#      sys.argv = ['./powerhub.py', '--help']
+#      from powerhub.args import parser
+#      parser.parse_args()
+#      captured = capsys.readouterr()
+#      assert "PowerShell" in captured.err
