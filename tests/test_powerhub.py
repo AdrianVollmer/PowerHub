@@ -14,9 +14,15 @@ TEST_URI = 'foobar'
 @pytest.fixture
 def flask_app():
     sys.argv = ['./powerhub.py', TEST_URI, '--no-auth']
+    temp_db = tempfile.mkstemp()[1]
     from powerhub import flask
+    flask.app.config.update(
+         SQLALCHEMY_DATABASE_URI='sqlite:///' + temp_db
+    )
+    flask.cb.update()  # ensure table exists
     flask_app = flask.app.test_client()
     yield flask_app
+    os.remove(temp_db)
 
 
 def test_initial_redirection(flask_app):
@@ -42,34 +48,38 @@ def test_clipboard_page(flask_app):
     response = flask_app.get('/clipboard')
     assert b"PowerHub" in response.data
     assert b"Clipboard" in response.data
-    assert b"Delete all" in response.data
-    assert b"Export" in response.data
+    assert b"Clipboard is empty" in response.data
 
 
 def test_clipboard_add_del(flask_app):
     import cgi
+    reps = 8
     content = '<strong>NO HTML</strong> allowed here'
     response = flask_app.get('/clipboard').data.decode()
     entry_count = response.count('card-text')
     test_count = response.count(cgi.escape(content))
-    response = flask_app.post('/clipboard/add', data={
-        'content': content,
-    }, follow_redirects=False)
-    assert response.status == '302 FOUND'
+    for i in range(reps):
+        response = flask_app.post('/clipboard/add', data={
+            'content': content,
+        }, follow_redirects=False)
+        assert response.status == '302 FOUND'
     response = flask_app.get('/clipboard').data.decode()
+    assert "Delete all" in response
+    assert "Export" in response
     new_entry_count = response.count('card-text')
     new_test_count = response.count(cgi.escape(content))
     assert cgi.escape(content) in response
-    assert entry_count == new_entry_count - 1
-    assert test_count == new_test_count - 1
+    assert entry_count == new_entry_count - reps
+    assert test_count == new_test_count - reps
 
     # delete
-    e_id = re.findall(r'data-id="([0-9]+)"', response)[-1]
-    response = flask_app.post('/clipboard/delete', data={
-        'id': e_id,
-    }, follow_redirects=False)
-    response = flask_app.get('/clipboard').data.decode()
-    assert ('data-id="%s"' % e_id) not in response
+    for i in range(reps):
+        e_id = re.findall(r'data-id="([0-9]+)"', response)[-1]
+        response = flask_app.post('/clipboard/delete', data={
+            'id': e_id,
+        }, follow_redirects=False)
+        response = flask_app.get('/clipboard').data.decode()
+        assert ('data-id="%s"' % e_id) not in response
 
 
 def test_fileexchange_page(flask_app):
@@ -85,7 +95,6 @@ def test_fileexchange_page(flask_app):
     assert "<td>%d</td>" % size in response
 
 #  TODO:
-#      * setup temporary database
 #      * retrieve download cradle
 #      * stager generation
 #      * test proxy including ssl
