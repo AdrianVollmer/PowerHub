@@ -110,7 +110,7 @@ auth_group.add_argument(
     '--auth', dest="AUTH", type=str,
     default="",
     help=("define credentials for basic authentication in the form of \
-          'user:pass'"))
+          'user:pass' (default: powerhub:<random>"))
 
 
 auth_group.add_argument(
@@ -122,11 +122,6 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
-
-if not (args.AUTH or args.NOAUTH):
-    print("You need to supply either '--auth <user>:<pass>' (recommended)"
-          " or '--no-auth' on the command line")
-    exit(1)
 
 if args.URI_PORT == 0:
     args.URI_PORT = args.LPORT

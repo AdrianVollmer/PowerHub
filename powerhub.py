@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from powerhub.args import args
-import powerhub.flask
 import powerhub.reverseproxy
 try:
     from powerhub.webdav import run_webdav
@@ -23,6 +22,8 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 log = logging.getLogger(__name__)
+
+import powerhub.flask  # noqa, comes after logging has been set up
 
 
 def signal_handler(sig, frame):
