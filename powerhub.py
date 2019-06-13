@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+from powerhub.args import args
 import powerhub.flask
 import powerhub.reverseproxy
-from powerhub.args import args
 try:
     from powerhub.webdav import run_webdav
 except ImportError as e:
