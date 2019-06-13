@@ -29,9 +29,9 @@ def create_self_signed_cert(hostname,
     cert.set_pubkey(k)
     cert.sign(k, 'sha256')
 
-    open(cert_file, "w+").write(
+    open(cert_file, "bw+").write(
         crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-    open(key_file, "w+").write(
+    open(key_file, "bw+").write(
         crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
 
 
