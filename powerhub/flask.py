@@ -50,6 +50,10 @@ socketio = SocketIO(
     async_mode="threading",
 )
 
+if not args.DEBUG:
+    logging.getLogger("socketio").setLevel(logging.WARN)
+    logging.getLogger("engineio").setLevel(logging.WARN)
+
 need_proxy = True
 need_tlsv12 = (args.SSL_KEY is not None)
 
@@ -75,9 +79,10 @@ class MyRequestHandler(WSGIRequestHandler):
     #      else:
     #          return self.client_address[0]
 
-    def log(self, type, message, *args):
+    def log(self, type, message, *largs):
         # don't log datetime again
-        _log(type, '%s %s\n' % (self.address_string(), message % args))
+        if " /socket.io/?" not in largs[0] or args.DEBUG:
+            _log(type, '%s %s\n' % (self.address_string(), message % largs))
 
 
 def run_flask_app():
