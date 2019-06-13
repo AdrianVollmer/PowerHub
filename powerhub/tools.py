@@ -29,7 +29,7 @@ def create_self_signed_cert(hostname,
     cert.set_pubkey(k)
     cert.sign(k, 'sha256')
     log.info("Generated a self-signed certifiate for '%s' with SHA-1 "
-             "fingerprint: %s" % (hostname, cert.digest("sha1")))
+             "fingerprint: %s" % (hostname, cert.digest("sha1").decode()))
 
     open(cert_file, "bw+").write(
         crypto.dump_certificate(crypto.FILETYPE_PEM, cert))

@@ -48,4 +48,4 @@ if __name__ == "__main__":
                  args.REC_HOST, args.REC_PORT)
     start_thread(powerhub.flask.shell_receiver.run_provider)
     start_thread(powerhub.flask.run_flask_app)
-    powerhub.reverseproxy.reactor.run()
+    powerhub.reverseproxy.run_proxy()

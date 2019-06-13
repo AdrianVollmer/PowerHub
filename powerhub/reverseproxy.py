@@ -14,6 +14,7 @@ from twisted.web.server import Site
 from twisted.web.resource import Resource
 
 from powerhub.args import args
+from powerhub.tools import get_self_signed_cert
 
 import logging
 log = logging.getLogger(__name__)
@@ -40,10 +41,13 @@ class DynamicProxy(Resource):
             return ReverseProxyResource(host, args.FLASK_PORT, new_path)
 
 
-proxy = DynamicProxy()
-site = Site(proxy)
-reactor.listenTCP(args.LPORT, site, interface=args.LHOST)
-if args.SSL_KEY and args.SSL_CERT:
+def run_proxy():
+    proxy = DynamicProxy()
+    site = Site(proxy)
+    reactor.listenTCP(args.LPORT, site, interface=args.LHOST)
+
+    if not args.SSL_KEY or not args.SSL_CERT:
+        args.SSL_CERT, args.SSL_KEY = get_self_signed_cert(args.URI_HOST)
     reactor.listenSSL(args.SSL_PORT,
                       site,
                       ssl.DefaultOpenSSLContextFactory(
@@ -52,3 +56,4 @@ if args.SSL_KEY and args.SSL_CERT:
                       ),
                       interface=args.LHOST,
                       )
+    reactor.run()
