@@ -20,14 +20,16 @@ def create_self_signed_cert(hostname,
 
     # create a self-signed cert
     cert = crypto.X509()
-    cert.get_subject().O = "PowerHub"
+    cert.get_subject().O = "PowerHub"  # noqa
     cert.get_subject().CN = hostname
-    #  cert.set_serial_number(1000)
+    cert.set_serial_number(random.randint(1, 10000))
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(10*365*24*60*60)
     cert.set_issuer(cert.get_subject())
     cert.set_pubkey(k)
     cert.sign(k, 'sha256')
+    log.info("Generated a self-signed certifiate for '%s' with SHA-1 "
+             "fingerprint: %s" % (hostname, cert.digest("sha1")))
 
     open(cert_file, "bw+").write(
         crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
