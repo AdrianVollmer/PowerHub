@@ -1,3 +1,4 @@
+from powerhub.tools import get_self_signed_cert
 import argparse
 
 parser = argparse.ArgumentParser(
@@ -136,6 +137,9 @@ if ((args.SSL_KEY and not args.SSL_CERT)
     print("If you supply one of SSL_CERT or SSL_KEY you must also supply "
           "the other")
     exit(1)
+
+if not args.SSL_KEY:
+    args.SSL_CERT, args.SSL_KEY = get_self_signed_cert(args.URI_HOST)
 
 if args.SSL_KEY:
     ssl_context = (args.SSL_CERT, args.SSL_KEY)
