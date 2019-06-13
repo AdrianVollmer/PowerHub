@@ -6,6 +6,8 @@ import random
 import string
 
 from OpenSSL import crypto
+import logging
+log = logging.getLogger(__name__)
 
 
 def create_self_signed_cert(hostname,
@@ -40,6 +42,8 @@ def get_self_signed_cert(hostname):
     # check if one already exists
     if not (os.path.isfile(cert_file) and
             os.path.isfile(key_file)):
+
+        log.info("No SSL certificate found, generating a self-signed one...")
         create_self_signed_cert(hostname, cert_file, key_file)
     return (cert_file, key_file)
 
