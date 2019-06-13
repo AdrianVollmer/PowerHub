@@ -5,7 +5,15 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    '-p',
+    '-lh', '--lhost', default='0.0.0.0',
+    dest="LHOST",
+    type=str,
+    help="the local bind address to listen on for the HTTP and HTTPS "
+         "services (default: %(default)s)"
+)
+
+parser.add_argument(
+    '-lp',
     '--lport',
     default=8080,
     dest="LPORT",
@@ -30,7 +38,6 @@ parser.add_argument(
     type=int,
     help="the local port to listen on for the Flask app (default: %(default)s)"
 )
-
 
 parser.add_argument(
     '-wp',
@@ -76,20 +83,12 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-l', '--lhost', default='0.0.0.0',
-    dest="LHOST",
-    type=str,
-    help="the local bind address to listen on for the HTTP and HTTPS "
-         "services (default: %(default)s)"
-)
-
-parser.add_argument(
     dest="URI_HOST", type=str,
     help="the hostname or IP address where the target can reach the server"
 )
 
 parser.add_argument(
-    '-u', '--uri-port', dest="URI_PORT", type=int,
+    '-up', '--uri-port', dest="URI_PORT", type=int,
     default=0,
     help="the port where the target can reach the server (default: LPORT)"
 )
