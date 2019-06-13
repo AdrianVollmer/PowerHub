@@ -110,7 +110,7 @@ auth_group.add_argument(
     '--auth', dest="AUTH", type=str,
     default="",
     help=("define credentials for basic authentication in the form of \
-          'user:pass' (default: powerhub:<random>"))
+          'user:pass' (default: powerhub:<random>)"))
 
 
 auth_group.add_argument(
