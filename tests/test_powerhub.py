@@ -28,7 +28,7 @@ def flask_app():
 def test_initial_redirection(flask_app):
     response = flask_app.get('/')
     assert b"Redirecting..." in response.data
-    assert b'<a href="//%s:' % TEST_URI.encode() in response.data
+    assert b'<a href="/hub' in response.data
 
 
 def test_hub_page(flask_app):
