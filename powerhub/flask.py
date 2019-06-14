@@ -36,7 +36,10 @@ app = Flask(__name__)
 app.config.update(
     DEBUG=args.DEBUG,
     SECRET_KEY=os.urandom(16),
-    SQLALCHEMY_DATABASE_URI='sqlite:///' + _db_filename,
+    DB_FILENAME=_db_filename,
+)
+app.config.update(
+    SQLALCHEMY_DATABASE_URI='sqlite:///' + app.config["DB_FILENAME"],
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
 try:
