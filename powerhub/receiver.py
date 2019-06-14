@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import select
 import socket
 import struct
@@ -87,6 +88,10 @@ class ReverseShell(threading.Thread):
             self.details.update(p["data"])
         else:
             self.shell_type = 'dumb'
+            self.details["id"] = hex(random.getrandbits(64))
+            self.details["created"] = eut.formatdate(timeval=None,
+                                                     localtime=False,
+                                                     usegmt=True)
             for key in ["user", "host", "ps_version", "os_version",
                         "arch", "domain"]:
                 self.details[key] = '?'
