@@ -29,6 +29,20 @@ class DynamicProxy(Resource):
         resource = path.split('/')[0].encode()
         path = '/'.join(path.split('/')[1:])
         host = '127.0.0.1'
+        x_forwarded_for = request.client.host
+        x_for_host = request.host.host
+        x_for_port = request.host.port
+        if x_for_port == args.SSL_PORT:
+            x_for_proto = "https"
+        else:
+            x_for_proto = "http"
+        for header in [
+            ('X-Forwarded-For', x_forwarded_for),
+            ('X-Forwarded-Host', x_for_host),
+            ('X-Forwarded-Port', x_for_port),
+            ('X-Forwarded-Proto', x_for_proto),
+        ]:
+            request.requestHeaders.addRawHeader(*header)
         path = path.encode()
         if resource == b"webdav":
             log.debug("Forwarding request to WebDAV server")
