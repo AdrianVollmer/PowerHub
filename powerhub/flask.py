@@ -5,7 +5,7 @@ import shutil
 from tempfile import TemporaryDirectory
 
 from flask import Flask, render_template, request, Response, redirect, \
-         send_from_directory, flash, make_response, abort
+         send_from_directory, flash, make_response, abort, url_for
 try:
     from flask_sqlalchemy import SQLAlchemy
 except ImportError:
@@ -13,6 +13,7 @@ except ImportError:
           "won't be persistent. Consult the README.")
 
 from werkzeug.serving import WSGIRequestHandler, _log
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_socketio import SocketIO  # , emit
 
 from powerhub.clipboard import init_clipboard
@@ -33,6 +34,7 @@ log = logging.getLogger(__name__)
 _db_filename = os.path.join(XDG_DATA_HOME, "powerhub_db.sqlite")
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1, x_port=1)
 app.config.update(
     DEBUG=args.DEBUG,
     SECRET_KEY=os.urandom(16),
@@ -75,12 +77,11 @@ shell_receiver = ShellReceiver(push_notification=push_notification)
 
 
 class MyRequestHandler(WSGIRequestHandler):
-    #  TODO for when proxy sets headers properly
-    #  def address_string(self):
-    #      if 'x-forwarded-for' in self.headers._headers
-    #          return self.headers._headers['x-forwarded-for']
-    #      else:
-    #          return self.client_address[0]
+    def address_string(self):
+        if 'x-forwarded-for' in dict(self.headers._headers):
+            return dict(self.headers._headers)['x-forwarded-for']
+        else:
+            return self.client_address[0]
 
     def log(self, type, message, *largs):
         # don't log datetime again
@@ -101,7 +102,7 @@ def run_flask_app():
 @app.route('/')
 @requires_auth
 def index():
-    return redirect('//%s:%s/hub' % (args.URI_HOST, args.URI_PORT))
+    return redirect('/hub')
 
 
 @app.route('/hub')
@@ -177,7 +178,7 @@ def add_clipboard():
         str(datetime.utcnow()).split('.')[0],
         request.remote_addr
     )
-    return redirect('//%s:%s/clipboard' % (args.URI_HOST, args.URI_PORT))
+    return redirect('/clipboard')
 
 
 @app.route('/clipboard/delete', methods=["POST"])
@@ -312,8 +313,7 @@ def upload():
     if noredirect:
         return ""
     else:
-        return redirect('//%s:%s/fileexchange' %
-                        (args.URI_HOST, args.URI_PORT))
+        return redirect('/fileexchange')
 
 
 @app.route('/d/<path:filename>')
@@ -353,7 +353,7 @@ def get_repo():
     )
     # possible types: success, info, danger, warning
     flash(msg, msg_type)
-    return redirect('//%s:%s/hub' % (args.URI_HOST, args.URI_PORT))
+    return redirect('/hub')
 
 
 @app.route('/reload', methods=["POST"])
