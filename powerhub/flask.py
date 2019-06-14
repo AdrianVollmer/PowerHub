@@ -110,6 +110,7 @@ def hub():
         "modules": modules,
         "repositories": list(repositories.keys()),
         "SSL": args.SSL_KEY is not None,
+        "AUTH": args.AUTH,
     }
     return render_template("hub.html", **context)
 
@@ -123,6 +124,7 @@ def receiver():
                              need_tlsv12=need_tlsv12),
         "SSL": args.SSL_KEY is not None,
         "shells": shell_receiver.active_shells(),
+        "AUTH": args.AUTH,
     }
     return render_template("receiver.html", **context)
 
@@ -132,6 +134,7 @@ def receiver():
 def clipboard():
     context = {
         "clipboard": list(cb.entries.values()),
+        "AUTH": args.AUTH,
     }
     return render_template("clipboard.html", **context)
 
@@ -141,6 +144,7 @@ def clipboard():
 def fileexchange():
     context = {
         "files": get_filelist(),
+        "AUTH": args.AUTH,
     }
     return render_template("fileexchange.html", **context)
 
