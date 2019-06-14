@@ -75,12 +75,11 @@ shell_receiver = ShellReceiver(push_notification=push_notification)
 
 
 class MyRequestHandler(WSGIRequestHandler):
-    #  TODO for when proxy sets headers properly
-    #  def address_string(self):
-    #      if 'x-forwarded-for' in self.headers._headers
-    #          return self.headers._headers['x-forwarded-for']
-    #      else:
-    #          return self.client_address[0]
+    def address_string(self):
+        if 'x-forwarded-for' in dict(self.headers._headers):
+            return dict(self.headers._headers)['x-forwarded-for']
+        else:
+            return self.client_address[0]
 
     def log(self, type, message, *largs):
         # don't log datetime again
