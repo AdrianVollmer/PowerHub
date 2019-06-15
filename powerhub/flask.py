@@ -435,6 +435,13 @@ def shell_kill_all():
     return ""
 
 
+@app.route('/receiver/shellcard', methods=["GET"])
+def shell_card():
+    shell_id = request.args["shell-id"]
+    shell = shell_receiver.get_shell_by_id(shell_id)
+    return render_template("receiver-shellcard.html", s=shell)
+
+
 @socketio.on('connect', namespace="/push-notifications")
 def test_connect():
     log.debug("Websockt client connected")

@@ -1,0 +1,53 @@
+<div class="card{% if s.is_stale() %} faded{% endif %}">
+    <div class="card-header" id="heading-{{s["details"].id}}">
+      <h5 class="mb-0">
+        <a id="shell-header-{{s["details"].id}}"
+           class="shell-tooltip"
+           data-shellid="{{s["details"].id}}"
+           data-toggle="popover"
+           data-html="true"
+           data-placement="left"
+           data-trigger="hover" >
+           <span class="btn btn-link"
+                 id="shell-header-{{s["details"].id}}"
+                 data-toggle="collapse"
+                 data-target="#collapse-{{s["details"].id}}"
+                 aria-expanded="true"
+                 aria-controls="collapse-{{s["details"].id}}">
+                 {{s.description}}
+           </span>
+        </a>
+        <div style="display: none;" id="popover-content-{{s["details"].id}}">{% include 'shell-tooltip.html' %}</div>
+        <div class="btn-group float-right" role="group" aria-label="Control Shell">
+          <button type="button"
+                  href="/shell-log?id={{s["details"].id}}"
+                  id="shell-log-{{s["details"].id}}"
+                  data-remote="false"
+                  data-toggle="modal"
+                  data-target="#shell-log-modal"
+                  class="btn btn-primary">View Log</button>
+          <button type="button"
+                  id="shell-kill-{{s["details"].id}}"
+                  data-toggle="popover" data-trigger="hover" data-placement="top"
+                  data-content="Kill the remote process"
+                  class="btn btn-danger kill-shell">Kill Shell</button>
+          <button type="button"
+                  id="shell-forget-{{s["details"].id}}"
+                  data-toggle="popover" data-trigger="hover" data-placement="top"
+                  data-content="Forget about the shell in case you can't
+                  kill it for some reason, maybe because it went stale. It
+                  will not be killed, but you also won't be able to interact
+                  with it afterwards until it connects back."
+                  class="btn btn-secondary forget-shell">Forget</button>
+        </div>{% if s.is_stale() %} (stale){% endif %}
+      </h5>
+    </div>
+    <div id="collapse-{{s["details"].id}}"
+         class="collapse"
+         aria-labelledby="heading-{{s["details"].id}}"
+         data-parent="#accordion">
+      <div class="card-body">
+          {% include 'shell-details.html' %}
+      </div>
+    </div>
+  </div>
