@@ -63,13 +63,15 @@ need_proxy = True
 need_tlsv12 = (args.SSL_KEY is not None)
 
 
-def push_notification(type, msg, title, subtitle=""):
+def push_notification(type, msg, title, subtitle="", **kwargs):
+    arguments = {
+        'msg': msg,
+        'title': title,
+        'subtitle': subtitle,
+    }
+    arguments.update(dict(**kwargs)),
     socketio.emit('push',
-                  {
-                      'msg': msg,
-                      'title': title,
-                      'subtitle': subtitle,
-                  },
+                  arguments,
                   namespace="/push-notifications")
 
 
