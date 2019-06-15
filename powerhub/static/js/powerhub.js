@@ -97,8 +97,25 @@ $(document).ready(function(){
             // remove the toast from the dom tree after it faded out
             $(this).remove();
         });
+        actOnPushMsg(msg);
         $('#toast-container .toast').last().toast('show');
     });
 });
+
+function actOnPushMsg(msg) {
+    if (msg.msg.startsWith("Reverse shell caught")) {
+        $("#noshell-note").addClass('d-none');
+        $("#shell-list").removeClass('d-none');
+        $.get(
+            "receiver/shellcard",
+            {
+                "shell-id": msg.shellid,
+            }
+        ).done(function(data) {
+            $(data).hide().appendTo('#accordion').fadeIn(750);
+            update_shell_buttons();
+        });
+    };
+};
 
 feather.replace();
