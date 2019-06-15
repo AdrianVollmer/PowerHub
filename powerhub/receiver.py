@@ -245,12 +245,14 @@ class ShellPacket(object):
             try:
                 self.json = json.loads(body.decode())
             except Exception:
-                print(body.decode())
+                log.error("Could not decipher shell packet")
+                log.debug(body.decode())
+                self.json = {}
         elif packet_type == T_DICT:
             self.json = body
         else:
             raise Exception
-        if not self.json["data"]:
+        if "data" not in self.json:
             self.json["data"] = ""
         self.delivered = False
 
