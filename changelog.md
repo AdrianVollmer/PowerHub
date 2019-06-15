@@ -1,6 +1,8 @@
 Version 1.3
 ===========
 
+* On the event of an incoming shell, the entry is faded in nicely in the
+  webapp. (#31)
 * Made command line parameters more persistent:
   -p -> -lp
   -l -> -lh

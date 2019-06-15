@@ -63,13 +63,15 @@ need_proxy = True
 need_tlsv12 = (args.SSL_KEY is not None)
 
 
-def push_notification(type, msg, title, subtitle=""):
+def push_notification(type, msg, title, subtitle="", **kwargs):
+    arguments = {
+        'msg': msg,
+        'title': title,
+        'subtitle': subtitle,
+    }
+    arguments.update(dict(**kwargs)),
     socketio.emit('push',
-                  {
-                      'msg': msg,
-                      'title': title,
-                      'subtitle': subtitle,
-                  },
+                  arguments,
                   namespace="/push-notifications")
 
 
@@ -431,6 +433,13 @@ def shell_kill_all():
     for shell in shell_receiver.active_shells():
         shell.kill()
     return ""
+
+
+@app.route('/receiver/shellcard', methods=["GET"])
+def shell_card():
+    shell_id = request.args["shell-id"]
+    shell = shell_receiver.get_shell_by_id(shell_id)
+    return render_template("receiver-shellcard.html", s=shell)
 
 
 @socketio.on('connect', namespace="/push-notifications")
