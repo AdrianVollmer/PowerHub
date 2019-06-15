@@ -5,7 +5,7 @@ import shutil
 from tempfile import TemporaryDirectory
 
 from flask import Flask, render_template, request, Response, redirect, \
-         send_from_directory, flash, make_response, abort, url_for
+         send_from_directory, flash, make_response, abort
 try:
     from flask_sqlalchemy import SQLAlchemy
 except ImportError:
