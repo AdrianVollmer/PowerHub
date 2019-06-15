@@ -350,6 +350,7 @@ class ShellReceiver(object):
                     'info',
                     'Reverse shell caught from %s:%d' % addr,
                     'Receiver',
+                    shellid=rs.details["id"],
                 )
 
     def run_provider(self, host='127.0.0.1', port=18157):
