@@ -101,6 +101,13 @@ def run_flask_app():
     )
 
 
+@app.template_filter()
+def debug(msg):
+    if args.DEBUG:
+        return msg
+    return ""
+
+
 @app.route('/')
 @requires_auth
 def index():

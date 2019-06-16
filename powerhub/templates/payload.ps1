@@ -13,6 +13,7 @@ Set-Alias -Name Decrypt-Code -Value {{symbol_name("Decrypt-Code")}}
 $WEBDAV_URL = "{{webdav_url}}"
 $ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
+{{'$DebugPreference = "Continue"'|debug}}
 
 $Modules = @()
 {% if modules %}
@@ -357,6 +358,7 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
        $Stream
     )
 
+    {{'Write-Debug "Pushing $Files..."'|debug}}
     begin { $result = @() }
     process {
         $result = $result + $Stream
