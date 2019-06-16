@@ -8,6 +8,11 @@ from powerhub.args import args
 import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+import logging
+
+logger = logging.getLogger("wsgidav")
+logger.propagate = True
+logger.setLevel(logging.DEBUG)
 
 config = {
     "host": '127.0.0.1',
