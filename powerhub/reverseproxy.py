@@ -45,7 +45,10 @@ class DynamicProxy(Resource):
             request.requestHeaders.addRawHeader(*header)
         path = path.encode()
         if resource == b"webdav":
-            log.debug("Forwarding request to WebDAV server")
+            if not path:
+                path = b'/'
+            log.debug("Forwarding request to WebDAV server: %s" %
+                      path.decode())
             return ReverseProxyResource(host, args.WEBDAV_PORT, path)
         else:
             log.debug("Forwarding request to Flask server")
