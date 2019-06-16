@@ -26,6 +26,7 @@ class DynamicProxy(Resource):
 
     def getChild(self, path, request):
         path = path.decode()
+        log.debug("%s - %s" % (request.client.host, path))
         resource = path.split('/')[0].encode()
         path = '/'.join(path.split('/')[1:])
         host = '127.0.0.1'
