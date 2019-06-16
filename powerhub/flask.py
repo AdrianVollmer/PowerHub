@@ -320,7 +320,7 @@ def upload():
         if file:
             save_file(file)
     if noredirect:
-        return ""
+        return ('OK', 200)
     else:
         return redirect('/fileexchange')
 
