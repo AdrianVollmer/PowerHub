@@ -423,7 +423,8 @@ The letter the mounted drive will receive (default: 'S')
         [String]$Letter = "S"
     )
     Set-Variable -Name "WebdavLetter" -Value "$Letter" -Scope Global
-    $netout = & net use ${Letter}: \\$WEBDAV_URL /persistent:no 2>&1 | Out-Null
+    {{'Write-Debug "Mounting $WEBDAV_URL to $LETTER"'|debug}}
+    $netout = iex "net use ${Letter}: $WEBDAV_URL /persistent:no 2>&1" | Out-Null
     if (!$?) {
         throw "Error while executing 'net use': $netout"
     }
@@ -438,7 +439,7 @@ Unmount the Webdav drive.
 
 #>
     If (${WebdavLetter}) {
-        $netout = & net use ${WebdavLetter}: /delete 2>&1 | Out-Null
+        $netout = iex "net use ${WebdavLetter}: /delete 2>&1" | Out-Null
         if (!$?) {
             throw "Error while executing 'net use': $netout"
         }
