@@ -86,7 +86,7 @@ The Clipboard
 
 The clipboard functionality is meant for exchanging small snippets, such as
 hashes, passwords, one-liners, and so forth. It's like an extremely basic
-[Etherpad](https://etherpad.org/) or a guest book, but non-persistent.
+[Etherpad](https://etherpad.org/) or a guest book.
 
 The File Exchange
 -----------------
@@ -112,12 +112,12 @@ The dependencies for the WebDAV service are `wsgidav` (installable via
 Usage
 =====
 
-PowerHub has two mandatory arguments: the first is the callback host (can be
-an IP address) and the second is either `--auth <user>:<pass>` or
-`--no-auth`. The latter disables basic authentication which is *not
-recommended*. This host name is used by the stager to download the payload.
-If the callback port or path differ from the default, it can also be
-changed.
+PowerHub has one mandatory arguments: the callback host (can be an IP
+address). You should also use `--auth <user>:<pass>`, otherwise, a randomly
+generated password will be used for basic authentication. The switch
+`--no-auth` disables basic authentication which is *not recommended*. The
+callback host name is used by the stager to download the payload. If the
+callback port or path differ from the default, it can also be changed.
 
 Read `./powerhub.py --help` for details.
 
