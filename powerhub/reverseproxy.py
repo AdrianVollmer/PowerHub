@@ -37,7 +37,7 @@ class DynamicProxy(Resource):
         for header in [
             ('X-Forwarded-For', x_forwarded_for),
             ('X-Forwarded-Host', x_for_host),
-            ('X-Forwarded-Port', x_for_port),
+            ('X-Forwarded-Port', str(x_for_port)),
             ('X-Forwarded-Proto', x_for_proto),
         ]:
             request.requestHeaders.addRawHeader(*header)
