@@ -15,9 +15,7 @@ from twisted.web.resource import Resource
 
 from powerhub.args import args
 from powerhub.tools import get_self_signed_cert
-
-import logging
-log = logging.getLogger(__name__)
+from powerhub.logging import log
 
 
 class DynamicProxy(Resource):

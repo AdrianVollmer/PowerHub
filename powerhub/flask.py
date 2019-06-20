@@ -1,5 +1,6 @@
 from base64 import b64encode
 from datetime import datetime
+import logging
 import os
 import shutil
 from tempfile import TemporaryDirectory
@@ -27,9 +28,8 @@ from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
 from powerhub.receiver import ShellReceiver
 from powerhub.args import args
+from powerhub.logging import log
 
-import logging
-log = logging.getLogger(__name__)
 
 _db_filename = os.path.join(XDG_DATA_HOME, "powerhub_db.sqlite")
 

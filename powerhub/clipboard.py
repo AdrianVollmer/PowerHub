@@ -1,6 +1,4 @@
 from sqlalchemy.exc import OperationalError
-import logging
-log = logging.getLogger(__name__)
 
 
 def init_clipboard(db=None):

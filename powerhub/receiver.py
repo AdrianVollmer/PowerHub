@@ -7,10 +7,9 @@ import struct
 import threading
 from datetime import datetime as dt
 import email.utils as eut
-from powerhub.directories import XDG_DATA_HOME
 
-import logging
-log = logging.getLogger(__name__)
+from powerhub.directories import XDG_DATA_HOME
+from powerhub.logging import log
 
 T_JSON = 0
 T_DICT = 1
