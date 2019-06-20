@@ -1,4 +1,3 @@
-from powerhub.directories import XDG_DATA_HOME
 import io
 import gzip
 import os
@@ -6,8 +5,9 @@ import random
 import string
 
 from OpenSSL import crypto
-import logging
-log = logging.getLogger(__name__)
+
+from powerhub.directories import XDG_DATA_HOME
+from powerhub.logging import log
 
 
 def create_self_signed_cert(hostname,

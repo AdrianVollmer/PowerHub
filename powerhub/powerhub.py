@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import threading
+import signal
+
 import powerhub.flask
 import powerhub.reverseproxy
 from powerhub.args import args
+from powerhub.logging import log
 try:
     from powerhub.webdav import run_webdav
 except ImportError as e:
@@ -16,7 +20,7 @@ import signal
 import logging
 
 
-FORMAT = '%(levelname).1s %(asctime)-15s %(message)s'
+FORMAT = '%(asctime)-15s %(message)s'
 
 logging.basicConfig(
     stream=sys.stdout,
