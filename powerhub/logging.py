@@ -4,7 +4,8 @@ import sys
 from powerhub.args import args
 
 
-FORMAT = '%(asctime)-15s %(message)s'
+FORMAT = '%(levelname).1s %(asctime)-15s %(message)s'
+
 
 logging.basicConfig(
     stream=sys.stdout,
