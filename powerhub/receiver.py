@@ -1,3 +1,4 @@
+import bson
 import json
 import os
 import random
@@ -12,7 +13,7 @@ from powerhub.directories import XDG_DATA_HOME
 import logging
 log = logging.getLogger(__name__)
 
-T_JSON = 0
+T_BSON = 0
 T_DICT = 1
 
 
@@ -241,19 +242,19 @@ class ShellPacket(object):
         UNDERLINE = '\033[4m'
 
     def __init__(self, packet_type, body):
-        if packet_type == T_JSON:
+        if packet_type == T_BSON:
             try:
-                self.json = json.loads(body.decode())
+                self._dict = bson.loads(body.decode())
             except Exception:
                 log.error("Could not decipher shell packet")
                 log.debug(body.decode())
-                self.json = {}
+                self._dict = {}
         elif packet_type == T_DICT:
-            self.json = body
+            self._dict = body
         else:
             raise Exception
-        if "data" not in self.json:
-            self.json["data"] = ""
+        if "data" not in self:
+            self["data"] = ""
         self.delivered = False
 
     def set_delivered(self):
@@ -262,17 +263,17 @@ class ShellPacket(object):
     def serialize(self):
         """Return a byte string of the ShellPacket"""
 
-        buffer = json.dumps(self.json).encode()
+        buffer = bson.dumps(self._dict).encode()
         packet_length = len(buffer)
-        packet_type = T_JSON
+        packet_type = T_BSON
         header = struct.pack('>HI', packet_type, packet_length)
         return (header + buffer)
 
     def __getitem__(self, key):
-        return self.json[key]
+        return self._dict[key]
 
     def __str__(self):
-        return json.dumps(self.json)
+        return json.dumps(self._dict)
 
     def shell_string(self, colors=True):
         if self["msg_type"] in ["OUTPUT", "COMMAND"]:
@@ -309,7 +310,7 @@ class ShellPacket(object):
             )
         elif self["msg_type"] == "SHELL_HELLO":
             result = ""
-            for key, val in self.json["data"].items():
+            for key, val in self["data"].items():
                 result += "%s:\t%s\n" % (key, val)
             return result
         else:

