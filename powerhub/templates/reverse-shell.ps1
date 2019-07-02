@@ -21,47 +21,89 @@ $elements = @{
 $enc = [system.Text.Encoding]::UTF8
 
 function ConvertTo-Bson {
-    param([Parameter(Position = 0, Mandatory = $true)] $dict)
-    $result = @()
-    foreach ($key in $dict.keys) {
-        $result += $elements[$dict[$key].gettype()]
-        $result += $enc.getbytes($key)
+    param(
+        [Parameter(Position = 0, Mandatory = $true)] $dict,
+        [Parameter(Position = 1)] [Int32]$type
+    )
+
+    [byte[]]$result = @()
+
+    if ($type -eq 0) { # it's the document
+        $result += ConvertTo-Bson $dict $elements[$dict.GetType()]
+    } elseif ($type -eq 2) { # string
+        $result += [bitconverter]::GetBytes([Int32]($dict.length+1))
+        $result += $enc.GetBytes($dict)
         $result += 0
-        # this is only for strings. TODO: consider other types than string.
-        $result += [bitconverter]::GetBytes([Int32]($dict[$key].length+1))
-        $result += $enc.getbytes($dict[$key])
+    } elseif ($type -eq 3) { # hashtable
+        foreach ($key in $dict.keys) {
+            $type = $elements[$dict[$key].gettype()]
+            $result += $type
+            $result += $enc.GetBytes($key)
+            $result += 0
+            $result += ConvertTo-Bson $dict[$key] $type
+        }
+        $result = [bitconverter]::GetBytes([Int32]($result.Length+5)) + $result
         $result += 0
+    } elseif ($type -eq 4) { # array
+        $counter = 0
+        foreach ($i in $dict) {
+            $type = $elements[$i.gettype()]
+            $result += $type
+            $result += $enc.GetBytes("$counter")
+            $result += 0
+            $result += ConvertTo-Bson $i $type
+            $counter += 1
+        }
+        $result = [bitconverter]::GetBytes([Int32]($result.Length+5)) + $result
+        $result += 0
+    } else {
+        throw "Type not supported yet", $type, $dict
+        # TODO: consider other types than string.
     }
-    $result = [bitconverter]::GetBytes([Int32]($result.Length + 5)) + $result
-    $result += 0
     $result
 }
 
 function ConvertFrom-Bson {
-    param([Parameter(Position = 0, Mandatory = $true)] $array)
+    param([Parameter(Position = 0, Mandatory = $true)] [byte[]]$array,
+          [Parameter(Position = 1, Mandatory = $false)] [Int32]$type)
     $result = @{}
-    $isKey = $True
-    $i = 5
-    while ($True) {
-        $key = ""
-        while ($True) {
-            if ( $array[$i] -eq 0) { break }
-            $key += $enc.GetString($array[$i])
-            $i += 1
+    $i = 0
+    if ($type -eq 0) {
+        $i = 4
+        $type = 3
+        $l = $array.length
+        $length = [BitConverter]::ToInt32([byte[]]$array, 0)
+        if ($length -ne $l) {
+            throw "Not a valid BSON structure"
         }
-        # TODO make more robust, ie. throw exceptions
-        $val = ""
-        $i += 5
+    }
+    if ($type -eq 3 -or $type -eq 4) {
         while ($True) {
-            if ( $array[$i] -eq 0) { break }
-            $val += $enc.GetString($array[$i])
+            $key = ""
+            $type = $array[$i]
             $i += 1
+            while ($True) { # get the key name
+                if ($array[$i] -eq 0) { break }
+                $key += $enc.GetString($array[$i])
+                $i += 1
+            }
+            [byte[]]$val = @()
+            $i += 1
+            $length = [BitConverter]::ToInt32([byte[]]$array, $i)
+            [byte[]]$val = $array[($i+4) .. ($i+4+$length-1)]
+            $result[$key] = ConvertFrom-Bson $val $type
+            $i += $length+4
+            if ($i -ge $array.length - 2  ) {break}
         }
-        $result[$key] = $val
-        if ($i -ge $array.length - 2 ) {break}
+    } elseif ($type -eq 2) {
+        $result = $enc.GetString($array)
+    } else {
+        throw "Type not supported yet", $type, $array
     }
     $result
 }
+
+
 
 function Invoke-PowerShellTcp
 {
