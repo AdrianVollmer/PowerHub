@@ -5,3 +5,4 @@ wsgidav>=3.0.0
 watchdog
 twisted>=18.9.0
 flask-sqlalchemy>=2.1
+bson
