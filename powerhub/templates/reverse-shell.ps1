@@ -64,7 +64,7 @@ function ConvertTo-Bson {
 }
 
 function ConvertFrom-Bson {
-    param([Parameter(Position = 0, Mandatory = $true)] [byte[]]$array,
+    param([Parameter(Position = 0, Mandatory = $true)] $array,
           [Parameter(Position = 1, Mandatory = $false)] [Int32]$type)
     $result = @{}
     $i = 0
@@ -96,7 +96,7 @@ function ConvertFrom-Bson {
             if ($i -ge $array.length - 2  ) {break}
         }
     } elseif ($type -eq 2) {
-        $result = $enc.GetString($array)
+        $result = $enc.GetString($array[0 .. ($array.length-2)])
     } else {
         throw "Type not supported yet", $type, $array
     }
@@ -139,22 +139,15 @@ function Invoke-PowerShellTcp
         param (
             [Parameter(Position = 0)] $Stream
         )
-        $i = $stream.Read($bytes, 0, 2)
-        if ($i -eq 0) {
-            $Null
-        } else {
-            $packet_type = $bytes[0..1]
-            $stream.Read($bytes, 0, 4)
-            $packet_length = $bytes[0..3]
-            if ([BitConverter]::IsLittleEndian) {
-                [Array]::reverse($packet_length)
-            }
-            $len = [BitConverter]::ToUInt32([byte[]]$packet_length, 0)
-            $stream.Read($bytes, 0, $len)
-            $body = $bytes[0..($len-1)]
-            $body = [System.Text.Encoding]::UTF8.GetString($body)
-            ConvertFrom-Bson $body
-        }
+        $stream.Read($bytes, 0, 4)
+        $packet_length = $bytes[0..3]
+        $len = [BitConverter]::ToUInt32([byte[]]$packet_length, 0)
+        $stream.Read($bytes, 0, $len-4)
+        $body = $packet_length
+        $body += $bytes[0 .. ($len-5)]
+        {{'Write-Debug "Read: $($enc.getstring($body))"'|debug}}
+        $result = ConvertFrom-Bson $body
+        return $result
     }
 
     function Write-ShellPacket {
@@ -164,7 +157,7 @@ function Invoke-PowerShellTcp
         )
         $body = [byte[]](ConvertTo-Bson $Packet)
 
-        {{'Write-Debug $enc.getstring($body)'|debug}}
+        {{'Write-Debug "Sending:  $($enc.getstring($body))"'|debug}}
         $Stream.Write($body, 0, $body.length)
         $Stream.Flush()
     }
@@ -230,8 +223,9 @@ function Invoke-PowerShellTcp
 
         $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
         $data = ""
-        while ( $packet = (Read-ShellPacket  $stream) ) {
+        while ( $packet = (Read-ShellPacket  $stream)[2] ) {
             $output = ""
+            {{'Write-Debug "Processing $($packet|out-string)"'|debug}}
             if ($packet.msg_type -eq "COMMAND") {
                 $data = $packet.data
 
