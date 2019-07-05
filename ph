@@ -100,16 +100,20 @@ def send_packet(p, return_response=False):
 
 def recv_packet(sock):
     if isinstance(sock, socket.socket):
-        header = sock.recv(4, socket.MSG_PEEK)
-        if not header:
-            print("Connection closed")
+        try:
+            header = sock.recv(4, socket.MSG_PEEK)
+            if not header:
+                print("Connection closed")
+                os._exit(0)
+            packet_length = struct.unpack('<i', header)[0]
+            body = sock.recv(packet_length)
+        except ConnectionResetError:
+            print("Connection reset by peer")
             os._exit(0)
-        packet_length = struct.unpack('<i', header)[0]
-        body = sock.recv(packet_length)
     else:
         header = os.read(sock, 4)
         packet_length = struct.unpack('<i', header)
-        body = os.read(sock, packet_length)
+        body = header + os.read(sock, packet_length-4)
     p = ShellPacket(body)
     return p
 
