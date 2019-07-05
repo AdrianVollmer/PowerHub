@@ -390,6 +390,7 @@ def reverse_shell():
         "delay": 10,  # delay in seconds
         "lifetime": 3,  # lifetime in days
         "PORT": str(args.REC_PORT),
+        "key": key,
     }
     result = render_template(
                     "reverse-shell.ps1",

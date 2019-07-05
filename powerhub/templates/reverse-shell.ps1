@@ -2,6 +2,7 @@
 
 {{'$DebugPreference = "Continue"'|debug}}
 
+$KEY = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 $DL_CRADLE = @'
 {{dl_cradle}}
 '@
