@@ -101,6 +101,13 @@ def run_flask_app():
     )
 
 
+@app.template_filter()
+def debug(msg):
+    if args.DEBUG:
+        return msg
+    return ""
+
+
 @app.route('/')
 @requires_auth
 def index():
@@ -313,7 +320,7 @@ def upload():
         if file:
             save_file(file)
     if noredirect:
-        return ""
+        return ('OK', 200)
     else:
         return redirect('/fileexchange')
 

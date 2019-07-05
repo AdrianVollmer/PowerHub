@@ -100,17 +100,17 @@ def send_packet(p, return_response=False):
 
 def recv_packet(sock):
     if isinstance(sock, socket.socket):
-        header = sock.recv(6)
+        header = sock.recv(4, socket.MSG_PEEK)
         if not header:
             print("Connection closed")
             os._exit(0)
-        packet_type, packet_length = struct.unpack('>HI', header)
+        packet_length = struct.unpack('<i', header)[0]
         body = sock.recv(packet_length)
     else:
-        header = os.read(sock, 6)
-        packet_type, packet_length = struct.unpack('>HI', header)
+        header = os.read(sock, 4)
+        packet_length = struct.unpack('<i', header)
         body = os.read(sock, packet_length)
-    p = ShellPacket(packet_type, body)
+    p = ShellPacket(body)
     return p
 
 
@@ -120,7 +120,7 @@ def send_command(command):
         "data": command,
         "width": columns,
     }
-    p = ShellPacket(T_DICT, json)
+    p = ShellPacket(json, T_DICT)
     send_packet(p)
 
 
@@ -134,7 +134,7 @@ def complete(text, n):
     if text in completions:
         response = completions[text]
     else:
-        p = ShellPacket(T_DICT, packet)
+        p = ShellPacket(packet, T_DICT)
         p = send_packet(p, return_response=True)
         response = p["data"]
         completions[text] = response
