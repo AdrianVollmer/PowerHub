@@ -1,6 +1,9 @@
 Version 1.3
 ===========
 
+* Return module object on Load-HubModule so it can be passed to Run-Exe and
+  similar commands
+* Add Save-HubModule
 * Obfuscate reverse shell traffic
 * Ensure PowerShell v2 compatibility
 * On the event of an incoming shell, the entry is faded in nicely in the
