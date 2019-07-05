@@ -1,6 +1,7 @@
 Version 1.3
 ===========
 
+* Ensure PowerShell v2 compatibility
 * On the event of an incoming shell, the entry is faded in nicely in the
   webapp. (#31)
 * Made command line parameters more persistent:
