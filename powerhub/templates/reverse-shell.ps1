@@ -56,6 +56,8 @@ function ConvertTo-Bson {
         }
         $result = [bitconverter]::GetBytes([Int32]($result.Length+5)) + $result
         $result += 0
+    } elseif ($type -eq 0x10) { # int32
+        $result += [bitconverter]::GetBytes([Int32]($dict))
     } else {
         throw "Type not supported yet", $type, $dict
         # TODO: consider other types than string.
@@ -90,15 +92,25 @@ function ConvertFrom-Bson {
             }
             [byte[]]$val = @()
             $i += 1
-            $length = [BitConverter]::ToInt32([byte[]]$array, $i)
-            [byte[]]$val = $array[($i+4) .. ($i+4+$length-1)]
-            $result[$key] = ConvertFrom-Bson $val $type
-            $i += $length+4
+            if ($type -eq 2) {
+                $length = [BitConverter]::ToInt32([byte[]]$array, $i)
+                [byte[]]$val = $array[($i+4) .. ($i+4+$length-1)]
+                $result[$key] = ConvertFrom-Bson $val $type
+                $i += $length+4
+            } elseif ($type -eq 0x10) {
+                [byte[]]$val = $array[($i) .. ($i+4)]
+                $result[$key] = ConvertFrom-Bson $val $type
+                $i += 4
+            }
             if ($i -ge $array.length - 2  ) {break}
         }
     } elseif ($type -eq 2) {
         # remove the null byte at the end
         $result = $enc.GetString($array[0 .. ($array.length-2)])
+    } elseif ($type -eq 0x10) { # int32
+
+        {{'Write-Debug "ToInt32:  $array, $($array.length)"'|debug}}
+        $result = [bitconverter]::ToInt32([byte[]]$array, 0)
     } else {
         throw "Type not supported yet", $type, $array
     }
