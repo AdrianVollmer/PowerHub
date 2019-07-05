@@ -68,6 +68,7 @@ def push_notification(type, msg, title, subtitle="", **kwargs):
         'msg': msg,
         'title': title,
         'subtitle': subtitle,
+        'type': type,
     }
     arguments.update(dict(**kwargs)),
     socketio.emit('push',
@@ -187,6 +188,7 @@ def add_clipboard():
         str(datetime.utcnow()).split('.')[0],
         request.remote_addr
     )
+    push_notification("reload", "Update Clipboard", "")
     return redirect('/clipboard')
 
 
@@ -319,6 +321,7 @@ def upload():
             return redirect(request.url)
         if file:
             save_file(file)
+    push_notification("reload", "Update Fileexchange", "")
     if noredirect:
         return ('OK', 200)
     else:

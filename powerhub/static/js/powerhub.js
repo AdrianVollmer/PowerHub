@@ -98,11 +98,14 @@ $(document).ready(function(){
             $(this).remove();
         });
         actOnPushMsg(msg);
-        $('#toast-container .toast').last().toast('show');
+        if (msg.title != "") {
+            $('#toast-container .toast').last().toast('show');
+        };
     });
 });
 
 function actOnPushMsg(msg) {
+    console.log(window.location.pathname);
     if (msg.msg.startsWith("Reverse shell caught")) {
         $("#noshell-note").addClass('d-none');
         $("#shell-list").removeClass('d-none');
@@ -115,6 +118,12 @@ function actOnPushMsg(msg) {
             $(data).hide().appendTo('#accordion').fadeIn(750);
             update_shell_buttons();
         });
+    } else if (msg.msg.startsWith("Update Clipboard")
+            && window.location.pathname == "/clipboard") {
+            location.reload();
+    } else if (msg.msg.startsWith("Update Fileexchange")
+            && window.location.pathname == "/fileexchange") {
+            location.reload();
     };
 };
 
