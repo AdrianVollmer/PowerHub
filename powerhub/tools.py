@@ -56,7 +56,9 @@ def get_self_signed_cert(hostname):
 
 
 def generate_random_key(n):
-    return ''.join(random.choice(string.ascii_letters) for _ in range(n))
+    key = ''.join(random.choice(string.ascii_letters) for _ in range(n))
+    log.debug("Generated a secret key: %s", key)
+    return key
 
 
 def compress(bytes):
