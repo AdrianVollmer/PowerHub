@@ -8,8 +8,8 @@ import threading
 from datetime import datetime as dt
 import email.utils as eut
 
-from powerhub.directories import XDG_DATA_HOME
-from powerhub.tools import encrypt, key
+from powerhub.directories import SHELL_LOG_DIR
+from powerhub.tools import encrypt, KEY
 from powerhub.logging import log
 
 T_BSON = 0
@@ -82,7 +82,7 @@ class ReverseShell(threading.Thread):
     def get_shell_hello(self):
         r, _, _ = select.select([self.rsock], [], [])
         firstbytes = r[0].recv(8, socket.MSG_PEEK)
-        firstbytes = encrypt(firstbytes, key)
+        firstbytes = encrypt(firstbytes, KEY)
         if firstbytes == self.SHELL_HELLO:  # or rc4(shell_hello) TODO
             log.debug("Shell hello received")
             r[0].recv(8)
@@ -100,7 +100,7 @@ class ReverseShell(threading.Thread):
 
         data = p.serialize()
         if s == self.rsock:
-            data = encrypt(data, key)
+            data = encrypt(data, KEY)
         s.send(data)
         p.set_delivered()
 
@@ -110,13 +110,13 @@ class ReverseShell(threading.Thread):
         if not header:
             return None
         if s == self.rsock:
-            header = encrypt(header, key)
+            header = encrypt(header, KEY)
         packet_length = struct.unpack('<i', header)[0]
         body = b''
         while len(body) < packet_length:
             body += s.recv(packet_length-len(body))
         if s == self.rsock:
-            body = encrypt(body, key)
+            body = encrypt(body, KEY)
         p = ShellPacket(body)
         if p['msg_type'] == "PONG":
             log.debug("%s - Pong" % (self.details["id"]))

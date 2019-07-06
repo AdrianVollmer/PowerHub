@@ -89,4 +89,4 @@ def encrypt(data, key):
     return (bytes(out))
 
 
-key = generate_random_key(128)
+KEY = generate_random_key(128)

