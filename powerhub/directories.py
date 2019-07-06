@@ -1,16 +1,16 @@
 import os
 
+_HOME = os.path.expanduser('~')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-UPLOAD_DIR = os.path.join(BASE_DIR, "upload")
-MOD_DIR = os.path.join(BASE_DIR, 'modules')
-WEBDAV_DIR = os.path.join(BASE_DIR, 'webdav')
+XDG_DATA_HOME = os.environ.get('XDG_DATA_HOME') or \
+        os.path.join(_HOME, '.local', 'share', 'powerhub')
+UPLOAD_DIR = os.path.join(XDG_DATA_HOME, "upload")
+MOD_DIR = os.path.join(XDG_DATA_HOME, 'modules')
+WEBDAV_DIR = os.path.join(XDG_DATA_HOME, 'webdav')
 WEBDAV_RO = os.path.join(WEBDAV_DIR, 'ro')
 WEBDAV_BLACKHOLE = os.path.join(WEBDAV_DIR, 'blackhole')
 WEBDAV_PUBLIC = os.path.join(WEBDAV_DIR, 'public')
-BLACKHOLE_DIR = os.path.join(BASE_DIR, 'blackhole')
-_HOME = os.path.expanduser('~')
-XDG_DATA_HOME = os.environ.get('XDG_DATA_HOME') or \
-            os.path.join(_HOME, '.local', 'share', 'powerhub')
+BLACKHOLE_DIR = os.path.join(XDG_DATA_HOME, 'blackhole')
 
 
 def ensure_dir_exists(dirname):

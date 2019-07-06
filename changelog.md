@@ -1,6 +1,8 @@
 Version 1.3
 ===========
 
+* Move all user directories to `$XDG_DATA_HOME/.local/share/powerhub` to
+  enable usage on multi user systems
 * Return module object on Load-HubModule so it can be passed to Run-Exe and
   similar commands
 * Add Save-HubModule
