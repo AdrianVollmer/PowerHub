@@ -150,7 +150,7 @@ class ReverseShell(threading.Thread):
             timestamp = self.created
             timestamp = str(timestamp).replace(" ", "_")
             filename = "shell_%s_%s.txt" % (timestamp, self.details["id"])
-            filename = os.path.join(XDG_DATA_HOME, filename)
+            filename = os.path.join(SHELL_LOG_DIR, filename)
             with open(filename, 'a+') as f:
                 f.write(p.shell_string(colors=False))
                 if p["msg_type"] == "COMMAND":

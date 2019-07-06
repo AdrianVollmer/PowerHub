@@ -11,6 +11,7 @@ WEBDAV_RO = os.path.join(WEBDAV_DIR, 'ro')
 WEBDAV_BLACKHOLE = os.path.join(WEBDAV_DIR, 'blackhole')
 WEBDAV_PUBLIC = os.path.join(WEBDAV_DIR, 'public')
 BLACKHOLE_DIR = os.path.join(XDG_DATA_HOME, 'blackhole')
+SHELL_LOG_DIR = os.path.join(XDG_DATA_HOME, 'shell_logs')
 
 
 def ensure_dir_exists(dirname):
@@ -34,6 +35,7 @@ directories = [
     WEBDAV_BLACKHOLE,
     WEBDAV_PUBLIC,
     BLACKHOLE_DIR,
+    SHELL_LOG_DIR,
 ]
 
 for d in directories:
