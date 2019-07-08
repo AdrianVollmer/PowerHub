@@ -391,6 +391,7 @@ def reverse_shell():
         "lifetime": 3,  # lifetime in days
         "PORT": str(args.REC_PORT),
         "key": KEY,
+        "symbol_name": symbol_name,
     }
     result = render_template(
                     "reverse-shell.ps1",

@@ -7,6 +7,8 @@ $DL_CRADLE = @'
 {{dl_cradle}}
 '@
 
+Set-Alias -Name Decrypt-Code -Value {{symbol_name("Decrypt-Code")}}
+
 $elements = @{ # bson elements
     [Double] = 1
     [System.String] = 2
