@@ -342,19 +342,20 @@ class ShellReceiver(object):
         while True:
             connection, addr = self.rsock.accept()
             rs = ReverseShell(connection)
-            stale_shells = [s for s in self.shells
-                            if s.details["id"] == rs.details["id"]]
-            for s in stale_shells:
-                s.unset_lsock()
-            self.shells.append(rs)
-            rs.start()
-            if self.push_notification:
-                self.push_notification(
-                    'info',
-                    'Reverse shell caught from %s:%d' % addr,
-                    'Receiver',
-                    shellid=rs.details["id"],
-                )
+            if rs.active:
+                stale_shells = [s for s in self.shells
+                                if s.details["id"] == rs.details["id"]]
+                for s in stale_shells:
+                    s.unset_lsock()
+                self.shells.append(rs)
+                rs.start()
+                if self.push_notification:
+                    self.push_notification(
+                        'info',
+                        'Reverse shell caught from %s:%d' % addr,
+                        'Receiver',
+                        shellid=rs.details["id"],
+                    )
 
     def run_provider(self, host='127.0.0.1', port=18157):
         """Provides a service where you can interact with caught shells"""
