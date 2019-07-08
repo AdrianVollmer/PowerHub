@@ -10,7 +10,6 @@ import struct
 import sys
 import threading
 
-from powerhub.receiver import ShellPacket, T_DICT
 
 parser = argparse.ArgumentParser(
     description="Interact with PowerHub shells"
@@ -31,8 +30,9 @@ parser.add_argument(
 )
 
 
+# parse args before powerhub does
 args = parser.parse_args()
-
+from powerhub.receiver import ShellPacket, T_DICT  # noqa
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_address = ('127.0.0.1', 18157)
