@@ -184,7 +184,7 @@ while True:
                 exit(0)
             elif decision.lower() == 'k':
                 packet = {"msg_type": "KILL", "data": ""}
-                p = ShellPacket(T_DICT, packet)
+                p = ShellPacket(packet, T_DICT)
                 send_packet(p)
                 exit(0)
             else:
