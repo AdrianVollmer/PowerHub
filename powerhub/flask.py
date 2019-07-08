@@ -29,6 +29,7 @@ from powerhub.obfuscation import symbol_name
 from powerhub.receiver import ShellReceiver
 from powerhub.args import args
 from powerhub.logging import log
+from powerhub._version import __version__
 
 
 _db_filename = os.path.join(XDG_DATA_HOME, "powerhub_db.sqlite")
@@ -132,6 +133,7 @@ def hub():
         "repositories": list(repositories.keys()),
         "SSL": args.SSL_KEY is not None,
         "AUTH": args.AUTH,
+        "VERSION": __version__,
     }
     return render_template("hub.html", **context)
 
@@ -146,6 +148,7 @@ def receiver():
         "SSL": args.SSL_KEY is not None,
         "shells": shell_receiver.active_shells(),
         "AUTH": args.AUTH,
+        "VERSION": __version__,
     }
     return render_template("receiver.html", **context)
 
@@ -156,6 +159,7 @@ def clipboard():
     context = {
         "clipboard": list(cb.entries.values()),
         "AUTH": args.AUTH,
+        "VERSION": __version__,
     }
     return render_template("clipboard.html", **context)
 
@@ -166,6 +170,7 @@ def fileexchange():
     context = {
         "files": get_filelist(),
         "AUTH": args.AUTH,
+        "VERSION": __version__,
     }
     return render_template("fileexchange.html", **context)
 

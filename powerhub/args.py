@@ -1,4 +1,5 @@
 import argparse
+from powerhub._version import __version__
 
 parser = argparse.ArgumentParser(
     description="Leverage PowerShell to load sketchy code over HTTP"
@@ -117,7 +118,7 @@ auth_group.add_argument(
     help=("disable basic authentication (not recommended)"))
 
 parser.add_argument(
-    '-v', '--version', action='version', version='%(prog)s 1.2'
+    '-v', '--version', action='version', version='PowerHub ' + __version__
 )
 
 args = parser.parse_args()
