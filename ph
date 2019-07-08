@@ -174,7 +174,7 @@ while True:
         got_decision = False
         while not got_decision:
             decision = input(
-                "\nDo you want to [E]xit, [s]tay, or [k]ill the shell? "
+                "\nDo you want to [e]xit, [s]tay, or [k]ill the shell? "
             )
             if decision.lower() == 's':
                 command = ""
