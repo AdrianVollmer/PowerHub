@@ -109,6 +109,13 @@ def debug(msg):
     return ""
 
 
+@app.template_filter()
+def nodebug(msg):
+    if not args.DEBUG:
+        return msg
+    return ""
+
+
 @app.route('/')
 @requires_auth
 def index():
