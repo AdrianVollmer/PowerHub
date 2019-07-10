@@ -49,7 +49,7 @@ class DynamicProxy(Resource):
                 path = b'/'
             log.debug("Forwarding request to WebDAV server: %s" %
                       path.decode())
-            return ReverseProxyResource(host, args.WEBDAV_PORT, path)
+            return ReverseProxyResource(host, args.WEBDAV_PORT, b'/webdav'+path)
         else:
             log.debug("Forwarding request to Flask server")
             new_path = b'/%s' % (resource,)
