@@ -29,7 +29,8 @@ class DynamicProxy(Resource):
         path = '/'.join(path.split('/')[1:])
         host = '127.0.0.1'
         x_forwarded_for = request.client.host
-        x_for_host = request.host.host
+        x_for_host = request.requestHeaders.getRawHeaders('host')
+        x_for_host = x_for_host[0].split(':')[0]
         x_for_port = request.host.port
         if x_for_port == args.SSL_PORT:
             x_for_proto = "https"
