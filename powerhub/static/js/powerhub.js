@@ -27,7 +27,10 @@ $('#clipboard-delete-all').click(function(){
 });
 
 $('#reloadbutton').click(function(){
-    $.post({url: "reload", success: modules_loaded});
+    $.post({
+        url: "reload",
+        success: function() { location.reload(); },
+    });
 });
 
 $(function() {
@@ -43,11 +46,6 @@ $(function() {
         }
     );
 });
-
-function modules_loaded(data){
-    var msg = $('<div>').html(data);
-    $('#ajaxmsg').append(msg);
-};
 
 function update_shell_buttons() {
     $("#shell-log-modal").on("show.bs.modal", function(e) {
