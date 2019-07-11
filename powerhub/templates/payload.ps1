@@ -414,6 +414,7 @@ function Send-File {
     $WebRequest = [System.Net.WebRequest]::Create($post_url)
     $WebRequest.Method = "POST"
     $WebRequest.ContentType = "multipart/form-data; boundary=`"$boundary`""
+    $WebRequest.Proxy = [System.Net.WebRequest]::GetSystemWebProxy()
     $PostStream = $WebRequest.GetRequestStream()
     $BodyLines = [System.Text.Encoding]::ASCII.GetBytes($BodyLines)
     $PostStream.Write($BodyLines, 0, $BodyLines.Length)
