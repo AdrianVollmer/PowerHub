@@ -20,7 +20,8 @@ from powerhub.logging import log
 
 class DynamicProxy(Resource):
     isLeaf = False
-    allowedMethods = ("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS")
+    allowedMethods = ("GET", "POST", "PUT", "DELETE", "HEAD",
+                      "PROPFIND", "OPTIONS")
 
     def getChild(self, path, request):
         path = path.decode()
@@ -44,12 +45,13 @@ class DynamicProxy(Resource):
         ]:
             request.requestHeaders.addRawHeader(*header)
         path = path.encode()
-        if resource == b"webdav":
-            if not path:
-                path = b'/'
+        if resource.startswith(b"webdav"):
+            new_path = b'/%s' % (resource,)
+            if path:
+                new_path += b'/%s' % path
             log.debug("Forwarding request to WebDAV server: %s" %
                       path.decode())
-            return ReverseProxyResource(host, args.WEBDAV_PORT, b'/webdav'+path)
+            return ReverseProxyResource(host, args.WEBDAV_PORT, new_path)
         else:
             log.debug("Forwarding request to Flask server")
             new_path = b'/%s' % (resource,)

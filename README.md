@@ -95,15 +95,14 @@ The file exchange offers a way to transfer files via HTTP back to the host.
 Think [Droopy](https://github.com/stackp/Droopy).
 
 If you have the necessary Python modules installed, a WebDAV service is also
-started. You can mount it on the target as a network drive with
-`Mount-WebDAV` (as 'S:' by default). It allows for anonymous login and it
-contains three folders:
+started. You can mount it on the target as two network drives with
+`Mount-WebDAV` (as 'S:' by default). Be careful, it allows anonmyous access.
+One drive is read-only -- maybe you can bypass a weak anti virus with this.
+The other has two folders and writeable by everyone:
 
 * `public` with read/write access for everyone
-* `ro` with *read only* access for everyone -- maybe you can bypass a weak
-  anti virus with this
 * `blackhole` for dropping sensitive data. Any file placed here via WebDAV
-  will immediately be moved to the `blackhole` directory in `$XDG_DATA_HOME`.
+  will immediately be moved to the `upload` directory in `$XDG_DATA_HOME`.
 
 The dependencies for the WebDAV service are `wsgidav` (installable via
 `pip3`), `cheroot` and `watchdog`.

@@ -7,10 +7,9 @@ XDG_DATA_HOME = os.environ.get('XDG_DATA_HOME') or \
 UPLOAD_DIR = os.path.join(XDG_DATA_HOME, "upload")
 MOD_DIR = os.path.join(XDG_DATA_HOME, 'modules')
 WEBDAV_DIR = os.path.join(XDG_DATA_HOME, 'webdav')
-WEBDAV_RO = os.path.join(WEBDAV_DIR, 'ro')
+WEBDAV_RO = os.path.join(XDG_DATA_HOME, 'webdav_ro')
 WEBDAV_BLACKHOLE = os.path.join(WEBDAV_DIR, 'blackhole')
 WEBDAV_PUBLIC = os.path.join(WEBDAV_DIR, 'public')
-BLACKHOLE_DIR = os.path.join(XDG_DATA_HOME, 'blackhole')
 SHELL_LOG_DIR = os.path.join(XDG_DATA_HOME, 'shell_logs')
 
 
@@ -27,14 +26,12 @@ directories = [
     XDG_DATA_HOME,
     WEBDAV_DIR,
     MOD_DIR,
-    BLACKHOLE_DIR,
     os.path.join(MOD_DIR, 'ps1'),
     os.path.join(MOD_DIR, 'exe'),
     os.path.join(MOD_DIR, 'shellcode'),
     WEBDAV_RO,
     WEBDAV_BLACKHOLE,
     WEBDAV_PUBLIC,
-    BLACKHOLE_DIR,
     SHELL_LOG_DIR,
 ]
 

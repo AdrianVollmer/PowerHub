@@ -489,6 +489,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
 }
 
 $global:WebdavLetter = $Null
+$global:WebdavRoLetter = $Null
 
 function Mount-Webdav {
 <#
@@ -496,18 +497,27 @@ function Mount-Webdav {
 
 Mount the Webdav drive.
 
+.PARAMETER RoLetter
+
+The letter the mounted read-only drive will receive (default: 'R')
+
 .PARAMETER Letter
 
-The letter the mounted drive will receive (default: 'S')
+The letter the mounted public drive will receive (default: 'S')
 
 #>
     Param(
         [parameter(Mandatory=$False)]
-        [String]$Letter = "S"
+        [String]$Letter = "S",
+        [parameter(Mandatory=$False)]
+        [String]$RoLetter = "R"
     )
     Set-Variable -Name "WebdavLetter" -Value "$Letter" -Scope Global
+    Set-Variable -Name "WebdavRoLetter" -Value "$RoLetter" -Scope Global
     {{'Write-Debug "Mounting $WEBDAV_URL to $LETTER"'|debug}}
     $netout = iex "net use ${Letter}: $WEBDAV_URL /persistent:no 2>&1" | Out-Null
+    {{'Write-Debug "Mounting ${WEBDAV_URL}_ro to $RoLETTER"'|debug}}
+    $netout = iex "net use ${RoLetter}: ${WEBDAV_URL}_ro /persistent:no 2>&1" | Out-Null
     if (!$?) {
         throw "Error while executing 'net use': $netout"
     }
@@ -523,6 +533,7 @@ Unmount the Webdav drive.
 #>
     If (${WebdavLetter}) {
         $netout = iex "net use ${WebdavLetter}: /delete 2>&1" | Out-Null
+        $netout = iex "net use ${WebdavRoLetter}: /delete 2>&1" | Out-Null
         if (!$?) {
             throw "Error while executing 'net use': $netout"
         }
