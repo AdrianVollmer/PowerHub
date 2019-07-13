@@ -4,7 +4,11 @@ import sys
 from powerhub.args import args
 
 
-FORMAT = '%(levelname).1s %(asctime)-15s %(message)s'
+if args.DEBUG:
+    FORMAT = '%(levelname).1s %(asctime)-15s '
+    FORMAT += '%(filename)s:%(lineno)d %(message)s'
+else:
+    FORMAT = '%(levelname).1s %(asctime)-15s %(message)s'
 
 
 logging.basicConfig(
