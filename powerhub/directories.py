@@ -37,3 +37,5 @@ directories = [
 
 for d in directories:
     ensure_dir_exists(d)
+
+DB_FILENAME = os.path.join(XDG_DATA_HOME, "powerhub_db.sqlite")

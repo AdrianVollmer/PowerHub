@@ -7,21 +7,17 @@ from tempfile import TemporaryDirectory
 
 from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash, make_response, abort
-try:
-    from flask_sqlalchemy import SQLAlchemy
-except ImportError:
-    print("You have unmet dependencies. The clipboard "
-          "won't be persistent. Consult the README.")
 
 from werkzeug.serving import WSGIRequestHandler, _log
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_socketio import SocketIO  # , emit
 
+from powerhub.sql import get_db
 from powerhub.clipboard import init_clipboard
 from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
-from powerhub.directories import UPLOAD_DIR, BASE_DIR, XDG_DATA_HOME
+from powerhub.directories import UPLOAD_DIR, BASE_DIR, DB_FILENAME
 from powerhub.tools import encrypt, compress, KEY
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
@@ -32,23 +28,16 @@ from powerhub.logging import log
 from powerhub._version import __version__
 
 
-_db_filename = os.path.join(XDG_DATA_HOME, "powerhub_db.sqlite")
-
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1, x_port=1)
 app.config.update(
     DEBUG=args.DEBUG,
     SECRET_KEY=os.urandom(16),
-    DB_FILENAME=_db_filename,
-)
-app.config.update(
-    SQLALCHEMY_DATABASE_URI='sqlite:///' + app.config["DB_FILENAME"],
+    SQLALCHEMY_DATABASE_URI='sqlite:///' + DB_FILENAME,
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
-try:
-    db = SQLAlchemy(app)
-except NameError:
-    db = None
+
+db = get_db(app)
 cb = init_clipboard(db=db)
 
 socketio = SocketIO(
