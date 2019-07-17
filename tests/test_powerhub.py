@@ -3,12 +3,17 @@
 
 import os
 import tempfile
+import shutil
 import sys
 import re
 
 import pytest
 
 TEST_URI = 'foobar'
+NEW_XDG_DATA_HOME = os.path.join(os.sep, 'tmp', 'ph_test')
+os.environ["XDG_DATA_HOME"] = NEW_XDG_DATA_HOME
+shutil.rmtree(NEW_XDG_DATA_HOME)
+os.makedirs(NEW_XDG_DATA_HOME)
 
 
 @pytest.fixture
@@ -16,9 +21,6 @@ def flask_app():
     sys.argv = ['./powerhub.py', TEST_URI, '--no-auth']
     temp_db = tempfile.mkstemp()[1]
     from powerhub import flask
-    flask.app.config.update(
-         SQLALCHEMY_DATABASE_URI='sqlite:///' + temp_db
-    )
     flask.cb.update()  # ensure table exists
     flask_app = flask.app.test_client()
     yield flask_app
