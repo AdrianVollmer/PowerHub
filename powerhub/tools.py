@@ -7,6 +7,7 @@ import string
 from OpenSSL import crypto
 
 from powerhub.directories import XDG_DATA_HOME
+from powerhub.settings import get_setting, set_setting
 from powerhub.logging import log
 
 
@@ -61,6 +62,16 @@ def generate_random_key(n):
     return key
 
 
+def get_secret_key():
+    key = get_setting("secret_key")
+    if not key:
+        key = generate_random_key(128)
+        set_setting("secret_key", key)
+    else:
+        log.debug("Loaded secret key: %s", key)
+    return key
+
+
 def compress(bytes):
     out = io.BytesIO()
     with gzip.GzipFile(fileobj=out, mode="w") as f:
@@ -87,6 +98,3 @@ def encrypt(data, key):
         out.append(char ^ S[(S[i] + S[j]) % 256])
 
     return (bytes(out))
-
-
-KEY = generate_random_key(128)

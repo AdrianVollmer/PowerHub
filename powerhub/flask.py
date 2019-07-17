@@ -1,3 +1,4 @@
+
 from base64 import b64encode
 from datetime import datetime
 import logging
@@ -11,14 +12,18 @@ from flask import Flask, render_template, request, Response, redirect, \
 from werkzeug.serving import WSGIRequestHandler, _log
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_socketio import SocketIO  # , emit
+try:
+    from flask_sqlalchemy import SQLAlchemy
+except ImportError:
+    pass
 
-from powerhub.sql import get_db
+from powerhub.settings import init_settings
 from powerhub.clipboard import init_clipboard
 from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
 from powerhub.directories import UPLOAD_DIR, BASE_DIR, DB_FILENAME
-from powerhub.tools import encrypt, compress, KEY
+from powerhub.tools import encrypt, compress, get_secret_key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
@@ -37,8 +42,13 @@ app.config.update(
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
 
-db = get_db(app)
+try:
+    db = SQLAlchemy(app)
+except NameError:
+    db = None
+init_settings(db)
 cb = init_clipboard(db=db)
+KEY = get_secret_key()
 
 socketio = SocketIO(
     app,

@@ -15,7 +15,7 @@ def set_setting(key, value):
     _db.session.commit()
 
 
-def init_db(db):
+def init_settings(db):
     global Setting
     global _db
     _db = db
