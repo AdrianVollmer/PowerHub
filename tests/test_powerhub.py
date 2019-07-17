@@ -9,6 +9,10 @@ import re
 
 import pytest
 
+
+myPath = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, myPath + '/../')
+
 TEST_URI = 'foobar'
 NEW_XDG_DATA_HOME = os.path.join(os.sep, 'tmp', 'ph_test')
 os.environ["XDG_DATA_HOME"] = NEW_XDG_DATA_HOME
