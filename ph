@@ -170,7 +170,7 @@ while True:
 
     try:
         command = input(prompt)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, EOFError):
         got_decision = False
         while not got_decision:
             decision = input(
