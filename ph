@@ -18,7 +18,10 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "ID",
     type=str,
-    help="ID of the shell you want to interact with"
+    default="g"*8,
+    nargs='?',
+    help="ID of the shell you want to interact with "
+    "(default: the newest one)"
 )
 
 parser.add_argument(
@@ -32,6 +35,7 @@ parser.add_argument(
 
 # parse args before powerhub does
 args = parser.parse_args()
+sys.argv = [sys.argv[0], None]
 from powerhub.receiver import ShellPacket, T_DICT  # noqa
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

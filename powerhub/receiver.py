@@ -370,6 +370,8 @@ class ShellReceiver(object):
                 break
             peer_shell = [s for s in self.shells if s.details["id"] ==
                           id]
+            if id == "g"*8 and self.shells:
+                peer_shell = [self.shells[-1]]
             if not peer_shell:
                 log.error("No shell with ID %s found" % id)
                 connection.close()
@@ -377,7 +379,7 @@ class ShellReceiver(object):
             peer_shell[0].set_lsock(connection)
             log.info("%s - %s - Connected local and reverse shell" % (
                         addr[0],
-                        id,
+                        peer_shell[0].details["id"],
                         ))
 
     def get_shell_by_id(self, shell_id):
