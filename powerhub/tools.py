@@ -6,7 +6,7 @@ import string
 
 from OpenSSL import crypto
 
-from powerhub.directories import XDG_DATA_HOME
+from powerhub.directories import CERT_DIR
 from powerhub.settings import get_setting, set_setting
 from powerhub.logging import log
 
@@ -39,7 +39,7 @@ def create_self_signed_cert(hostname,
 
 
 def get_self_signed_cert(hostname):
-    file_basename = os.path.join(XDG_DATA_HOME, "cert_%s." % hostname)
+    file_basename = os.path.join(CERT_DIR, "cert_%s." % hostname)
     cert_file = file_basename + 'cert'
     key_file = file_basename + 'key'
     # check if one already exists
