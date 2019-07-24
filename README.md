@@ -72,6 +72,8 @@ A simple interface to install modules is provided for your convenience.
 The Receiver
 ------------
 
+*EXPERIMENTAL*
+
 The receiver catches incoming reverse shells and lists them here. Each shell
 receives a random ID consisting of an eight digit hex string. You can
 interact with it by executing the accompanying script: `./ph <ID>`.
