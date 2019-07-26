@@ -1,6 +1,18 @@
 from functools import wraps
+
 from flask import request, Response
+
 from powerhub.args import args
+from powerhub.tools import generate_random_key
+from powerhub.logging import log
+
+
+if not (args.AUTH or args.NOAUTH):
+    log.info("You specified neither '--no-auth' nor '--auth <user>:<pass>'. "
+             "A password will be generated for your protection.")
+    args.AUTH = "powerhub:" + generate_random_key(10)
+    log.info("The credentials for basic authentication are '%s' "
+             "(without quotes)." % args.AUTH)
 
 
 def check_auth(username, password):

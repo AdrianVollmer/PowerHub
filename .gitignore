@@ -3,11 +3,6 @@ venv
 .env
 .venv
 notes
-upload
-modules
-webdav/ro
-webdav/blackhole
-webdav/public
-blackhole
 *.pem
 *.pyc
+__pycache__

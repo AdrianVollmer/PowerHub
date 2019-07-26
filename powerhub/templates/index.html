@@ -32,7 +32,31 @@
   <body>
 
 <nav class="navbar navbar-expand navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+  <a class="navbar navbar-brand mr-0"
+     role="button"
+     href='#'
+     id="dropdownMenuLink"
+     data-toggle="dropdown"
+     aria-haspopup="true"
+     aria-expanded="false">
+  <span class="navbar-toggler-icon"></span>
+  </a>
+  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    {% if AUTH != "" %}
+    <a class="dropdown-item" href="#">Basic Authentication
+    Credentials:</br><code>{{AUTH}}</code></a>
+    {% endif %}
+    <div class="dropdown-item">Version: {{VERSION}}</div>
+    <div class="dropdown-item">by Adrian Vollmer</div>
+    <div class="dropdown-item"><a title="github source" target="_blank" href="https://github.com/AdrianVollmer/PowerHub">github.com/AdrianVollmer/PowerHub</a></div>
+  </div>
   <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">PowerHub</a>
+  <div class="collapse" id="navbarToggleExternalContent">
+    <div class="bg-dark p-4">
+      <h4 class="text-white">Collapsed content</h4>
+      <span class="text-muted">Toggleable via the navbar brand.</span>
+    </div>
+  </div>
 </nav>
 
 {% include "toasts.html" %}

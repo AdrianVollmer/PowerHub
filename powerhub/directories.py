@@ -1,16 +1,17 @@
 import os
 
+_HOME = os.path.expanduser('~')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-UPLOAD_DIR = os.path.join(BASE_DIR, "upload")
-MOD_DIR = os.path.join(BASE_DIR, 'modules')
-WEBDAV_DIR = os.path.join(BASE_DIR, 'webdav')
-WEBDAV_RO = os.path.join(WEBDAV_DIR, 'ro')
+XDG_DATA_HOME = os.environ.get('XDG_DATA_HOME') or \
+        os.path.join(_HOME, '.local', 'share', 'powerhub')
+UPLOAD_DIR = os.path.join(XDG_DATA_HOME, "upload")
+MOD_DIR = os.path.join(XDG_DATA_HOME, 'modules')
+WEBDAV_DIR = os.path.join(XDG_DATA_HOME, 'webdav')
+WEBDAV_RO = os.path.join(XDG_DATA_HOME, 'webdav_ro')
 WEBDAV_BLACKHOLE = os.path.join(WEBDAV_DIR, 'blackhole')
 WEBDAV_PUBLIC = os.path.join(WEBDAV_DIR, 'public')
-BLACKHOLE_DIR = os.path.join(BASE_DIR, 'blackhole')
-_HOME = os.path.expanduser('~')
-XDG_DATA_HOME = os.environ.get('XDG_DATA_HOME') or \
-            os.path.join(_HOME, '.local', 'share', 'powerhub')
+SHELL_LOG_DIR = os.path.join(XDG_DATA_HOME, 'shell_logs')
+CERT_DIR = os.path.join(XDG_DATA_HOME, 'ssl')
 
 
 def ensure_dir_exists(dirname):
@@ -26,15 +27,17 @@ directories = [
     XDG_DATA_HOME,
     WEBDAV_DIR,
     MOD_DIR,
-    BLACKHOLE_DIR,
     os.path.join(MOD_DIR, 'ps1'),
     os.path.join(MOD_DIR, 'exe'),
     os.path.join(MOD_DIR, 'shellcode'),
     WEBDAV_RO,
     WEBDAV_BLACKHOLE,
     WEBDAV_PUBLIC,
-    BLACKHOLE_DIR,
+    SHELL_LOG_DIR,
+    CERT_DIR,
 ]
 
 for d in directories:
     ensure_dir_exists(d)
+
+DB_FILENAME = os.path.join(XDG_DATA_HOME, "powerhub_db.sqlite")

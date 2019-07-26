@@ -10,7 +10,6 @@ import struct
 import sys
 import threading
 
-from powerhub.receiver import ShellPacket, T_DICT
 
 parser = argparse.ArgumentParser(
     description="Interact with PowerHub shells"
@@ -19,7 +18,10 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "ID",
     type=str,
-    help="ID of the shell you want to interact with"
+    default="g"*8,
+    nargs='?',
+    help="ID of the shell you want to interact with "
+    "(default: the newest one)"
 )
 
 parser.add_argument(
@@ -31,8 +33,10 @@ parser.add_argument(
 )
 
 
+# parse args before powerhub does
 args = parser.parse_args()
-
+sys.argv = [sys.argv[0], None]
+from powerhub.receiver import ShellPacket, T_DICT  # noqa
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_address = ('127.0.0.1', 18157)
@@ -100,17 +104,21 @@ def send_packet(p, return_response=False):
 
 def recv_packet(sock):
     if isinstance(sock, socket.socket):
-        header = sock.recv(6)
-        if not header:
-            print("Connection closed")
+        try:
+            header = sock.recv(4, socket.MSG_PEEK)
+            if not header:
+                print("Connection closed")
+                os._exit(0)
+            packet_length = struct.unpack('<i', header)[0]
+            body = sock.recv(packet_length)
+        except ConnectionResetError:
+            print("Connection reset by peer")
             os._exit(0)
-        packet_type, packet_length = struct.unpack('>HI', header)
-        body = sock.recv(packet_length)
     else:
-        header = os.read(sock, 6)
-        packet_type, packet_length = struct.unpack('>HI', header)
-        body = os.read(sock, packet_length)
-    p = ShellPacket(packet_type, body)
+        header = os.read(sock, 4)
+        packet_length = struct.unpack('<i', header)
+        body = header + os.read(sock, packet_length-4)
+    p = ShellPacket(body)
     return p
 
 
@@ -120,7 +128,7 @@ def send_command(command):
         "data": command,
         "width": columns,
     }
-    p = ShellPacket(T_DICT, json)
+    p = ShellPacket(json, T_DICT)
     send_packet(p)
 
 
@@ -134,7 +142,7 @@ def complete(text, n):
     if text in completions:
         response = completions[text]
     else:
-        p = ShellPacket(T_DICT, packet)
+        p = ShellPacket(packet, T_DICT)
         p = send_packet(p, return_response=True)
         response = p["data"]
         completions[text] = response
@@ -166,11 +174,11 @@ while True:
 
     try:
         command = input(prompt)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, EOFError):
         got_decision = False
         while not got_decision:
             decision = input(
-                "\nDo you want to [E]xit, [s]tay, or [k]ill the shell? "
+                "\nDo you want to [e]xit, [s]tay, or [k]ill the shell? "
             )
             if decision.lower() == 's':
                 command = ""
@@ -180,7 +188,7 @@ while True:
                 exit(0)
             elif decision.lower() == 'k':
                 packet = {"msg_type": "KILL", "data": ""}
-                p = ShellPacket(T_DICT, packet)
+                p = ShellPacket(packet, T_DICT)
                 send_packet(p)
                 exit(0)
             else:

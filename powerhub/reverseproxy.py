@@ -14,24 +14,44 @@ from twisted.web.server import Site
 from twisted.web.resource import Resource
 
 from powerhub.args import args
-
-import logging
-log = logging.getLogger(__name__)
+from powerhub.tools import get_self_signed_cert
+from powerhub.logging import log
 
 
 class DynamicProxy(Resource):
     isLeaf = False
-    allowedMethods = ("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS")
+    allowedMethods = ("GET", "POST", "PUT", "DELETE", "HEAD",
+                      "PROPFIND", "OPTIONS")
 
     def getChild(self, path, request):
         path = path.decode()
+        log.debug("%s - %s" % (request.client.host, path))
         resource = path.split('/')[0].encode()
         path = '/'.join(path.split('/')[1:])
         host = '127.0.0.1'
+        x_forwarded_for = request.client.host
+        x_for_host = request.requestHeaders.getRawHeaders('host')
+        x_for_host = x_for_host[0].split(':')[0]
+        x_for_port = request.host.port
+        if x_for_port == args.SSL_PORT:
+            x_for_proto = "https"
+        else:
+            x_for_proto = "http"
+        for header in [
+            ('X-Forwarded-For', x_forwarded_for),
+            ('X-Forwarded-Host', x_for_host),
+            ('X-Forwarded-Port', str(x_for_port)),
+            ('X-Forwarded-Proto', x_for_proto),
+        ]:
+            request.requestHeaders.addRawHeader(*header)
         path = path.encode()
-        if resource == b"webdav":
-            log.debug("Forwarding request to WebDAV server")
-            return ReverseProxyResource(host, args.WEBDAV_PORT, path)
+        if resource.startswith(b"webdav"):
+            new_path = b'/%s' % (resource,)
+            if path:
+                new_path += b'/%s' % path
+            log.debug("Forwarding request to WebDAV server: %s" %
+                      path.decode())
+            return ReverseProxyResource(host, args.WEBDAV_PORT, new_path)
         else:
             log.debug("Forwarding request to Flask server")
             new_path = b'/%s' % (resource,)
@@ -40,10 +60,13 @@ class DynamicProxy(Resource):
             return ReverseProxyResource(host, args.FLASK_PORT, new_path)
 
 
-proxy = DynamicProxy()
-site = Site(proxy)
-reactor.listenTCP(args.LPORT, site, interface=args.LHOST)
-if args.SSL_KEY and args.SSL_CERT:
+def run_proxy():
+    proxy = DynamicProxy()
+    site = Site(proxy)
+    reactor.listenTCP(args.LPORT, site, interface=args.LHOST)
+
+    if not args.SSL_KEY or not args.SSL_CERT:
+        args.SSL_CERT, args.SSL_KEY = get_self_signed_cert(args.URI_HOST)
     reactor.listenSSL(args.SSL_PORT,
                       site,
                       ssl.DefaultOpenSSLContextFactory(
@@ -52,3 +75,4 @@ if args.SSL_KEY and args.SSL_CERT:
                       ),
                       interface=args.LHOST,
                       )
+    reactor.run()

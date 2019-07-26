@@ -2,12 +2,17 @@ import os
 import threading
 from cheroot import wsgi
 from wsgidav.wsgidav_app import WsgiDAVApp
-from powerhub.directories import WEBDAV_PUBLIC, WEBDAV_RO, WEBDAV_BLACKHOLE, \
-        BLACKHOLE_DIR, WEBDAV_DIR
+from powerhub.directories import WEBDAV_RO, WEBDAV_BLACKHOLE, \
+        UPLOAD_DIR, WEBDAV_DIR
 from powerhub.args import args
 import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+import logging
+
+logger = logging.getLogger("wsgidav")
+logger.propagate = True
+logger.setLevel(logging.DEBUG)
 
 config = {
     "host": '127.0.0.1',
@@ -25,21 +30,16 @@ config = {
     #: Used by SimpleDomainController only
     "simple_dc": {"user_mapping": {"*": True}},
     "provider_mapping": {
-        "/ro": {
+        "/webdav_ro": {
             "root": WEBDAV_RO,
             "readonly": True,
             "auth": "anonymous",
         },
-        "/public": {
-            "root": WEBDAV_PUBLIC,
-        },
-        "/blackhole": {
-            "root": WEBDAV_BLACKHOLE,
-        },
-        "/": {
+        "/webdav/": {
             "root": WEBDAV_DIR,
-            "readonly": True,
-        }
+            "readonly": False,
+            "auth": "anonymous",
+        },
     },
     "verbose": 1,
     }
@@ -54,10 +54,12 @@ server = wsgi.Server(**server_args)
 
 
 class MyHandler(FileSystemEventHandler):
+    """Responsible for copying files from the BLACKHOLE_DIR to the
+    UPLOAD_DIR"""
     def on_created(self, event):
         os.rename(
             os.path.join(event.src_path),
-            os.path.join(BLACKHOLE_DIR, os.path.basename(event.src_path)),
+            os.path.join(UPLOAD_DIR, os.path.basename(event.src_path)),
         )
 
 
