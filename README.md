@@ -52,7 +52,7 @@ However, there are a few dependencies. They are listed in the
 Install them either via `pip3 install --user -r requirements.txt` or use a
 virtual environment:
 
-Run `python3 -m venv env` to create a virtual environment`, then use `source
+Run `python3 -m venv env` to create a virtual environment, then use `source
 env/bin/activate` to activate it. Now run `pip3 install -r requirements.txt`
 to install the depencendies inside the virtual environment.
 
