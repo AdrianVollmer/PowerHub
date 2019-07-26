@@ -62,7 +62,7 @@ def test_clipboard_add_del(flask_app):
     reps = 8
     content = '<strong>NO HTML</strong> allowed here'
     response = flask_app.get('/clipboard').data.decode()
-    entry_count = response.count('card-text')
+    entry_count = response.count('card-body')
     test_count = response.count(cgi.escape(content))
     for i in range(reps):
         response = flask_app.post('/clipboard/add', data={
@@ -72,7 +72,7 @@ def test_clipboard_add_del(flask_app):
     response = flask_app.get('/clipboard').data.decode()
     assert "Delete all" in response
     assert "Export" in response
-    new_entry_count = response.count('card-text')
+    new_entry_count = response.count('card-body')
     new_test_count = response.count(cgi.escape(content))
     assert cgi.escape(content) in response
     assert entry_count == new_entry_count - reps
