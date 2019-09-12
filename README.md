@@ -72,10 +72,20 @@ callback port or path differ from the default, it can also be changed.
 Read `./powerhub.py --help` and the [Wiki](https://github.com/AdrianVollmer/PowerHub/wiki/Usage) for details.
 
 
+Binaries
+========
+
+If you don't trust the binaries, you can generate them like so:
+
+* `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe -target:library -platform:x86 -out:amsi.dll zc00l.txt`
+* `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe -target:library -platform:x64 -out:amsi64.dll zc00l.txt`
+
+The contents of `zc00l.txt` are available [here](https://0x00-0x00.github.io/research/2018/10/28/How-to-bypass-AMSI-and-Execute-ANY-malicious-powershell-code.html).
+
 Credits
 =======
 
-PowerHub is partially based on the awesome work of zeroc00l, mar10, p3nt4.
+PowerHub is partially based on the awesome work of zc00l, mar10, p3nt4.
 And of course, it would be nothing without @harmj0y, @mattifestation and the
 many other contributors to [PowerSploit](https://github.com/PowerShellMafia/PowerSploit).
 
