@@ -233,7 +233,11 @@ Load the exe module with the name 'meterpreter.exe' in memory and run it
     if ($OnDisk) {
         foreach ($n in $Module) {
             $Filename = Save-HubModule $n -Directory $env:TMP
-            Start-Process -FilePath "$Filename" -ArgumentList "$ExeArgs"
+            if ($ExeArgs) {
+                Start-Process -FilePath "$Filename" -ArgumentList "$ExeArgs"
+            } else {
+                Start-Process -FilePath "$Filename"
+            }
         }
     } else {
         if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue) {
