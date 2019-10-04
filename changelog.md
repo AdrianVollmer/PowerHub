@@ -1,3 +1,9 @@
+Version 1.4
+===========
+
+* Add feature: executing clipboard entry content upon executing PowerHub on
+  target
+
 Version 1.3
 ===========
 

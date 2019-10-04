@@ -108,3 +108,7 @@ body {
 .faded {
   opacity: 0.5;
 }
+
+.card-id {
+  float: right;
+}
