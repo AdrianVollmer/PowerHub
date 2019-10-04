@@ -73,6 +73,10 @@
                aria-controls="receiver" aria-selected="{% block receiver_selected %}{% endblock %}">Receiver</a>
         </li>
         <li class="nav-item">
+            <a class="nav-link {% block loot_active %}{% endblock %}" id="loot-tab" href="/loot" role="tab"
+               aria-controls="loot" aria-selected="{% block loot_selected %}{% endblock %}">Loot</a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link {% block clipboard_active %}{% endblock %}" id="clipboard-tab"
                 href="/clipboard" role="tab" aria-controls="clipboard" aria-selected="{% block clipboard_selected %}{% endblock %}">Clipboard</a>
         </li>
