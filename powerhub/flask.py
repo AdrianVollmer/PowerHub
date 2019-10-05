@@ -300,7 +300,7 @@ def payload_0():
     try:
         clipboard_id = int(request.args.get('e'))
         exec_clipboard_entry = cb.entries[clipboard_id].content
-    except ValueError:
+    except TypeError:
         exec_clipboard_entry = ""
     context = {
         "modules": modules,
