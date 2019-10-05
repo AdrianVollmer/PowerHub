@@ -156,11 +156,6 @@ def receiver():
 @requires_auth
 def loot():
     context = {
-        "dl_str": stager_str(flavor='reverse_shell',
-                             need_proxy=need_proxy,
-                             need_tlsv12=need_tlsv12),
-        "SSL": args.SSL_KEY is not None,
-        "shells": shell_receiver.active_shells(),
         "AUTH": args.AUTH,
         "VERSION": __version__,
     }
