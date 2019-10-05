@@ -157,7 +157,7 @@ def receiver():
 @requires_auth
 def loot_tab():
     context = {
-        "loot": loot,
+        "loot": loot.get_entries(),
         "AUTH": args.AUTH,
         "VERSION": __version__,
     }
@@ -312,7 +312,7 @@ def payload_0():
     try:
         clipboard_id = int(request.args.get('e'))
         exec_clipboard_entry = cb.entries[clipboard_id].content
-    except ValueError:
+    except TypeError:
         exec_clipboard_entry = ""
     context = {
         "modules": modules,

