@@ -11,7 +11,15 @@
         <span data-feather="help-circle"></span></a>
     </sup>
 </h2>
-    <div class="col"></div>
+    <div class="col">
+        {% if loot|length == 0 %}
+        <div id="noloot-note">No loot received yet.</div>
+        {% else %}
+        <div id="accordion">
+            {% for l in loot %} {% include "loot/entry.html" %} {% endfor %}
+        </div>
+        {% endif %}
+    </div>
 </p>
 {% endblock %}
 

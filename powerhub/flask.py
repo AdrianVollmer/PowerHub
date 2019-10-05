@@ -28,6 +28,7 @@ from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
 from powerhub.receiver import ShellReceiver
+from powerhub.loot import loot
 from powerhub.args import args
 from powerhub.logging import log
 from powerhub._version import __version__
@@ -154,8 +155,9 @@ def receiver():
 
 @app.route('/loot')
 @requires_auth
-def loot():
+def loot_tab():
     context = {
+        "loot": loot,
         "AUTH": args.AUTH,
         "VERSION": __version__,
     }
