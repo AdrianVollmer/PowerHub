@@ -17,8 +17,7 @@ try:
 except ImportError:
     pass
 
-from powerhub.settings import init_settings
-from powerhub.clipboard import init_clipboard
+from powerhub.sql import init_settings, init_clipboard
 from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
