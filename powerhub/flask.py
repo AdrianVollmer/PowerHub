@@ -9,14 +9,6 @@ from tempfile import TemporaryDirectory
 from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash, make_response, abort
 
-from werkzeug.serving import WSGIRequestHandler, _log
-from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_socketio import SocketIO  # , emit
-try:
-    from flask_sqlalchemy import SQLAlchemy
-except ImportError:
-    pass
-
 from powerhub.settings import init_settings
 from powerhub.clipboard import init_clipboard
 from powerhub.stager import modules, stager_str, callback_url, \
@@ -31,6 +23,15 @@ from powerhub.receiver import ShellReceiver
 from powerhub.args import args
 from powerhub.logging import log
 from powerhub._version import __version__
+
+from werkzeug.serving import WSGIRequestHandler, _log
+from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_socketio import SocketIO  # , emit
+try:
+    from flask_sqlalchemy import SQLAlchemy
+except ImportError as e:
+    log.error("You have unmet dependencies, database will not be available")
+    log.exception(e)
 
 
 app = Flask(__name__)
