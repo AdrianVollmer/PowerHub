@@ -17,7 +17,7 @@ try:
 except ImportError:
     pass
 
-from powerhub.sql import init_settings, init_clipboard
+from powerhub.sql import get_clipboard, init_db
 from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
@@ -44,10 +44,10 @@ app.config.update(
 
 try:
     db = SQLAlchemy(app)
+    init_db(db)
 except NameError:
     db = None
-init_settings(db)
-cb = init_clipboard(db=db)
+cb = get_clipboard()
 KEY = get_secret_key()
 
 socketio = SocketIO(

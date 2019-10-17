@@ -7,7 +7,7 @@ import string
 from OpenSSL import crypto
 
 from powerhub.directories import CERT_DIR
-from powerhub.settings import get_setting, set_setting
+from powerhub.sql import get_setting, set_setting
 from powerhub.logging import log
 
 

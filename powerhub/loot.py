@@ -1,9 +1,10 @@
 from powerhub.logging import log
+from powerhub.sql import get_loot
 from powerhub.upload import save_file
 from powerhub.directories import LOOT_DIR
 import re
 
-lootbox = [1, 2]
+lootbox = get_loot()
 
 
 def get_loot_type(filename):
@@ -30,7 +31,14 @@ def store_minidump(loot_id, creds):
 
 def decrypt_hive(loot_id, filename, hive_type):
     """Decrypt the registry hive and store result in DB"""
-    pass
+    from pypykatz.registry.offline_parser import OffineRegistry
+    o = OffineRegistry()
+    o.from_files(security,
+                 sam_path=sam,
+                 software_path=software,
+                 system_path=system,
+                )
+    o.to_dict()
 
 
 def save_loot(file, loot_id):
