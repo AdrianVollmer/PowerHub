@@ -1,3 +1,4 @@
+from powerhub.logging import log
 try:
     from sqlalchemy.exc import OperationalError
 except ImportError:
@@ -51,22 +52,74 @@ def init_loot():
 
     class Loot(_db.Model):
         id = _db.Column(_db.String(8), primary_key=True)
-        sysinfo = _db.Column(_db.String(1024*8), unique=False, nullable=False)
-        lsass = _db.Column(_db.String(1024*16), unique=False, nullable=False)
-        lsass_file = _db.Column(_db.String(1024), unique=False, nullable=False)
+        sysinfo = _db.Column(_db.String(1024*8), unique=False, nullable=True)
+        lsass = _db.Column(_db.String(1024*16), unique=False, nullable=True)
+        lsass_file = _db.Column(_db.String(1024), unique=False, nullable=True)
         system_file = _db.Column(_db.String(1024),
                                  unique=False,
-                                 nullable=False)
+                                 nullable=True)
         security_file = _db.Column(_db.String(1024),
                                    unique=False,
-                                   nullable=False)
-        sam_file = _db.Column(_db.String(1024), unique=False, nullable=False)
-        sam = _db.Column(_db.String(1024*8), unique=False, nullable=False)
-        security = _db.Column(_db.String(1024*8), unique=False, nullable=False)
+                                   nullable=True)
+        sam_file = _db.Column(_db.String(1024), unique=False, nullable=True)
         software_file = _db.Column(_db.String(1024),
                                    unique=False,
-                                   nullable=False)
-        software = _db.Column(_db.String(1024*8), unique=False, nullable=False)
+                                   nullable=True)
+        hive = _db.Column(_db.String(1024*8), unique=False, nullable=True)
+
+
+def get_loot_entry(loot_id):
+    """Get a loot entry by ID and create it first if necessary"""
+    loot = Loot.query.filter_by(id=loot_id).first()
+    if not loot:
+        loot = Loot(id=loot_id)
+        _db.session.add(loot)
+    return loot
+
+
+def add_lsass(loot_id, lsass, lsass_file):
+    loot = get_loot_entry(loot_id)
+    loot.lsass = lsass
+    loot.lsass_file = lsass_file
+    _db.session.commit()
+    log.debug("LSASS entry added - %s" % loot_id)
+
+
+def add_hive(loot_id, hive_type, filename):
+    loot = get_loot_entry(loot_id)
+    if hive_type == "SAM":
+        loot.sam_file = filename
+    elif hive_type == "SECURITY":
+        loot.security_file = filename
+    elif hive_type == "SYSTEM":
+        loot.system_file = filename
+    elif hive_type == "SOFTWARE":
+        loot.software_file = filename
+    _db.session.commit()
+
+
+def decrypt_hive(loot_id):
+    """Decrypt the registry hive and store result in DB"""
+
+    loot = get_loot_entry(loot_id)
+
+    try:
+        from pypykatz.registry.offline_parser import OffineRegistry
+
+        o = OffineRegistry()
+        o = o.from_files(
+            loot.system_file,
+            security_path=loot.security_file,
+            sam_path=loot.sam_file,
+            software_path=loot.software_file,
+        )
+        loot.hive = o.to_json()
+        _db.session.commit()
+        log.debug("Hive decrypted - %s" % loot_id)
+
+    except ImportError as e:
+        log.error("You have unmet dependencies, loot could not be processed")
+        log.exception(e)
 
 
 def get_loot():

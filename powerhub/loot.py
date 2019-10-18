@@ -1,10 +1,8 @@
 from powerhub.logging import log
-from powerhub.sql import get_loot
+from powerhub.sql import get_loot, add_lsass, add_hive
 from powerhub.upload import save_file
 from powerhub.directories import LOOT_DIR
 import re
-
-lootbox = get_loot()
 
 
 def get_loot_type(filename):
@@ -24,21 +22,9 @@ def get_loot_type(filename):
         return "SOFTWARE"
 
 
-def store_minidump(loot_id, creds):
-    """Write the results from parsing the dmp file to the DB"""
-    pass
-
-
-def decrypt_hive(loot_id, filename, hive_type):
-    """Decrypt the registry hive and store result in DB"""
-    from pypykatz.registry.offline_parser import OffineRegistry
-    o = OffineRegistry()
-    o.from_files(security,
-                 sam_path=sam,
-                 software_path=software,
-                 system_path=system,
-                )
-    o.to_dict()
+def store_minidump(loot_id, lsass, lass_file):
+    """Write the results from parsing the lsass dmp file to the DB"""
+    add_lsass(loot_id, lsass, lass_file)
 
 
 def save_loot(file, loot_id):
@@ -51,9 +37,9 @@ def save_loot(file, loot_id):
             from pypykatz.pypykatz import pypykatz
             mimi = pypykatz.parse_minidump_file(filename)
             for _, v in mimi.logon_sessions.items():
-                store_minidump(loot_id, v.to_dict())
+                store_minidump(loot_id, v.to_json(), filename)
         else:  # registry hive
-            decrypt_hive(loot_id, filename, loot_type)
+            add_hive(loot_id, loot_type, filename)
     except ImportError as e:
         log.error("You have unmet dependencies, loot could not be processed")
         log.exception(e)
