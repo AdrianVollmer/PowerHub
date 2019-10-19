@@ -52,8 +52,8 @@ def init_loot():
 
     class Loot(_db.Model):
         id = _db.Column(_db.String(8), primary_key=True)
-        sysinfo = _db.Column(_db.String(1024*8), unique=False, nullable=True)
-        lsass = _db.Column(_db.String(1024*16), unique=False, nullable=True)
+        sysinfo = _db.Column(_db.String(1024*16), unique=False, nullable=True)
+        lsass = _db.Column(_db.String(1024*1024), unique=False, nullable=True)
         lsass_file = _db.Column(_db.String(1024), unique=False, nullable=True)
         system_file = _db.Column(_db.String(1024),
                                  unique=False,
@@ -65,7 +65,7 @@ def init_loot():
         software_file = _db.Column(_db.String(1024),
                                    unique=False,
                                    nullable=True)
-        hive = _db.Column(_db.String(1024*8), unique=False, nullable=True)
+        hive = _db.Column(_db.String(1024*32), unique=False, nullable=True)
 
 
 def get_loot_entry(loot_id):
@@ -123,7 +123,7 @@ def decrypt_hive(loot_id):
 
 
 def get_loot():
-    return Loot
+    return Loot.query.all()
 
 
 def get_clipboard():

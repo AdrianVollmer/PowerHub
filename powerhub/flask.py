@@ -12,12 +12,8 @@ from flask import Flask, render_template, request, Response, redirect, \
 from werkzeug.serving import WSGIRequestHandler, _log
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_socketio import SocketIO  # , emit
-try:
-    from flask_sqlalchemy import SQLAlchemy
-except ImportError:
-    pass
 
-from powerhub.sql import get_clipboard, init_db, decrypt_hive
+from powerhub.sql import get_clipboard, init_db, decrypt_hive, get_loot
 from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
@@ -27,7 +23,7 @@ from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
 from powerhub.receiver import ShellReceiver
-from powerhub.loot import get_loot, save_loot
+from powerhub.loot import save_loot, get_lsass_goodies, get_hive_goodies
 from powerhub.args import args
 from powerhub.logging import log
 from powerhub._version import __version__
@@ -43,9 +39,12 @@ app.config.update(
 )
 
 try:
+    from flask_sqlalchemy import SQLAlchemy
     db = SQLAlchemy(app)
     init_db(db)
-except NameError:
+except ImportError as e:
+    log.error("You have unmet dependencies, database will not be available")
+    log.exception(e)
     db = None
 cb = get_clipboard()
 KEY = get_secret_key()
@@ -156,8 +155,17 @@ def receiver():
 @app.route('/loot')
 @requires_auth
 def loot_tab():
+    # turn sqlalchemy object 'lootbox' into dict/array
+    loot = [{
+        "id": l.id,
+        "lsass": get_lsass_goodies(l.lsass),
+        "lsass_full": l.lsass,
+        "hive": get_hive_goodies(l.hive),
+        "hive_full": l.hive,
+        "sysinfo": l.sysinfo,
+    } for l in lootbox]
     context = {
-        "loot": lootbox.get_entries(),
+        "loot": loot,
         "AUTH": args.AUTH,
         "VERSION": __version__,
     }

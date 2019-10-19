@@ -7,17 +7,21 @@
                 data-target="#collapse-{{l.id}}"
                 aria-expanded="true"
                 aria-controls="collapse-{{l.id}}">
-                FQDN: {{l.fqdn}}
+                FQDN: {{l.id}}
        </span>
       </h5>
     </div>
+      <div class="card-body">
+          {% include 'loot/details.html' %}
+      </div>
+      {#
     <div id="collapse-{{l.id}}"
          class="collapse"
          aria-labelledby="heading-{{l.id}}"
          data-parent="#accordion">
       <div class="card-body">
-          {% include 'loot/details.html' %}
       </div>
     </div>
+    #}
   </div>
 
