@@ -3,6 +3,7 @@ import gzip
 import os
 import random
 import string
+import itertools
 
 from OpenSSL import crypto
 
@@ -98,3 +99,16 @@ def encrypt(data, key):
         out.append(char ^ S[(S[i] + S[j]) % 256])
 
     return (bytes(out))
+
+
+def unique(a):
+    result = []
+    for each in a:
+        if each not in result:
+            result.append(each)
+    return result
+
+
+def flatten(l):
+    flatten = itertools.chain.from_iterable
+    return list(flatten(l))
