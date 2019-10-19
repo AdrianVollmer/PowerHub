@@ -51,7 +51,24 @@ def save_loot(file, loot_id):
 
 def get_hive_goodies(hive):
     hive = json.loads(hive)
-    return hive
+    # remove users with empty hashes, most likely disabled
+    local_users = []
+    if "SAM" in hive:
+        local_users = [
+            u for u in hive["SAM"]["local_users"]
+            if not (
+                u["lm_hash"] == "aad3b435b51404eeaad3b435b51404ee" and
+                u["nt_hash"] == "31d6cfe0d16ae931b73c59d7e0c089c0"
+            )
+        ]
+    dccs = []
+    if "SECURITY" in hive:
+        dccs = hive["SECURITY"]["dcc"]
+    result = {
+        "local_users": local_users,
+        "dccs": dccs,
+    }
+    return result
 
 
 def get_lsass_goodies(lsass):

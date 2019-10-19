@@ -1,2 +1,70 @@
-lsass = {{l.lsass}}
+<h6>System Info</h6>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Domain</th>
+      <th scope="col">User Name</th>
+      <th scope="col">Password</th>
+      <th scope="col">LM Hash</th>
+      <th scope="col">NT Hash</th>
+    </tr>
+  </thead>
+  <tbody>
+      {{l.sysinfo}}
+  </tbody>
+</table>
 
+{% if l.lsass %}
+<h6>LSASS Credentials</h6>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Domain</th>
+      <th scope="col">User Name</th>
+      <th scope="col">Password</th>
+      <th scope="col">LM Hash</th>
+      <th scope="col">NT Hash</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in l.lsass %}
+    <tr>
+        <td scope="row">{{c.domainname}}</td>
+        <td>{{c.username}}</td>
+        <td>{{c.password}}</td>
+        <td>{{c.LMhash}}</td>
+        <td>{{c.NThash}}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% if l.hive %}
+<h6>Local Users</h6>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">User Name</th>
+      <th scope="col">RID</th>
+      <th scope="col">LM Hash</th>
+      <th scope="col">NT Hash</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in l.hive["local_users"] %}
+    <tr>
+        <td scope="row">{{c.username}}</td>
+        <td>{{c.rid}}</td>
+        <td>{{c.lm_hash}}</td>
+        <td>{{c.nt_hash}}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h6>Domain Cached Credentials</h6>
+    {% for c in l.hive["dccs"] %}
+    c
+    {% endfor %}
+{% endif %}
