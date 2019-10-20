@@ -1,16 +1,18 @@
 from powerhub.logging import log
-from powerhub.sql import add_lsass, add_hive
+from powerhub.sql import add_lsass, add_hive, add_sysinfo
 from powerhub.upload import save_file
 from powerhub.directories import LOOT_DIR
 from powerhub.tools import unique, flatten
 import re
 import json
+import csv
+from io import StringIO
 
 
 def get_loot_type(filename):
     """Determine the loot type
 
-    Could be an LSA process dump or a registry hive.
+    Could be an LSA process dump or a registry hive or system info.
     """
     if re.match(r".*lsass_[0-9]+.dmp(.[0-9]+)?", filename):
         return "DMP"
@@ -22,6 +24,10 @@ def get_loot_type(filename):
         return "SYSTEM"
     elif re.match(r".*software(.[0-9]+)?", filename):
         return "SOFTWARE"
+    elif re.match(r".*sysinfo(.[0-9]+)?", filename):
+        return "SYSINFO"
+    else:
+        return None
 
 
 def store_minidump(loot_id, lsass, lass_file):
@@ -40,13 +46,25 @@ def save_loot(file, loot_id):
             mimi = pypykatz.parse_minidump_file(filename)
             creds = [json.loads(v.to_json())
                      for _, v in mimi.logon_sessions.items()]
-            print(creds)
             store_minidump(loot_id, json.dumps(creds), filename)
+        elif loot_type == "SYSINFO":
+            add_sysinfo(loot_id, filename)
         else:  # registry hive
             add_hive(loot_id, loot_type, filename)
     except ImportError as e:
         log.error("You have unmet dependencies, loot could not be processed")
         log.exception(e)
+
+
+def parse_sysinfo(sysinfo):
+    f = StringIO(sysinfo)
+    reader = csv.reader(f, delimiter=',')
+    result = []
+    for row in reader:
+        result.append(row)
+    result = dict(zip(result[0], result[1]))
+    result['IPs'] = result['IPs'].split()
+    return result
 
 
 def get_hive_goodies(hive):

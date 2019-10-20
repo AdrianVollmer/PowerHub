@@ -2,15 +2,19 @@
 <table class="table">
   <thead>
     <tr>
-      <th scope="col">Domain</th>
-      <th scope="col">User Name</th>
-      <th scope="col">Password</th>
-      <th scope="col">LM Hash</th>
-      <th scope="col">NT Hash</th>
+      <th scope="col">IPs</th>
+      <th scope="col">OS</th>
+      <th scope="col">Version</th>
+      <th scope="col">Arch</th>
     </tr>
   </thead>
   <tbody>
-      {{l.sysinfo}}
+    <tr>
+      <td scope="row">{% for ip in l.sysinfo.IPs %}{{ip}}</br>{%endfor%}</td>
+      <td>{{l.sysinfo.name}}</td>
+      <td>{{l.sysinfo.version}}</td>
+      <td>{{l.sysinfo.arch}}</td>
+    </tr>
   </tbody>
 </table>
 

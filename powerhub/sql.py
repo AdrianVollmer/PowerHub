@@ -82,7 +82,7 @@ def add_lsass(loot_id, lsass, lsass_file):
     loot.lsass = lsass
     loot.lsass_file = lsass_file
     _db.session.commit()
-    log.debug("LSASS entry added - %s" % loot_id)
+    log.info("LSASS entry added - %s" % loot_id)
 
 
 def add_hive(loot_id, hive_type, filename):
@@ -96,6 +96,16 @@ def add_hive(loot_id, hive_type, filename):
     elif hive_type == "SOFTWARE":
         loot.software_file = filename
     _db.session.commit()
+    log.info("Hive entry added - %s" % loot_id)
+
+
+def add_sysinfo(loot_id, filename):
+    loot = get_loot_entry(loot_id)
+    with open(filename, 'r') as f:
+        sysinfo = f.read()
+    loot.sysinfo = sysinfo
+    _db.session.commit()
+    log.info("Sysinfo entry added - %s" % loot_id)
 
 
 def decrypt_hive(loot_id):

@@ -23,7 +23,8 @@ from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
 from powerhub.receiver import ShellReceiver
-from powerhub.loot import save_loot, get_lsass_goodies, get_hive_goodies
+from powerhub.loot import save_loot, get_lsass_goodies, get_hive_goodies, \
+        parse_sysinfo
 from powerhub.args import args
 from powerhub.logging import log
 from powerhub._version import __version__
@@ -48,7 +49,6 @@ except ImportError as e:
     db = None
 cb = get_clipboard()
 KEY = get_secret_key()
-lootbox = get_loot()
 
 socketio = SocketIO(
     app,
@@ -156,13 +156,14 @@ def receiver():
 @requires_auth
 def loot_tab():
     # turn sqlalchemy object 'lootbox' into dict/array
+    lootbox = get_loot()
     loot = [{
         "id": l.id,
         "lsass": get_lsass_goodies(l.lsass),
         "lsass_full": l.lsass,
         "hive": get_hive_goodies(l.hive),
         "hive_full": l.hive,
-        "sysinfo": l.sysinfo,
+        "sysinfo": parse_sysinfo(l.sysinfo,)
     } for l in lootbox]
     context = {
         "loot": loot,
@@ -383,7 +384,7 @@ def upload():
     """Upload one or more files"""
     file_list = request.files.getlist("file[]")
     noredirect = "noredirect" in request.args
-    loot = "loot" in request.args
+    loot = "loot" in request.args and request.args["loot"]
     for file in file_list:
         if file.filename == '':
             return redirect(request.url)
