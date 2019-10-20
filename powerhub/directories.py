@@ -5,6 +5,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 XDG_DATA_HOME = os.environ.get('XDG_DATA_HOME') or \
         os.path.join(_HOME, '.local', 'share', 'powerhub')
 UPLOAD_DIR = os.path.join(XDG_DATA_HOME, "upload")
+LOOT_DIR = os.path.join(XDG_DATA_HOME, "loot")
 MOD_DIR = os.path.join(XDG_DATA_HOME, 'modules')
 WEBDAV_DIR = os.path.join(XDG_DATA_HOME, 'webdav')
 WEBDAV_RO = os.path.join(XDG_DATA_HOME, 'webdav_ro')
@@ -24,6 +25,7 @@ def ensure_dir_exists(dirname):
 
 directories = [
     UPLOAD_DIR,
+    LOOT_DIR,
     XDG_DATA_HOME,
     WEBDAV_DIR,
     MOD_DIR,

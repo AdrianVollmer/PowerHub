@@ -9,8 +9,11 @@ from tempfile import TemporaryDirectory
 from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash, make_response, abort
 
-from powerhub.settings import init_settings
-from powerhub.clipboard import init_clipboard
+from werkzeug.serving import WSGIRequestHandler, _log
+from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_socketio import SocketIO  # , emit
+
+from powerhub.sql import get_clipboard, init_db, decrypt_hive, get_loot
 from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
@@ -20,18 +23,12 @@ from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
 from powerhub.receiver import ShellReceiver
+from powerhub.loot import save_loot, get_lsass_goodies, get_hive_goodies, \
+        parse_sysinfo
 from powerhub.args import args
 from powerhub.logging import log
 from powerhub._version import __version__
 
-from werkzeug.serving import WSGIRequestHandler, _log
-from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_socketio import SocketIO  # , emit
-try:
-    from flask_sqlalchemy import SQLAlchemy
-except ImportError as e:
-    log.error("You have unmet dependencies, database will not be available")
-    log.exception(e)
 
 
 app = Flask(__name__)
@@ -44,11 +41,14 @@ app.config.update(
 )
 
 try:
+    from flask_sqlalchemy import SQLAlchemy
     db = SQLAlchemy(app)
-except NameError:
+    init_db(db)
+except ImportError as e:
+    log.error("You have unmet dependencies, database will not be available")
+    log.exception(e)
     db = None
-init_settings(db)
-cb = init_clipboard(db=db)
+cb = get_clipboard()
 KEY = get_secret_key()
 
 socketio = SocketIO(
@@ -151,6 +151,27 @@ def receiver():
         "VERSION": __version__,
     }
     return render_template("receiver.html", **context)
+
+
+@app.route('/loot')
+@requires_auth
+def loot_tab():
+    # turn sqlalchemy object 'lootbox' into dict/array
+    lootbox = get_loot()
+    loot = [{
+        "id": l.id,
+        "lsass": get_lsass_goodies(l.lsass),
+        "lsass_full": l.lsass,
+        "hive": get_hive_goodies(l.hive),
+        "hive_full": l.hive,
+        "sysinfo": parse_sysinfo(l.sysinfo,)
+    } for l in lootbox]
+    context = {
+        "loot": loot,
+        "AUTH": args.AUTH,
+        "VERSION": __version__,
+    }
+    return render_template("loot.html", **context)
 
 
 @app.route('/clipboard')
@@ -364,12 +385,23 @@ def upload():
     """Upload one or more files"""
     file_list = request.files.getlist("file[]")
     noredirect = "noredirect" in request.args
+    loot = "loot" in request.args and request.args["loot"]
     for file in file_list:
         if file.filename == '':
             return redirect(request.url)
         if file:
-            save_file(file)
-    push_notification("reload", "Update Fileexchange", "")
+            if loot:
+                loot_id = request.args["loot"]
+                log.info("Loot received - %s" % loot_id)
+                save_loot(file, loot_id)
+            else:
+                log.info("File received - %s" % file.filename)
+                save_file(file)
+    if loot:
+        decrypt_hive(loot_id)
+        push_notification("reload", "Update Loot", "")
+    else:
+        push_notification("reload", "Update Fileexchange", "")
     if noredirect:
         return ('OK', 200)
     else:

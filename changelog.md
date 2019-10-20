@@ -1,7 +1,9 @@
 Version 1.4
 ===========
 
-* Add feature: executing clipboard entry content upon executing PowerHub on
+* New feature: Get-Loot transfers local credential information from the
+  LSASS process, the SAM hive and other back to PowerHub
+* New feature: executing clipboard entry content upon executing PowerHub on
   target
 
 Version 1.3

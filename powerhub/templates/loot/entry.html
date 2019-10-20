@@ -1,0 +1,27 @@
+<div class="card">
+    <div class="card-header" id="heading-{{l.id}}">
+      <h5 class="mb-0">
+          <span class="btn btn-link"
+                id="loot-header-{{l.id}}"
+                data-toggle="collapse"
+                data-target="#collapse-{{l.id}}"
+                aria-expanded="true"
+                aria-controls="collapse-{{l.id}}">
+              [{{l.id}}] {{l.sysinfo.hostname}}
+       </span>
+      </h5>
+    </div>
+      <div class="card-body">
+          {% include 'loot/details.html' %}
+      </div>
+      {#
+    <div id="collapse-{{l.id}}"
+         class="collapse"
+         aria-labelledby="heading-{{l.id}}"
+         data-parent="#accordion">
+      <div class="card-body">
+      </div>
+    </div>
+    #}
+  </div>
+
