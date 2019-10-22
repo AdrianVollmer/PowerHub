@@ -1,3 +1,4 @@
+{% if l.sysinfo %}
 <h6>System Info</h6>
 <table class="table">
   <thead>
@@ -17,6 +18,7 @@
     </tr>
   </tbody>
 </table>
+{% endif %}
 
 {% if l.lsass %}
 <h6>LSASS Credentials</h6>
@@ -68,7 +70,9 @@
 </table>
 
 <h6>Domain Cached Credentials</h6>
+    <ul>
     {% for c in l.hive["dccs"] %}
-    c
+    <li>{{c}}</li>
     {% endfor %}
+    </ul>
 {% endif %}
