@@ -103,6 +103,8 @@ def add_hive(loot_id, hive_type, filename):
 
 
 def add_sysinfo(loot_id, filename):
+    """Convert sysinfo in CSV to JSON and store in DB"""
+
     loot = get_loot_entry(loot_id)
     with open(filename, 'r') as f:
         sysinfo = f.read()
