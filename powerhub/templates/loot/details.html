@@ -70,7 +70,9 @@
 </table>
 
 <h6>Domain Cached Credentials</h6>
+    <ul>
     {% for c in l.hive["dccs"] %}
-    c
+    <li>{{c}}</li>
     {% endfor %}
+    </ul>
 {% endif %}

@@ -78,6 +78,9 @@ def get_hive_goodies(hive):
     dccs = []
     if "SECURITY" in hive:
         dccs = hive["SECURITY"]["dcc"]
+        dccs = [("%(domain)s/%(username)s:$DCC%(version)d$" +
+                "%(iteration)d#%(username)s#%(hash_value)s")
+                % c for c in dccs]
     result = {
         "local_users": local_users,
         "dccs": dccs,
