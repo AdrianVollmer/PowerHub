@@ -1,3 +1,4 @@
+{% if l.sysinfo %}
 <h6>System Info</h6>
 <table class="table">
   <thead>
@@ -17,6 +18,7 @@
     </tr>
   </tbody>
 </table>
+{% endif %}
 
 {% if l.lsass %}
 <h6>LSASS Credentials</h6>

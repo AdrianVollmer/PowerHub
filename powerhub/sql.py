@@ -1,3 +1,6 @@
+import csv
+import json
+from io import StringIO
 from powerhub.logging import log
 try:
     from sqlalchemy.exc import OperationalError
@@ -103,7 +106,19 @@ def add_sysinfo(loot_id, filename):
     loot = get_loot_entry(loot_id)
     with open(filename, 'r') as f:
         sysinfo = f.read()
-    loot.sysinfo = sysinfo
+    if not sysinfo:
+        return None
+    f = StringIO(sysinfo)
+    reader = csv.reader(f, delimiter=',')
+    result = []
+    for row in reader:
+        result.append(row)
+    if not result:
+        return None
+    result = dict(zip(result[0], result[1]))
+    result['IPs'] = result['IPs'].split()
+    result = json.dumps(result)
+    loot.sysinfo = result
     _db.session.commit()
     log.info("Sysinfo entry added - %s" % loot_id)
 

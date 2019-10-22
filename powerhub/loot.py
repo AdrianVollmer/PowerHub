@@ -5,8 +5,6 @@ from powerhub.directories import LOOT_DIR
 from powerhub.tools import unique, flatten
 import re
 import json
-import csv
-from io import StringIO
 
 
 def get_loot_type(filename):
@@ -57,14 +55,12 @@ def save_loot(file, loot_id):
 
 
 def parse_sysinfo(sysinfo):
-    f = StringIO(sysinfo)
-    reader = csv.reader(f, delimiter=',')
-    result = []
-    for row in reader:
-        result.append(row)
-    result = dict(zip(result[0], result[1]))
-    result['IPs'] = result['IPs'].split()
-    return result
+    try:
+        return json.loads(sysinfo)
+    except Exception as e:
+        log.error("Error while parsing sysinfo")
+        log.exception(e)
+        return {}
 
 
 def get_hive_goodies(hive):

@@ -30,7 +30,6 @@ from powerhub.logging import log
 from powerhub._version import __version__
 
 
-
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1, x_port=1)
 app.config.update(
