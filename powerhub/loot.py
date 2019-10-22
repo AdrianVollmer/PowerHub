@@ -92,6 +92,10 @@ def get_lsass_goodies(lsass):
     def get_creds(x):
         """recursive credential search"""
         if isinstance(x, dict):
+            # passwords of machine accounts are useless
+            if ("password" in x and x["password"] and
+                    x["username"].endswith('$')):
+                x["password"] = ""
             if "password" in x and x["password"]:
                 return {
                     "domainname": x["domainname"],
