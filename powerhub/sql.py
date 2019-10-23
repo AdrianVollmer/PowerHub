@@ -134,12 +134,15 @@ def decrypt_hive(loot_id):
         from pypykatz.registry.offline_parser import OffineRegistry
 
         o = OffineRegistry()
-        o = o.from_files(
-            loot.system_file,
-            security_path=loot.security_file,
-            sam_path=loot.sam_file,
-            software_path=loot.software_file,
-        )
+        try:
+            o = o.from_files(
+                loot.system_file,
+                security_path=loot.security_file,
+                sam_path=loot.sam_file,
+                software_path=loot.software_file,
+            )
+        except TypeError:  # 'system' is not here yet, no biggie
+            return None
         loot.hive = o.to_json()
         _db.session.commit()
         log.debug("Hive decrypted - %s" % loot_id)

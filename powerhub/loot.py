@@ -55,6 +55,8 @@ def save_loot(file, loot_id):
 
 
 def parse_sysinfo(sysinfo):
+    if not sysinfo:
+        return {}
     try:
         return json.loads(sysinfo)
     except Exception as e:
@@ -64,6 +66,8 @@ def parse_sysinfo(sysinfo):
 
 
 def get_hive_goodies(hive):
+    if not hive:
+        return {}
     hive = json.loads(hive)
     # remove users with empty hashes, most likely disabled
     local_users = []
@@ -125,6 +129,8 @@ def get_lsass_goodies(lsass):
         else:
             return None
 
+    if not lsass:
+        return []
     result = json.loads(lsass)
     result = get_creds(result)
     result = flatten(result)
