@@ -22,6 +22,12 @@
           </div>
         </div>
     </form>
+    {% if nonpersistent %}
+    <div class="alert alert-danger" role="alert">
+      Warning: Because you are missing a dependency (flask_sqlalchemy), the
+      clipboard is not persistent!
+    </div>
+    {% endif %}
 {% if clipboard|length == 0 %}
         <p>Clipboard is empty</p>
 {% else %}

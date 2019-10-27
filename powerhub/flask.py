@@ -159,6 +159,7 @@ def loot_tab():
     # turn sqlalchemy object 'lootbox' into dict/array
     lootbox = get_loot()
     loot = [{
+        "nonpersistent": db is None,
         "id": l.id,
         "lsass": get_lsass_goodies(l.lsass),
         "lsass_full": l.lsass,
@@ -178,6 +179,7 @@ def loot_tab():
 @requires_auth
 def clipboard():
     context = {
+        "nonpersistent": db is None,
         "clipboard": list(cb.entries.values()),
         "AUTH": args.AUTH,
         "VERSION": __version__,
