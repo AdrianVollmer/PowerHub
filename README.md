@@ -50,13 +50,28 @@ PowerHub itself does not need to be installed. Just execute `powerhub.py`.
 However, there are a few dependencies. They are listed in the
 [requirements.txt](https://github.com/AdrianVollmer/PowerHub/blob/master/requirements.txt).
 Install them either via `pip3 install --user -r requirements.txt` or use a
-virtual environment:
+virtual environment.
+
+Python2 is not supported.
+
+venv
+----
+
+`venv` can be installed on Debian-like systems by `apt install
+python3-venv`.
 
 Run `python3 -m venv env` to create a virtual environment, then use `source
 env/bin/activate` to activate it. Now run `pip3 install -r requirements.txt`
 to install the depencendies inside the virtual environment.
 
-Python2 is not supported.
+pipenv
+------
+
+Alternatively, you can use `pipenv`. `pipenv` can be installed on
+Debian-like systems by `apt install pipenv`.
+
+Run `pipenv install` once in the PowerHub directory, then `pipenv shell` to
+activate the virtual environment.
 
 
 Usage
