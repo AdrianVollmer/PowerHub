@@ -17,7 +17,8 @@ from powerhub.sql import get_clipboard, init_db, decrypt_hive, get_loot
 from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
-from powerhub.directories import UPLOAD_DIR, BASE_DIR, DB_FILENAME
+from powerhub.directories import UPLOAD_DIR, BASE_DIR, DB_FILENAME, \
+        XDG_DATA_HOME
 from powerhub.tools import encrypt, compress, get_secret_key
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
@@ -343,10 +344,16 @@ def payload_0():
 @app.route('/1')
 def payload_1():
     """Load 1st stage"""
+    try:
+        with open(os.path.join(XDG_DATA_HOME, "profile.ps1"), "r") as f:
+            profile = f.read()
+    except Exception:
+        profile = ""
     context = {
         "modules": modules,
         "webdav_url": webdav_url,
         "symbol_name": symbol_name,
+        "profile": profile,
     }
     result = render_template(
                     "payload.ps1",

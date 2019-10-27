@@ -691,3 +691,6 @@ try { New-Alias -Name rdne -Value Run-DotNETExe } catch { }
 try { New-Alias -Name rsh -Value Run-Shellcode } catch { }
 try { New-Alias -Name mwd -Value Mount-Webdav } catch { }
 try { New-Alias -Name umwd -Value Unmount-Webdav } catch { }
+
+
+{{ profile }}
