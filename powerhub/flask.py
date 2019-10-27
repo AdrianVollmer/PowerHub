@@ -334,7 +334,7 @@ def payload_0():
         "exec_clipboard_entry": exec_clipboard_entry,
     }
     result = render_template(
-                    "amsi.ps1",
+                    "powershell/stager.ps1",
                     **context,
                     content_type='text/plain'
     )
@@ -356,7 +356,7 @@ def payload_1():
         "profile": profile,
     }
     result = render_template(
-                    "payload.ps1",
+                    "powershell/payload.ps1",
                     **context,
     ).encode()
     result = b64encode(encrypt(result, KEY))
@@ -480,7 +480,7 @@ def reverse_shell():
         "symbol_name": symbol_name,
     }
     result = render_template(
-                    "reverse-shell.ps1",
+                    "powershell/reverse-shell.ps1",
                     **context,
     ).encode()
     result = b64encode(encrypt(result, KEY))
@@ -501,9 +501,9 @@ def shell_log():
         'content': content,
     }
     if content == 'html':
-        return render_template("shell-log.html", **context)
+        return render_template("receiver/shell-log.html", **context)
     elif content == 'raw':
-        response = make_response(render_template("shell-log.html",
+        response = make_response(render_template("receiver/shell-log.html",
                                  **context))
         response.headers['Content-Disposition'] = \
             'attachment; filename=' + shell_id + ".log"
@@ -537,7 +537,7 @@ def shell_kill_all():
 def shell_card():
     shell_id = request.args["shell-id"]
     shell = shell_receiver.get_shell_by_id(shell_id)
-    return render_template("receiver-shellcard.html", s=shell)
+    return render_template("receiver/receiver-shellcard.html", s=shell)
 
 
 @socketio.on('connect', namespace="/push-notifications")

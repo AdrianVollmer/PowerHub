@@ -17,7 +17,8 @@
                  {{s.description}}
            </span>
         </a>
-        <div style="display: none;" id="popover-content-{{s["details"].id}}">{% include 'shell-tooltip.html' %}</div>
+        <div style="display: none;"
+            id="popover-content-{{s["details"].id}}">{% include 'receiver/shell-tooltip.html' %}</div>
         <div class="btn-group float-right" role="group" aria-label="Control Shell">
           <button type="button"
                   href="/shell-log?id={{s["details"].id}}"
@@ -47,7 +48,7 @@
          aria-labelledby="heading-{{s["details"].id}}"
          data-parent="#accordion">
       <div class="card-body">
-          {% include 'shell-details.html' %}
+          {% include 'receiver/shell-details.html' %}
       </div>
     </div>
   </div>
