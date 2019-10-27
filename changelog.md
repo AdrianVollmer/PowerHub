@@ -1,6 +1,8 @@
 Version 1.4
 ===========
 
+* New feature: Automatically load 'profile.ps1' from data home at the end of
+  the payload
 * New feature: Get-Loot transfers local credential information from the
   LSASS process, the SAM hive and other back to PowerHub
 * New feature: executing clipboard entry content upon executing PowerHub on
