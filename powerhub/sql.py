@@ -156,6 +156,11 @@ def get_loot():
     return Loot.query.all()
 
 
+def delete_loot():
+    Loot.query.delete()
+    _db.session.commit()
+
+
 def get_clipboard():
     if _db:
         return get_clipboard_with_db(_db)
