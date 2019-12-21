@@ -7,7 +7,7 @@ import shutil
 from tempfile import TemporaryDirectory
 
 from flask import Flask, render_template, request, Response, redirect, \
-         send_from_directory, flash, make_response, abort
+         send_from_directory, flash, make_response, abort, jsonify
 
 from werkzeug.serving import WSGIRequestHandler, _log
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -259,6 +259,20 @@ def export_clipboard():
         result,
         content_type='text/plain; charset=utf-8'
     )
+
+
+@app.route('/loot/export', methods=["GET"])
+@requires_auth
+def export_loot():
+    """Export all loot entries"""
+    lootbox = get_loot()
+    loot = [{
+        "id": l.id,
+        "lsass": get_lsass_goodies(l.lsass),
+        "hive": get_hive_goodies(l.hive),
+        "sysinfo": parse_sysinfo(l.sysinfo,)
+    } for l in lootbox]
+    return jsonify(loot)
 
 
 @app.route('/m')
