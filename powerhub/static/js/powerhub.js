@@ -19,13 +19,6 @@ $('.delete-clipboard').click(function(){
      $("#card-" + id).remove();
 });
 
-$('#clipboard-delete-all').click(function(){
-    $.post({
-        url: "clipboard/del-all",
-        success: function() { location.reload(); },
-    });
-});
-
 $('#reloadbutton').click(function(){
     $.post({
         url: "reload",

@@ -32,30 +32,34 @@
         <p>Clipboard is empty</p>
 {% else %}
     <div class="row mb-3">
-      <div class="col-sm text-right">
-          <a href="#" class="btn btn-danger btn-sm flush-right"
-             id="clipboard-delete-all">Delete all</a>
-          <a href="/clipboard/export" class="btn btn-secondary btn-sm flush-right">
-              <span class="align-baseline" data-feather="download"></span> Export
-          </a>
-      </div>
+        <div class="col-sm text-right">
+            <form action="/clipboard/del-all" method="post" class="col-sm">
+                <button type="submit"
+                        class="btn btn-danger btn-sm">
+                    Delete all
+                </button>
+                <a href="/clipboard/export" class="btn btn-secondary btn-sm flush-right">
+                    <span class="align-baseline" data-feather="download"></span> Export
+                </a>
+            </form>
+        </div>
     </div>
-        {% for c in clipboard %}
-            <div class="card row" id="card-{{c.id}}">
-              <div class="card-body">
-                <h5 class="card-title">{{c.time}}
-                <div class="card-id">{{c.id}}</div>
-                  <sup>
-                    <a href="#" class="card-link delete-clipboard" data-id="{{c.id}}">
-                        <span data-feather="trash-2">delete</span>
-                    </a>
-                  </sup>
-                </h5>
-                <h6 class="card-subtitle mb-2 text-muted">{{c.IP}}</h6>
-                <pre style="white-space: pre-wrap; word-break: break-all;">{{ c.content }}</pre>
-              </div>
-            </div>
-        {% endfor %}
+    {% for c in clipboard %}
+        <div class="card row" id="card-{{c.id}}">
+          <div class="card-body">
+            <h5 class="card-title">{{c.time}}
+            <div class="card-id">{{c.id}}</div>
+              <sup>
+                <a href="#" class="card-link delete-clipboard" data-id="{{c.id}}">
+                    <span data-feather="trash-2">delete</span>
+                </a>
+              </sup>
+            </h5>
+            <h6 class="card-subtitle mb-2 text-muted">{{c.IP}}</h6>
+            <pre style="white-space: pre-wrap; word-break: break-all;">{{ c.content }}</pre>
+          </div>
+        </div>
+    {% endfor %}
 {% endif %}
     </div>
 </p>

@@ -243,7 +243,7 @@ def del_all_clipboard():
     """Delete all clipboard entries"""
     for id in list(cb.entries.keys()):
         cb.delete(id)
-    return ""
+    return redirect("/clipboard")
 
 
 @app.route('/clipboard/export', methods=["GET"])
