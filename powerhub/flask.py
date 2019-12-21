@@ -382,7 +382,7 @@ def payload_1():
         "profile": profile,
     }
     result = render_template(
-                    "powershell/payload.ps1",
+                    "powershell/powerhub.ps1",
                     **context,
     ).encode()
     result = b64encode(encrypt(result, KEY))
