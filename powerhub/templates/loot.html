@@ -23,11 +23,15 @@
           {% else %}
           <div class="row mb-3">
               <div class="col-sm text-right">
-                  <a href="#" class="btn btn-danger btn-sm flush-right"
-                     id="loot-delete-all">Delete all</a>
+                <form action="/loot/del-all" method="post" class="col-sm">
+                  <button type="submit"
+                          class="btn btn-danger btn-sm">
+                          Delete all
+                  </button>
                   <a href="/loot/export" class="btn btn-secondary btn-sm flush-right">
                       <span class="align-baseline" data-feather="download"></span> Export
                   </a>
+                 </form>
               </div>
           </div>
           <div id="accordion">

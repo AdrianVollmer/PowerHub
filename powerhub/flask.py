@@ -13,7 +13,8 @@ from werkzeug.serving import WSGIRequestHandler, _log
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_socketio import SocketIO  # , emit
 
-from powerhub.sql import get_clipboard, init_db, decrypt_hive, get_loot
+from powerhub.sql import get_clipboard, init_db, decrypt_hive, get_loot, \
+        delete_loot
 from powerhub.stager import modules, stager_str, callback_url, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
@@ -273,6 +274,15 @@ def export_loot():
         "sysinfo": parse_sysinfo(l.sysinfo,)
     } for l in lootbox]
     return jsonify(loot)
+
+
+@app.route('/loot/del-all', methods=["POST"])
+@requires_auth
+def del_all_loog():
+    """Delete all loot entries"""
+    # TODO get confirmation by user
+    delete_loot()
+    return redirect("/loot")
 
 
 @app.route('/m')
