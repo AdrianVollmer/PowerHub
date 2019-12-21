@@ -79,6 +79,9 @@ def get_hive_goodies(hive):
                 u["nt_hash"] == "31d6cfe0d16ae931b73c59d7e0c089c0"
             )
         ]
+        for u in local_users:
+            if u["lm_hash"] == "aad3b435b51404eeaad3b435b51404ee":
+                u["lm_hash"] = ""
     dccs = []
     if "SECURITY" in hive:
         dccs = hive["SECURITY"]["dcc"]
