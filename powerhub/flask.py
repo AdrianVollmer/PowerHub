@@ -389,6 +389,22 @@ def payload_1():
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
+@app.route('/ml')
+def hub_modules():
+    """Return list of hub modules"""
+    global modules
+    modules = import_modules()
+    context = {
+        "modules": modules,
+    }
+    result = render_template(
+                    "powershell/modules.ps1",
+                    **context,
+    ).encode()
+    result = b64encode(encrypt(compress(result), KEY))
+    return Response(result, content_type='text/plain; charset=utf-8')
+
+
 @app.route('/l')
 def payload_l():
     """Load the AMSI Bypass DLL"""
