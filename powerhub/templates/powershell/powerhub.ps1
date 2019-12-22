@@ -78,11 +78,11 @@ function Convert-IntStringToArray ($s) {
     foreach ($t in $no) {
         $limits = $t.Split("-")
         if ($limits.Length -eq 1) {
-            $indices += $limits[0]
+            $indices += [Int]$limits[0]
         } else {
             if (-not $limits[0]) { $limits[0] = 0}
             if (-not $limits[1]) { $limits[1] = $Modules.length-1}
-            $indices += $limits[0] .. $limits[1]
+            $indices += [Int]($limits[0]) .. [Int]($limits[1])
         }
     }
     $indices
@@ -120,7 +120,7 @@ A regular expression. PowerHub will then load all modules that have a matching
 Name.
 
 Alternatively, you can use the number of the module, separated by commas. Can
-contain a range such as "1,4-8". Try a leading zero in case it is not working.
+contain a range such as "1,4-8".
 
 
 .EXAMPLE
