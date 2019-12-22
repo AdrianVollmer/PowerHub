@@ -302,9 +302,9 @@ Load the exe module with the name 'meterpreter.exe' in memory and save it to dis
         $code = Decrypt-Code $code $KEY
         $code = Unzip-Code $code
         if ($Directory) {
-            $Filename = "$Directory/$($m.Name)"
+            $Filename = "$Directory/$($m.BaseName)"
         } else {
-            $Filename = $m.Name
+            $Filename = $m.BaseName
         }
         $code | Set-Content "$Filename" -Encoding Byte
         $Filename

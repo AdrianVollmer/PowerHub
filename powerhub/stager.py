@@ -75,6 +75,7 @@ class Module(object):
     def __dict__(self):
         return {
             "Name": self.short_name,
+            "BaseName": os.path.basename(self.name),
             "Code": self.code,
             "N": self.n,
             "Type": self.type,
