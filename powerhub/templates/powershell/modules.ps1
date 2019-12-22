@@ -7,7 +7,7 @@ $Modules = @()
         Add-Member -InputObject $m -memberType NoteProperty -name "{{key}}" -value "{{value}}"
     {% endfor %}
     $m | Add-Member MemberSet PSStandardMembers $PSStandardMembers
-    $defaultDisplaySet = 'ShortName','Name','Type','N'
+    $defaultDisplaySet = 'Name','Type','N','Loaded'
     $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet',[string[]]$defaultDisplaySet)
     $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
     $Modules += $m
