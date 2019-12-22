@@ -72,6 +72,15 @@ class Module(object):
         self.active = False
         self.code = ""
 
+    def __dict__(self):
+        return {
+            "Name": self.name,
+            "ShortName": self.short_name,
+            "Code": self.code,
+            "N": self.n,
+            "Type": self.type,
+        }
+
 
 modules = import_modules()
 
