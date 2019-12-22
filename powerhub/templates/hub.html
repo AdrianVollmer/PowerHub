@@ -10,24 +10,91 @@ lies in its PowerShell script. Paste the command below in a PowerShell and
 follow the instructions. You will be able to easily transfer and execute
 more PowerShell modules and binary code in-memory (compressed and
 encrypted). The endpoint protection will most likely not care. Note that
-you need to place or symlink the modules in the 'module' directory first.
-The stuff in <code>~/.local/share/powerhub/profile.ps1</code> will be
+you need to place or symlink the modules in the <code>module</code> directory first.
+The stuff in <code>$XDG_DATA_HOME/powerhub/profile.ps1</code> will be
 executed automatically. Have fun!"><span data-feather="help-circle"></span></a></sup>
 </h2>
     <p>Paste this in PowerShell:</p>
-    <div class="code_div" contenteditable='true'><code id='dlcradle'>{{ dl_str }}</code></div>
+    <div class="code_div mb-3" contenteditable='true'>
+        <code id='dlcradle'>{{ dl_str }}</code>
+    </div>
+    {#
     <div class="custom-control custom-checkbox dlcradle-options">
       <input type="checkbox" class="custom-control-input" id="need-proxy" checked>
       <label class="custom-control-label" for="need-proxy">I need a proxy</label>
     </div>
-      {% if SSL %}
+    {% if SSL %}
     <div class="custom-control custom-checkbox dlcradle-options">
       <input type="checkbox" class="custom-control-input" id="need-tlsv12" checked>
       <label class="custom-control-label" for="need-tlsv12">Force
           TLSv1.2 on the client</label>
     </div>
       {% endif %}
-    <hr>
+
+      #}
+
+
+<div class="input-group input-group-sm mb-3">
+  <div class="input-group-prepend">
+    <label class="input-group-text" for="inputGroupLauncher" style="width: 150px;">Launcher</label>
+  </div>
+  <select class="custom-select" id="inputGroupLauncher">
+    <option selected value="powershell">PowerShell</option>
+    <option value="cmd">CMD</option>
+    <option value="cmd_enc">CMD Encoded</option>
+    <option value="rundll32">Rundll32</option>
+  </select>
+</div>
+
+<div class="input-group input-group-sm mb-3">
+  <div class="input-group-prepend">
+    <label class="input-group-text" for="inputGroupAmsi" style="width: 150px;">AMSI Bypass</label>
+  </div>
+  <select class="custom-select" id="inputGroupAmsi">
+    <option selected value="am0nsec">am0nsec (Requires PowerShell Version 5)</option>
+  </select>
+</div>
+
+<div class="input-group input-group-sm mb-3">
+  <div class="input-group-prepend">
+    <label class="input-group-text" for="inputGroupTransport" style="width: 150px;">Transport</label>
+  </div>
+  <select class="custom-select" id="inputGroupTransport">
+    <option selected value="http">HTTP</option>
+    <option value="https">HTTPS</option>
+    <option value="smb" disabled>SMB (not yet implemented)</option>
+    <option value="dns" disabled>DNS (not yet implemented)</option>
+  </select>
+</div>
+
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1">
+  <label class="form-check-label" for="inlineCheckbox1">Use Web Proxy</label>
+</div>
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
+  <label class="form-check-label" for="inlineCheckbox2">Force TLSv1.2</label>
+</div>
+
+<div class="custom-control custom-radio custom-control-inline">
+  <input type="radio" id="customRadioInline1" name="customRadioInline1" class="custom-control-input">
+  <label class="custom-control-label" for="customRadioInline1">Verify by fingerprint</label>
+</div>
+
+<div class="custom-control custom-radio custom-control-inline">
+  <input type="radio" id="customRadioInline2" name="customRadioInline1" class="custom-control-input">
+  <label class="custom-control-label" for="customRadioInline2">No TLS verification</label>
+</div>
+
+<div class="custom-control custom-radio custom-control-inline">
+  <input type="radio" id="customRadioInline3" name="customRadioInline1" class="custom-control-input">
+  <label class="custom-control-label" for="customRadioInline3">Use local certificate store</label>
+</div>
+
+
+
+
+<hr>
 <p>
 There {% if modules|length == 1 %}is <strong>1</strong> module{% else %}are
 <strong>{{ modules|length }}</strong> modules{% endif %} available.</p>
@@ -52,11 +119,14 @@ There {% if modules|length == 1 %}is <strong>1</strong> module{% else %}are
                 {% include "hub/modulelist.html" %}
             {% else %}
                 You probably didn't put anything in the <code>modules</code>
-                directory. If you already have those modules on your hard
-                drive, it make sense to symlink them. But if you don't, or
-                if you are really lazy, for your convenience, you can
-                perform a shallow clone of some popular PowerShell
-                repositories by clicking on "Need more?".
+                directory. It's in either
+                <code>$XDG_DATA_HOME/powerhub</code> or
+                </code>$HOME/.local/share/powerhub</code>. If you already
+                have those modules on your hard drive, it make sense to
+                symlink them. But if you don't, or if you are really lazy,
+                for your convenience, you can perform a shallow clone of
+                some popular PowerShell repositories by clicking on "Need
+                more?".
             {% endif %}
         </div>
         <div class="modal-footer">
@@ -65,6 +135,7 @@ There {% if modules|length == 1 %}is <strong>1</strong> module{% else %}are
     </div>
   </div>
 </div>
+
 
 <div class="modal fade bd-getmodules-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
