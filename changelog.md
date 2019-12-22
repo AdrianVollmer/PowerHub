@@ -7,6 +7,7 @@ Version 1.4
   LSASS process, the SAM hive and other back to PowerHub
 * New feature: executing clipboard entry content upon executing PowerHub on
   target
+* Auto-reload modules when loading them on the client side
 
 Version 1.3
 ===========
