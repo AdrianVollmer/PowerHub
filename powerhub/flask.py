@@ -423,8 +423,9 @@ def payload_l():
 @app.route('/dlcradle')
 def dlcradle():
     global need_proxy, need_tlsv12
-    need_proxy = request.args['proxy'] == 'true'
-    need_tlsv12 = request.args['tlsv12'] == 'true'
+    #  need_proxy = request.args['proxy'] == 'true'
+    #  need_tlsv12 = request.args['tlsv12'] == 'true'
+    print(request.args)
     return stager_str(need_proxy=need_proxy, need_tlsv12=need_tlsv12)
 
 

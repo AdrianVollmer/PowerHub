@@ -34,64 +34,66 @@ executed automatically. Have fun!"><span data-feather="help-circle"></span></a><
       #}
 
 
-<div class="input-group input-group-sm mb-3">
-  <div class="input-group-prepend">
-    <label class="input-group-text" for="inputGroupLauncher" style="width: 150px;">Launcher</label>
-  </div>
-  <select class="custom-select" id="inputGroupLauncher">
-    <option selected value="powershell">PowerShell</option>
-    <option value="cmd">CMD</option>
-    <option value="cmd_enc">CMD Encoded</option>
-    <option value="rundll32">Rundll32</option>
-  </select>
-</div>
+      <div id="cradle-options">
+          <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                  <label class="input-group-text" for="inputGroupLauncher" style="width: 150px;">Launcher</label>
+              </div>
+              <select class="custom-select" id="inputGroupLauncher">
+                  <option selected value="powershell">PowerShell</option>
+                  <option value="cmd">CMD</option>
+                  <option value="cmd_enc">CMD Encoded</option>
+                  <option value="rundll32" disabled>Rundll32 (not yet implemented)</option>
+                  <option value="installutil" disabled>InstallUtil (not yet implemented)</option>
+              </select>
+          </div>
 
-<div class="input-group input-group-sm mb-3">
-  <div class="input-group-prepend">
-    <label class="input-group-text" for="inputGroupAmsi" style="width: 150px;">AMSI Bypass</label>
-  </div>
-  <select class="custom-select" id="inputGroupAmsi">
-    <option selected value="am0nsec">am0nsec (Requires PowerShell Version 5)</option>
-  </select>
-</div>
+          <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                  <label class="input-group-text" for="GroupAmsi" style="width: 150px;">AMSI Bypass</label>
+              </div>
+              <select class="custom-select" id="GroupAmsi">
+                  <option selected value="am0nsec">am0nsec (Requires PowerShell Version 5)</option>
+              </select>
+          </div>
 
-<div class="input-group input-group-sm mb-3">
-  <div class="input-group-prepend">
-    <label class="input-group-text" for="inputGroupTransport" style="width: 150px;">Transport</label>
-  </div>
-  <select class="custom-select" id="inputGroupTransport">
-    <option selected value="http">HTTP</option>
-    <option value="https">HTTPS</option>
-    <option value="smb" disabled>SMB (not yet implemented)</option>
-    <option value="dns" disabled>DNS (not yet implemented)</option>
-  </select>
-</div>
+          <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                  <label class="input-group-text" for="GroupTransport" style="width: 150px;">Transport</label>
+              </div>
+              <select class="custom-select" id="GroupTransport">
+                  <option selected value="http">HTTP</option>
+                  <option value="https">HTTPS</option>
+                  <option value="smb" disabled>SMB (not yet implemented)</option>
+                  <option value="dns" disabled>DNS (not yet implemented)</option>
+              </select>
+          </div>
 
-<div class="form-check form-check-inline">
-  <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1">
-  <label class="form-check-label" for="inlineCheckbox1">Use Web Proxy</label>
-</div>
-<div class="form-check form-check-inline">
-  <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
-  <label class="form-check-label" for="inlineCheckbox2">Force TLSv1.2</label>
-</div>
+          <div class="form-check form-check-inline relevant-to-http relevant-to-https">
+              <input class="form-check-input" type="checkbox" id="CheckboxProxy" value="Proxy">
+              <label class="form-check-label" for="CheckboxProxy">Use Web Proxy</label>
+          </div>
+          <div class="form-check form-check-inline relevant-to-https">
+              <input class="form-check-input" type="checkbox" id="CheckboxTLS1.2" value="TLSv1.2">
+              <label class="form-check-label" for="CheckboxTLS1.2">Force TLSv1.2</label>
+          </div>
 
-<div class="custom-control custom-radio custom-control-inline">
-  <input type="radio" id="customRadioInline1" name="customRadioInline1" class="custom-control-input">
-  <label class="custom-control-label" for="customRadioInline1">Verify by fingerprint</label>
-</div>
+          <div class="custom-control custom-radio custom-control-inline relevant-to-https">
+              <input type="radio" id="RadioFingerprint" name="RadioVerification" class="custom-control-input">
+              <label class="custom-control-label" for="RadioFingerprint">Verify by fingerprint</label>
+          </div>
 
-<div class="custom-control custom-radio custom-control-inline">
-  <input type="radio" id="customRadioInline2" name="customRadioInline1" class="custom-control-input">
-  <label class="custom-control-label" for="customRadioInline2">No TLS verification</label>
-</div>
+          <div class="custom-control custom-radio custom-control-inline relevant-to-https">
+              <input type="radio" id="RadioNoVerification" name="RadioVerification" class="custom-control-input">
+              <label class="custom-control-label" for="RadioNoVerification">No TLS verification</label>
+          </div>
 
-<div class="custom-control custom-radio custom-control-inline">
-  <input type="radio" id="customRadioInline3" name="customRadioInline1" class="custom-control-input">
-  <label class="custom-control-label" for="customRadioInline3">Use local certificate store</label>
-</div>
+          <div class="custom-control custom-radio custom-control-inline relevant-to-https">
+              <input type="radio" id="RadioCertStore" name="RadioVerification" class="custom-control-input">
+              <label class="custom-control-label" for="RadioCertStore">Use local certificate store</label>
+          </div>
 
-
+      </div>
 
 
 <hr>

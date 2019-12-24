@@ -1,10 +1,15 @@
-$('.dlcradle-options').change(function() {
+$('#cradle-options select, #cradle-options input').change(function() {
+    var parameters = {};
+    $('#cradle-options select').each(function(){
+        parameters[this.id] = this.value;
+    });
+    $('#cradle-options input').each(function(){
+        parameters[this.id] = $(this).is(':checked');
+    });
+    console.log(parameters);
     $.get(
         "dlcradle",
-        {
-            "proxy": $("#need-proxy").is(':checked'),
-            "tlsv12": $("#need-tlsv12").is(':checked'),
-        }
+        parameters,
     ).done(function(data) { $('#dlcradle').text(data); });
 });
 
