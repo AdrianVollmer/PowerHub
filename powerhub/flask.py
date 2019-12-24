@@ -16,7 +16,7 @@ from flask_socketio import SocketIO  # , emit
 
 from powerhub.sql import get_clipboard, init_db, decrypt_hive, get_loot, \
         delete_loot
-from powerhub.stager import modules, stager_str, callback_url, \
+from powerhub.stager import modules, build_cradle, callback_url, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
 from powerhub.directories import UPLOAD_DIR, BASE_DIR, DB_FILENAME, \
@@ -139,7 +139,7 @@ def hub():
 @requires_auth
 def receiver():
     context = {
-        #  "dl_str": stager_str(flavor='reverse_shell',
+        #  "dl_str": build_cradle(flavor='reverse_shell',
         #                       need_proxy=need_proxy,
         #                       need_tlsv12=need_tlsv12),
         "SSL": args.SSL_KEY is not None,
@@ -420,7 +420,7 @@ def payload_l():
 def dlcradle():
     #  global need_proxy, need_tlsv12
     try:
-        return stager_str(request.args)
+        return build_cradle(request.args)
     except BadRequestKeyError:
         log.error("Unknown key, must be one of %s" % str(request.args))
         return ('Error', 500)
@@ -511,7 +511,7 @@ def reload_modules():
 def reverse_shell():
     """Spawn a reverse shell"""
     context = {
-        "dl_cradle": stager_str().replace('$K', '$R'),
+        "dl_cradle": build_cradle().replace('$K', '$R'),
         "IP": args.URI_HOST,
         "delay": 10,  # delay in seconds
         "lifetime": 3,  # lifetime in days

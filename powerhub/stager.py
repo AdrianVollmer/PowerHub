@@ -105,7 +105,7 @@ endpoints = {
 }
 
 
-def stager_str(get_args):
+def build_cradle(get_args):
     result = ""
     from powerhub.tools import FINGERPRINT
     if get_args['GroupTransport'] == 'https':
