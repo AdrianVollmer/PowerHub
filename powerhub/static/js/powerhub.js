@@ -1,17 +1,27 @@
-$('#cradle-options select, #cradle-options input').change(function() {
+function update_cradle() {
+    if (!$('#dlcradle').length) {return};
     var parameters = {};
     $('#cradle-options select').each(function(){
         parameters[this.id] = this.value;
     });
     $('#cradle-options input').each(function(){
         parameters[this.id] = $(this).is(':checked');
+        $(this).parent().hide();
     });
-    console.log(parameters);
+    $('#cradle-options select').each(function(){
+        $('#cradle-options .relevant-to-'+this.value).each(function(){
+            $(this).show();
+        });
+    });
     $.get(
         "dlcradle",
         parameters,
     ).done(function(data) { $('#dlcradle').text(data); });
-});
+};
+
+$(window).on('load', update_cradle);
+
+$('#cradle-options select, #cradle-options input').on('change', update_cradle);
 
 function toggleDiv(id) {
     var div = document.getElementById(id);

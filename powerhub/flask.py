@@ -9,6 +9,7 @@ from tempfile import TemporaryDirectory
 from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash, make_response, abort, jsonify
 
+from werkzeug.exceptions import BadRequestKeyError
 from werkzeug.serving import WSGIRequestHandler, _log
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_socketio import SocketIO  # , emit
@@ -60,9 +61,6 @@ socketio = SocketIO(
 if not args.DEBUG:
     logging.getLogger("socketio").setLevel(logging.WARN)
     logging.getLogger("engineio").setLevel(logging.WARN)
-
-need_proxy = True
-need_tlsv12 = (args.SSL_KEY is not None)
 
 
 def push_notification(type, msg, title, subtitle="", **kwargs):
@@ -128,8 +126,6 @@ def index():
 @requires_auth
 def hub():
     context = {
-        "dl_str": stager_str(need_proxy=need_proxy,
-                             need_tlsv12=need_tlsv12),
         "modules": modules,
         "repositories": list(repositories.keys()),
         "SSL": args.SSL_KEY is not None,
@@ -143,9 +139,9 @@ def hub():
 @requires_auth
 def receiver():
     context = {
-        "dl_str": stager_str(flavor='reverse_shell',
-                             need_proxy=need_proxy,
-                             need_tlsv12=need_tlsv12),
+        #  "dl_str": stager_str(flavor='reverse_shell',
+        #                       need_proxy=need_proxy,
+        #                       need_tlsv12=need_tlsv12),
         "SSL": args.SSL_KEY is not None,
         "shells": shell_receiver.active_shells(),
         "AUTH": args.AUTH,
@@ -422,11 +418,12 @@ def payload_l():
 
 @app.route('/dlcradle')
 def dlcradle():
-    global need_proxy, need_tlsv12
-    #  need_proxy = request.args['proxy'] == 'true'
-    #  need_tlsv12 = request.args['tlsv12'] == 'true'
-    print(request.args)
-    return stager_str(need_proxy=need_proxy, need_tlsv12=need_tlsv12)
+    #  global need_proxy, need_tlsv12
+    try:
+        return stager_str(request.args)
+    except BadRequestKeyError:
+        log.error("Unknown key, must be one of %s" % str(request.args))
+        return ('Error', 500)
 
 
 @app.route('/u', methods=["POST"])

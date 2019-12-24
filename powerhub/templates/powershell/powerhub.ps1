@@ -15,11 +15,6 @@ $ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
 {{'$DebugPreference = "Continue"'|debug}}
 
-$WebClient = New-Object net.webclient;
-$WebClient.Proxy = [Net.WebRequest]::GetSystemWebProxy();
-$WebClient.Proxy.Credentials = [Net.CredentialCache]::DefaultCredentials;
-
-
 function Unzip-Code {
      Param ( [byte[]] $byteArray )
      if ($PS_VERSION -eq 2) {

