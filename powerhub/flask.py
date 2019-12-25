@@ -137,8 +137,14 @@ def hub():
 @app.route('/receiver')
 @requires_auth
 def receiver():
+    try:
+        cradle = build_cradle(request.args, flavor='reverse_shell'),
+    except BadRequestKeyError:
+        log.error("Unknown key, must be one of %s" % str(request.args))
+        cradle = 'error'
+
     context = {
-        "dl_str": build_cradle(request.args, flavor='reverse_shell'),
+        "dl_str": cradle,
         "SSL": args.SSL_KEY is not None,
         "shells": shell_receiver.active_shells(),
         "AUTH": args.AUTH,
