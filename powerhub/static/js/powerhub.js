@@ -1,6 +1,10 @@
 function update_cradle() {
-    if (!$('#dlcradle').length) {return};
-    var parameters = {};
+    if (!$('#dlcradle').length) {
+        return
+    } else {
+        var flavor = $('#dlcradle').attr('data-flavor');
+    };
+    var parameters = {"flavor": flavor};
     $('#cradle-options select').each(function(){
         parameters[this.id] = this.value;
     });

