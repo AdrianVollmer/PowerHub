@@ -21,7 +21,7 @@ from powerhub.stager import modules, build_cradle, callback_urls, \
 from powerhub.upload import save_file, get_filelist
 from powerhub.directories import UPLOAD_DIR, BASE_DIR, DB_FILENAME, \
         XDG_DATA_HOME
-from powerhub.tools import encrypt, compress, get_secret_key
+from powerhub.tools import encrypt, compress, KEY
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
@@ -51,7 +51,6 @@ except ImportError as e:
     log.exception(e)
     db = None
 cb = get_clipboard()
-KEY = get_secret_key()
 
 socketio = SocketIO(
     app,
@@ -376,6 +375,7 @@ def payload_1():
         "webdav_url": webdav_url,
         "symbol_name": symbol_name,
         "profile": profile,
+        "transport": request.args['t'],
     }
     result = render_template(
                     "powershell/powerhub.ps1",
@@ -429,7 +429,7 @@ def dlcradle():
 def upload():
     """Upload one or more files"""
     file_list = request.files.getlist("file[]")
-    noredirect = "noredirect" in request.args
+    is_from_script = "script" in request.args
     loot = "loot" in request.args and request.args["loot"]
     for file in file_list:
         if file.filename == '':
@@ -438,16 +438,16 @@ def upload():
             if loot:
                 loot_id = request.args["loot"]
                 log.info("Loot received - %s" % loot_id)
-                save_loot(file, loot_id)
+                save_loot(file, loot_id, encrypted=is_from_script)
             else:
                 log.info("File received - %s" % file.filename)
-                save_file(file)
+                save_file(file, encrypted=is_from_script)
     if loot:
         decrypt_hive(loot_id)
         push_notification("reload", "Update Loot", "")
     else:
         push_notification("reload", "Update Fileexchange", "")
-    if noredirect:
+    if is_from_script:
         return ('OK', 200)
     else:
         return redirect('/fileexchange')

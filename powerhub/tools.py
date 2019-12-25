@@ -116,3 +116,6 @@ def unique(a):
 def flatten(l):
     flatten = itertools.chain.from_iterable
     return list(flatten(l))
+
+
+KEY = get_secret_key()

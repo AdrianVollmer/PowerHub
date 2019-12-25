@@ -33,10 +33,10 @@ def store_minidump(loot_id, lsass, lass_file):
     add_lsass(loot_id, lsass, lass_file)
 
 
-def save_loot(file, loot_id):
+def save_loot(file, loot_id, encrypted=False):
     """Process the loot file"""
 
-    filename = save_file(file, dir=LOOT_DIR)
+    filename = save_file(file, dir=LOOT_DIR, encrypted=encrypted)
     loot_type = get_loot_type(filename)
     try:
         if loot_type == "DMP":
