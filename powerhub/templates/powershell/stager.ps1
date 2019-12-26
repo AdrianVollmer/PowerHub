@@ -14,6 +14,7 @@ function {{symbol_name("Decrypt-String")}} {
     $result
 }
 
+{# strings used for disabling powershell logging #}
 {% set strings = [
     "Bypass.AMSI",
     "System.Management.Automation.Utils",
@@ -33,6 +34,8 @@ function {{symbol_name("Decrypt-String")}} {
 if ($PSVersionTable.PSVersion.Major -ge 5) {
     {% if amsibypass == 'am0nsec' %}
         {% include "powershell/am0nsec-amsi-bypass.ps1" %}
+    {% elif amsibypass == 'reflection' %}
+        {% include "powershell/reflection.ps1" %}
     {% endif %}
 
     {# Disable Logging #}
