@@ -16,7 +16,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_socketio import SocketIO  # , emit
 
 from powerhub.sql import get_clipboard, init_db, decrypt_hive, get_loot, \
-        delete_loot
+        delete_loot, get_clip_entry_list
 from powerhub.stager import modules, build_cradle, callback_urls, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
@@ -142,8 +142,10 @@ def index():
 @app.route('/hub')
 @requires_auth
 def hub():
+    clip_entries = get_clip_entry_list(cb)
     context = {
         "modules": modules,
+        "clip_entries": clip_entries,
         "repositories": list(repositories.keys()),
         "SSL": args.SSL_KEY is not None,
         "AUTH": args.AUTH,

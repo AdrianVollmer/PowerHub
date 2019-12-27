@@ -18,6 +18,7 @@
   <select class="custom-select" id="GroupAmsi">
       <option selected value="reflection">Matt Graber's Reflection method</option>
       <option selected value="am0nsec">am0nsec (Requires PowerShell Version 5)</option>
+      <option selected value="zc00l">zc00l</option>
       <option selected value="none">None</option>
   </select>
 </div>
@@ -31,6 +32,18 @@
       <option value="https">HTTPS</option>
       <option value="smb" disabled>SMB (not yet implemented)</option>
       <option value="dns" disabled>DNS (not yet implemented)</option>
+  </select>
+</div>
+
+<div class="input-group input-group-sm mb-3">
+  <div class="input-group-prepend">
+      <label class="input-group-text" for="GroupClipExec" style="width: 150px;">Clip-Exec</label>
+  </div>
+  <select class="custom-select" id="GroupClipExec">
+      <option selected value="none">None</option>
+      {% for entry in clip_entries %}
+      <option value="{{entry['n']}}"><code>[{{entry['n']}}]</code> {{entry['text']}}</option>
+      {% endfor %}
   </select>
 </div>
 
@@ -57,3 +70,4 @@
   <input type="radio" id="RadioCertStore" name="RadioVerification" class="custom-control-input">
   <label class="custom-control-label" for="RadioCertStore">Use local certificate store</label>
 </div>
+

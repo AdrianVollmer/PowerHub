@@ -241,3 +241,9 @@ def get_clipboard_with_db(db):
             return len(self.entries.keys())
 
     return Clipboard()
+
+
+def get_clip_entry_list(clipboard):
+    return [{"n": c.id,
+             "text": c.content[:50] + ("..." if len(c.content) > 50 else ""),
+             } for c in clipboard.entries.values()]
