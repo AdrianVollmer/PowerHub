@@ -326,12 +326,20 @@ def payload_0():
         exec_clipboard_entry = cb.entries[clipboard_id].content
     except TypeError:
         exec_clipboard_entry = ""
+    amsi_bypass = request.args['a']
+    amsi_template = ""
+    # prevent path traversal
+    if not (amsi_bypass == 'none'
+            or '.' in amsi_bypass
+            or '/' in amsi_bypass
+            or '\\' in amsi_bypass):
+        amsi_template = "powershell/amsi/"+amsi_bypass+".ps1"
     context = {
         "modules": modules,
         "callback_url": callback_urls[request.args['t']],
         "transport": request.args['t'],
         "key": KEY,
-        "amsibypass": request.args['a'],
+        "amsibypass": amsi_template,
         "symbol_name": symbol_name,
         "stage2": request.args["f"],
         "exec_clipboard_entry": exec_clipboard_entry,
