@@ -36,6 +36,8 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
         {% include "powershell/am0nsec-amsi-bypass.ps1" %}
     {% elif amsibypass == 'reflection' %}
         {% include "powershell/reflection.ps1" %}
+    {% elif amsibypass == 'adam-chester' %}
+        {% include "powershell/amsi-adam-chester.ps1" %}
     {% endif %}
 
     {# Disable Logging #}
