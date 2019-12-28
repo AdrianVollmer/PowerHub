@@ -36,8 +36,14 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
         {% include "powershell/am0nsec-amsi-bypass.ps1" %}
     {% elif amsibypass == 'reflection' %}
         {% include "powershell/reflection.ps1" %}
+    {% elif amsibypass == 'reflection2' %}
+        {% include "powershell/amsi-reflection2.ps1" %}
+    {% elif amsibypass == 'rasta-mouse' %}
+        {% include "powershell/amsi-rasta-mouse.ps1" %}
     {% elif amsibypass == 'adam-chester' %}
         {% include "powershell/amsi-adam-chester.ps1" %}
+    {% elif amsibypass == 'zc00l' %}
+        {% include "powershell/amsi-zcool.ps1" %}
     {% endif %}
 
     {# Disable Logging #}
