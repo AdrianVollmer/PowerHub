@@ -17,8 +17,15 @@
     </sup>
 </h2>
 <p>Paste this in PowerShell:</p>
-<div class="code_div" contenteditable='true'><code id='dlcradle'>{{ dl_str }}</code></div>
-<hr/>
+    <div class="code_div mb-3" contenteditable='true'>
+        <code id='dlcradle' data-flavor="reverse_shell">{{ dl_str }}</code>
+    </div>
+
+<div id="cradle-options">{% include "cradle-options.html" %}</div>
+
+
+<hr>
+
 <div class="container">
 {% if shells|length == 0 %}
 <div id="noshell-note">No shells received yet.</div>

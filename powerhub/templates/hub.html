@@ -10,24 +10,18 @@ lies in its PowerShell script. Paste the command below in a PowerShell and
 follow the instructions. You will be able to easily transfer and execute
 more PowerShell modules and binary code in-memory (compressed and
 encrypted). The endpoint protection will most likely not care. Note that
-you need to place or symlink the modules in the 'module' directory first.
-The stuff in <code>~/.local/share/powerhub/profile.ps1</code> will be
+you need to place or symlink the modules in the <code>module</code> directory first.
+The stuff in <code>$XDG_DATA_HOME/powerhub/profile.ps1</code> will be
 executed automatically. Have fun!"><span data-feather="help-circle"></span></a></sup>
 </h2>
-    <p>Paste this in PowerShell:</p>
-    <div class="code_div" contenteditable='true'><code id='dlcradle'>{{ dl_str }}</code></div>
-    <div class="custom-control custom-checkbox dlcradle-options">
-      <input type="checkbox" class="custom-control-input" id="need-proxy" checked>
-      <label class="custom-control-label" for="need-proxy">I need a proxy</label>
+<p>Paste this in PowerShell:</p>
+    <div class="code_div mb-3" contenteditable='true'>
+        <code id='dlcradle' data-flavor="hub">{{ dl_str }}</code>
     </div>
-      {% if SSL %}
-    <div class="custom-control custom-checkbox dlcradle-options">
-      <input type="checkbox" class="custom-control-input" id="need-tlsv12" checked>
-      <label class="custom-control-label" for="need-tlsv12">Force
-          TLSv1.2 on the client</label>
-    </div>
-      {% endif %}
-    <hr>
+
+<div id="cradle-options">{% include "cradle-options.html" %}</div>
+
+<hr>
 <p>
 There {% if modules|length == 1 %}is <strong>1</strong> module{% else %}are
 <strong>{{ modules|length }}</strong> modules{% endif %} available.</p>
@@ -52,11 +46,14 @@ There {% if modules|length == 1 %}is <strong>1</strong> module{% else %}are
                 {% include "hub/modulelist.html" %}
             {% else %}
                 You probably didn't put anything in the <code>modules</code>
-                directory. If you already have those modules on your hard
-                drive, it make sense to symlink them. But if you don't, or
-                if you are really lazy, for your convenience, you can
-                perform a shallow clone of some popular PowerShell
-                repositories by clicking on "Need more?".
+                directory. It's in either
+                <code>$XDG_DATA_HOME/powerhub</code> or
+                </code>$HOME/.local/share/powerhub</code>. If you already
+                have those modules on your hard drive, it make sense to
+                symlink them. But if you don't, or if you are really lazy,
+                for your convenience, you can perform a shallow clone of
+                some popular PowerShell repositories by clicking on "Need
+                more?".
             {% endif %}
         </div>
         <div class="modal-footer">
@@ -65,6 +62,7 @@ There {% if modules|length == 1 %}is <strong>1</strong> module{% else %}are
     </div>
   </div>
 </div>
+
 
 <div class="modal fade bd-getmodules-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">

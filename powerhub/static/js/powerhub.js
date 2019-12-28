@@ -1,12 +1,31 @@
-$('.dlcradle-options').change(function() {
+function update_cradle() {
+    if (!$('#dlcradle').length) {
+        return
+    } else {
+        var flavor = $('#dlcradle').attr('data-flavor');
+    };
+    var parameters = {"flavor": flavor};
+    $('#cradle-options select').each(function(){
+        parameters[this.id] = this.value;
+    });
+    $('#cradle-options input').each(function(){
+        parameters[this.id] = $(this).is(':checked');
+        $(this).parent().hide();
+    });
+    $('#cradle-options select').each(function(){
+        $('#cradle-options .relevant-to-'+this.value).each(function(){
+            $(this).show();
+        });
+    });
     $.get(
         "dlcradle",
-        {
-            "proxy": $("#need-proxy").is(':checked'),
-            "tlsv12": $("#need-tlsv12").is(':checked'),
-        }
+        parameters,
     ).done(function(data) { $('#dlcradle').text(data); });
-});
+};
+
+$(window).on('load', update_cradle);
+
+$('#cradle-options select, #cradle-options input').on('change', update_cradle);
 
 function toggleDiv(id) {
     var div = document.getElementById(id);

