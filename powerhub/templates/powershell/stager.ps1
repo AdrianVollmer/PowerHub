@@ -43,7 +43,7 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
     {% elif amsibypass == 'adam-chester' %}
         {% include "powershell/amsi-adam-chester.ps1" %}
     {% elif amsibypass == 'zc00l' %}
-        {% include "powershell/amsi-zcool.ps1" %}
+        {% include "powershell/amsi-zc00l.ps1" %}
     {% endif %}
 
     {# Disable Logging #}
