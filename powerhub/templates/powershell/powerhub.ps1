@@ -266,6 +266,14 @@ function Save-HubModule {
 
 Saves a loaded module to disk. WARNING: This will most likely trigger endpoint protection!
 
+.PARAMETER Module
+
+A PowerHub module object.
+
+.PARAMETER Directory
+
+Directory in which to save the file.
+
 .EXAMPLE
 
 Get-HubModule SeatBelt | Save-HubModule -Directory tmp/
@@ -314,6 +322,10 @@ Executes a .NET exe module in memory, which must be loaded first.
 
 This might trigger the anti-virus.
 
+.PARAMETER Module
+
+A PowerHub module object of type 'exe' (must be a .NET exe).
+
 .EXAMPLE
 
 Load-HubModule SeatBelt | Run-DotNETExe -Arguments "system"
@@ -355,6 +367,14 @@ function Run-Shellcode {
 .SYNOPSIS
 
 Executes a loaded shellcode module in memory using Invoke-Shellcode, which must be loaded first.
+
+.PARAMETER Module
+
+A PowerHub module object of type "shellcode".
+
+.PARAMETER ProcessID
+
+A process ID of the process to be used for injection.
 
 .EXAMPLE
 
@@ -477,6 +497,15 @@ function PushTo-Hub {
 .SYNOPSIS
 
 Uploads files back to the hub via Cmdlet.
+
+.PARAMETER Files
+
+An array of strings which contain the names of the files that you want to transfer.
+
+.PARAMETER Name
+
+Filename to be used, if the data is read from stdin. If empty, a combination of
+the hostname and a timestamp will be used.
 
 .EXAMPLE
 
