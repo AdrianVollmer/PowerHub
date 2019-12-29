@@ -755,3 +755,4 @@ Update-HubModules
 
 {{ profile }}
 
+Invoke-Expression ({{symbol_name("Decrypt-String")}} ${{symbol_name("clip_entry")}})
