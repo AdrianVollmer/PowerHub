@@ -288,7 +288,11 @@ Load the exe module with the name 'meterpreter.exe' in memory and save it to dis
         } else {
             $Filename = $m.BaseName
         }
-        $code | Set-Content "$Filename" -Encoding Byte
+        if ($m.Type -eq "ps1") {
+            $code | Set-Content "$Filename" -Encoding UTF8
+        } else {
+            $code | Set-Content "$Filename" -Encoding Byte
+        }
         $Filename
     }
 }
