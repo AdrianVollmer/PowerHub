@@ -47,11 +47,9 @@ function Import-HubModule {
         $Module
     )
 
-    if ($Module.Type -eq "ps1") {
-        $code = $Module.Code
-        $sb = [Scriptblock]::Create($code)
-        New-Module -ScriptBlock $sb | Out-Null
-    }
+    $code = $Module.Code
+    $sb = [Scriptblock]::Create($code)
+    New-Module -ScriptBlock $sb | Out-Null
 
     if ($?){
         Write-Verbose ("[*] {0} imported." -f $Module.Name)
@@ -169,9 +167,13 @@ Use the '-Verbose' option to print detailed information.
         if ($i -lt $Modules.length -and $i -ge 0) {
             $args = @{"m"="$i"}
             # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
-            $Modules[$i].Code = Transport-String "m" $args
+            if ($Modules[$i].Type -eq 'ps1') {
+                $Modules[$i].Code = Transport-String "m" $args
+                Import-HubModule $Modules[$i]
+            } else {
+                $Modules[$i].Code = Transport-String "m" $args $True
+            }
             $Modules[$i].Loaded = $True
-            Import-HubModule $Modules[$i]
         }
         $result += $Modules[$i]
     }
