@@ -86,8 +86,40 @@ Lists all modules that are available via the hub.
     $Modules | Format-Table -AutoSize -Property N,Type,Name,Loaded
 }
 
-function Load-HubModule {
+function Get-HubModule {
+<#
+.SYNOPSIS
 
+Simply returns a hub module for further processing. Its only parameter  works
+similar to Load-HubModule. In fact, Load-HubModule calls Get-HubModule.
+
+.PARAMETER Expression
+
+See help of Load-HubModule.
+
+#>
+    Param(
+        [parameter(Mandatory=$true)]
+        [String]
+        $Expression
+    )
+
+    if ($Expression -match "^[0-9-,]+$") {
+        $indices = Convert-IntStringToArray($Expression)
+    } else {
+        $indices = $Modules | Where { $_.Name -match $Expression } | % {$_.N}
+    }
+
+    $result = @()
+    foreach ($i in $indices) {
+        if ($i -lt $Modules.length -and $i -ge 0) {
+            $result += $Modules[$i]
+        }
+    }
+    return $result
+}
+
+function Load-HubModule {
 <#
 .SYNOPSIS
 
@@ -154,26 +186,18 @@ Use the '-Verbose' option to print detailed information.
         $Expression
     )
 
-    if ($Expression -match "^[0-9-,]+$") {
-        $indices = Convert-IntStringToArray($Expression)
-    } else {
-        $indices = $Modules | Where { $_.Name -match $Expression } | % {$_.N}
-    }
-
     $result = @()
-    foreach ($i in $indices) {
-        if ($i -lt $Modules.length -and $i -ge 0) {
-            $args = @{"m"="$i"}
-            # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
-            if ($Modules[$i].Type -eq 'ps1') {
-                $Modules[$i].Code = Transport-String "m" $args
-                Import-HubModule $Modules[$i]
-            } else {
-                $Modules[$i].Code = Transport-String "m" $args $True
-            }
-            $Modules[$i].Loaded = $True
+    Get-HubModule $Expression | % {
+        $args = @{"m"=$_.N}
+        # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
+        if ($_.Type -eq 'ps1') {
+            $_.Code = Transport-String "m" $args
+            Import-HubModule $_
+        } else {
+            $_.Code = Transport-String "m" $args $True
         }
-        $result += $Modules[$i]
+        $_.Loaded = $True
+        $result += $_
     }
     $result
 }
@@ -701,6 +725,7 @@ function Help-PowerHub {
 The following functions are available (some with short aliases):
   * List-HubModules (lshm)
   * Load-HubModule (lhm)
+  * Get-HubModule (ghm)
   * Update-HubModules (uhm)
   * Get-Loot (glo)
   * Run-Exe (re)
@@ -716,6 +741,7 @@ Use 'Get-Help' to learn more about those functions.
 
 try { New-Alias -Name pth -Value PushTo-Hub } catch { }
 try { New-Alias -Name lhm -Value Load-HubModule } catch { }
+try { New-Alias -Name ghm -Value Get-HubModule } catch { }
 try { New-Alias -Name lshm -Value List-HubModules } catch { }
 try { New-Alias -Name uhm -Value Update-HubModules } catch { }
 try { New-Alias -Name glo -Value Get-Loot } catch { }
