@@ -11,7 +11,7 @@ $Modules = @()
         set default members - does not work in PSv2:
         https://stackoverflow.com/questions/1369542/
     #}
-    $m | Add-Member MemberSet PSStandardMembers $PSStandardMembers
+    $m | Add-Member MemberSet PSStandardMembers $PSStandardMembers -Force
     $defaultDisplaySet = 'Name','Type','N','Loaded'
     $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet',[string[]]$defaultDisplaySet)
     $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
