@@ -280,7 +280,9 @@ Description
 Load the exe module with the name 'meterpreter.exe' in memory and save it to disk
 #>
     Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module,
+
         [parameter(Mandatory=$false,Position=1)] $Directory = ""
     )
 
@@ -329,7 +331,9 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
 #>
 
     Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module,
+
         [parameter(Mandatory=$false)] [String[]] $Arguments
     )
 
@@ -372,7 +376,9 @@ Description
 Load the shellcode module with the name 'meterpreter.bin' in memory and run it
 #>
     Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module,
+
         [ValidateNotNullOrEmpty()] [UInt16] $ProcessID
     )
 
