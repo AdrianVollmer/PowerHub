@@ -154,8 +154,6 @@ Use the '-Verbose' option to print detailed information.
         $Expression
     )
 
-    Update-HubModules
-
     if ($Expression -match "^[0-9-,]+$") {
         $indices = Convert-IntStringToArray($Expression)
     } else {
