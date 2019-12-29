@@ -2,12 +2,13 @@
 
 {{'$DebugPreference = "Continue"'|debug}}
 
-$KEY = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
+$KEY = ${{symbol_name("KEY")}}
+{% set stage2 = "h" %}
 $DL_CRADLE = @'
-{#{% include "powershell/powerhub.ps1" %}#}
 '@
 
-{% include "powershell/rc4.ps1" %}
+# write-host $DL_CRADLE
+
 Set-Alias -Name Decrypt-Code -Value {{symbol_name("Decrypt-Code")}}
 
 $elements = @{ # bson elements
