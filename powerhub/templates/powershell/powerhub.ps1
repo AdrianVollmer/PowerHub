@@ -189,7 +189,7 @@ Executes a loaded exe module in memory using Invoke-ReflectivePEInjection, which
 
 .PARAMETER Module
 
-An integer reference the module to execute or the module object itself. Use List-HubModules to find this integer.
+A PowerHub module object of type 'exe'.
 
 .PARAMETER ExeArgs
 
@@ -220,8 +220,11 @@ Description
 Load the exe module with the name 'meterpreter.exe' in memory and run it
 #>
     Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module,
+
         [parameter(Mandatory=$false,Position=1)] [String] $ExeArgs,
+
         [parameter(Mandatory=$false)] [Switch] $OnDisk
     )
 
