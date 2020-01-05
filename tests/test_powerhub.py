@@ -28,7 +28,6 @@ def flask_app():
     sys.argv = ['./powerhub.py', TEST_URI, '--no-auth']
     temp_db = tempfile.mkstemp()[1]
     from powerhub import flask
-    flask.cb.update()  # ensure table exists
     flask_app = flask.app.test_client()
     yield flask_app
     os.remove(temp_db)
