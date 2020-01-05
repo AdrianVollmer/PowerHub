@@ -16,7 +16,10 @@ sys.path.insert(0, myPath + '/../')
 TEST_URI = 'foobar'
 NEW_XDG_DATA_HOME = os.path.join(os.sep, 'tmp', 'ph_test')
 os.environ["XDG_DATA_HOME"] = NEW_XDG_DATA_HOME
-shutil.rmtree(NEW_XDG_DATA_HOME)
+try:
+    shutil.rmtree(NEW_XDG_DATA_HOME)
+except FileNotFoundError:
+    pass
 os.makedirs(NEW_XDG_DATA_HOME)
 
 
