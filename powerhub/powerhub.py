@@ -44,7 +44,7 @@ def start_thread(f, *args):
     ).start()
 
 
-def main():
+def main(fully_threaded=False):
     signal.signal(signal.SIGINT, signal_handler)
     try:
         start_thread(run_webdav)
@@ -54,4 +54,7 @@ def main():
                  args.REC_HOST, args.REC_PORT)
     start_thread(powerhub.flask.shell_receiver.run_provider)
     start_thread(powerhub.flask.run_flask_app)
-    powerhub.reverseproxy.run_proxy()
+    if fully_threaded:
+        start_thread(powerhub.reverseproxy.run_proxy)
+    else:
+        powerhub.reverseproxy.run_proxy()
