@@ -15,13 +15,13 @@ from test_config import TEST_URI, TEST_COMMANDS
 
 
 sys.argv = ['./powerhub.py', TEST_URI, '--no-auth']
+NEW_XDG_DATA_HOME = os.path.join(os.sep, 'tmp', 'ph_test')
 
 
 def init_tests():
     myPath = os.path.dirname(os.path.abspath(__file__))
     sys.path.insert(0, myPath + '/../../')
 
-    NEW_XDG_DATA_HOME = os.path.join(os.sep, 'tmp', 'ph_test')
     os.environ["XDG_DATA_HOME"] = NEW_XDG_DATA_HOME
     try:
         shutil.rmtree(NEW_XDG_DATA_HOME)
