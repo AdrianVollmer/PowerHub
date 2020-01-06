@@ -3,6 +3,7 @@ venv
 .env
 .venv
 notes
+tests/helpers/test_config.py
 *.pem
 *.pyc
 __pycache__

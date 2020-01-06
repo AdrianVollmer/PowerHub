@@ -2,8 +2,19 @@ import os
 import shutil
 import sys
 
+from test_config import TEST_URI, TEST_COMMANDS
+# test_config must define these variables. they are local to the computer
+# you are running this on, so the file is not tracked by git.
+# mine looks something like this:
+#  TEST_URI = "192.168.11.2"
+#  TEST_COMMANDS = [
+#      'ssh win10 \'"%(POWERSHELL_ESCAPED_QUOTES)s"\'',
+#      'wmiexec.py -hashes :681d3xxxxxxxxxxxxxxxxxxxxxxxxxxx '
+#      + 'Administrator@192.168.11.3 %(BASH)s',
+#  ]
 
-TEST_URI = 'foobar'
+
+sys.argv = ['./powerhub.py', TEST_URI, '--no-auth']
 
 
 def init_tests():
