@@ -107,7 +107,7 @@ See help of Load-HubModule.
     if ($Expression -match "^[0-9-,]+$") {
         $indices = Convert-IntStringToArray($Expression)
     } else {
-        $indices = $Modules | Where { $_.Name -match $Expression } | % {$_.N}
+        $indices = [Int[]]($Modules | Where { $_.Name -match $Expression } | % {$_.N})
     }
 
     $result = @()
