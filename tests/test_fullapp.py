@@ -7,7 +7,7 @@ import time
 from subprocess import check_output
 from shlex import split
 #  import tempfile
-#  import re
+import re
 import requests
 
 import pytest
@@ -79,7 +79,12 @@ def get_stager():
 
 
 def execute_cradle(cmd):
-    return check_output(split(cmd))[:-1].decode()
+    env = os.environ
+    env["PYTHONIOENCODING"] = "utf8"
+    return check_output(
+        split(cmd),
+        env=env,
+    )[:-1].decode()
 
 
 def create_modules():
@@ -121,27 +126,37 @@ def test_stager(full_app):
     win10cmd = TEST_COMMANDS["win10"] % full_app
     # Insert formatter for extra command
     win10cmd = win10cmd[:-2] + '%s' + win10cmd[-2:]
-    out = execute_cradle(win10cmd % "")
+    run_test_remote(lambda c: win10cmd % c.replace('"', '\\"'))
+
+    win7cmd = TEST_COMMANDS["win7"] % full_app
+    win7cmd = win7cmd.replace('\\$', '$')
+    # Insert formatter for extra command
+    win7cmd = win7cmd[:-3] + '%s' + win7cmd[-3:]
+    run_test_remote(lambda c: win7cmd % c.replace('"', "'"))
+
+
+def run_test_remote(cmd):
+    out = execute_cradle(cmd(""))
     assert "Adrian Vollmer" in out
     assert "Run 'Help-PowerHub' for help" in out
 
-    out = execute_cradle(win10cmd % "lshm")
+    out = execute_cradle(cmd("lshm"))
     for i in range(MAX_TEST_MODULE_PS1):
         assert "psmod%d" % i in out
 
-    out = execute_cradle(win10cmd % "lhm psmod53;Invoke-Testfunc53")
-    expected = """Test53
-Name            Type N  Loaded
-----            ---- -  ------
-ps1/psmod53.ps1 ps1  72   True"""
+    out = execute_cradle(cmd("lhm psmod53|fl;Invoke-Testfunc53"))
     assert "Test53" in out
     assert "psmod53" in out
-    assert expected in out.replace('\r\n', '\n')
+    assert re.search("Name *: ps1/psmod53.ps1\r\n", out)
+    assert re.search("Type *: ps1\r\n", out)
+    assert re.search("N *: 72\r\n", out)
+    assert re.search("Loaded *: True\r\n", out)
 
     out = execute_cradle(
-        win10cmd % ('lhm \\"72-74,77\\";lshm;Invoke-Testfunc53;'
-                    + "Invoke-Testfunc99;Invoke-Testfunc47;Invoke-Testfunc72;")
+        cmd('$p="72-74,77";lhm $p;Invoke-Testfunc53;'
+            + "Invoke-Testfunc99;Invoke-Testfunc47;Invoke-Testfunc72;")
     )
+    print(out)
     # I don't understand the order of the modules
     assert "Test53" in out
     assert "Test99" in out
@@ -151,16 +166,19 @@ ps1/psmod53.ps1 ps1  72   True"""
     from powerhub.directories import UPLOAD_DIR
     testfile = "testfile.dat"
     out = execute_cradle(
-        win10cmd % ('[io.file]::WriteAllBytes(\\"$env:TEMP/%s\\",(1..255));' %
-                    testfile + 'pth \\"$env:TEMP/%s\\";' % testfile)
+        cmd(('$p=-join ($env:TEMP,"\\\\%s");'
+             + '[io.file]::WriteAllBytes($p,(1..255));'
+             + 'pth $p;rm $p') % testfile)
     )
+    time.sleep(1)
     with open(os.path.join(UPLOAD_DIR, testfile), "rb") as f:
         data = f.read()
     assert data == bytes(range(1, 256))
 
     out = execute_cradle(
-        win10cmd % ('\\"FooBar123\\"|pth -name %s;' % testfile)
+        cmd('$p="FooBar123";$p|pth -name %s;' % testfile)
     )
+    time.sleep(1)
     with open(os.path.join(UPLOAD_DIR, testfile+".1"), "rb") as f:
         data = f.read()
     assert data == b"FooBar123"
