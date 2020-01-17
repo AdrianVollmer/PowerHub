@@ -51,11 +51,10 @@ def get_self_signed_cert(hostname):
 
         log.info("No SSL certificate found, generating a self-signed one...")
         create_self_signed_cert(hostname, cert_file, key_file)
-    else:
-        f = open(cert_file, "br").read()
-        cert = crypto.load_certificate(crypto.FILETYPE_PEM, f)
-        log.info("Loaded SSL certificate for '%s' with SHA1 fingerprint: %s"
-                 % (hostname, cert.digest("sha1").decode()))
+    f = open(cert_file, "br").read()
+    cert = crypto.load_certificate(crypto.FILETYPE_PEM, f)
+    log.info("Loaded SSL certificate for '%s' with SHA1 fingerprint: %s"
+             % (hostname, cert.digest("sha1").decode()))
     global FINGERPRINT
     FINGERPRINT = cert.digest("sha1").decode()
     return (cert_file, key_file)

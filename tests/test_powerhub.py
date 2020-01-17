@@ -3,21 +3,17 @@
 
 import os
 import tempfile
-import shutil
 import sys
 import re
 
 import pytest
 
+# https://stackoverflow.com/a/33515264/1308830
+sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
+from test_init import TEST_URI, init_tests  # noqa
 
-myPath = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, myPath + '/../')
 
-TEST_URI = 'foobar'
-NEW_XDG_DATA_HOME = os.path.join(os.sep, 'tmp', 'ph_test')
-os.environ["XDG_DATA_HOME"] = NEW_XDG_DATA_HOME
-shutil.rmtree(NEW_XDG_DATA_HOME)
-os.makedirs(NEW_XDG_DATA_HOME)
+init_tests()
 
 
 @pytest.fixture
@@ -25,7 +21,6 @@ def flask_app():
     sys.argv = ['./powerhub.py', TEST_URI, '--no-auth']
     temp_db = tempfile.mkstemp()[1]
     from powerhub import flask
-    flask.cb.update()  # ensure table exists
     flask_app = flask.app.test_client()
     yield flask_app
     os.remove(temp_db)

