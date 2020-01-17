@@ -454,11 +454,10 @@ function Send-Bytes {
     )
 
     if ($FileName) {
-        # remove path
-        try {
-            $FileName = (Get-Item $Filename).Name
-        } catch [System.Management.Automation.ItemNotFoundException] {
-            $FileName = $FileName.Replace('^.', '').Replace('\', '_')
+        if ([System.IO.File]::Exists($Filename)) {
+            $Filename = (Get-Item $Filename).Name
+        } else {
+            $FileName = $FileName -replace '^\.', '' -replace '\\', '_'
         }
     } else {
         $FileName = Get-Date -Format o
@@ -563,7 +562,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
         $result = $result + $Stream
     }
     end {
-        if ($result) {
+        if (-not $Files) {
             {{'Write-Debug "Pushing stdin stream..."'|debug}}
             if ($result.length -ge 1 -and $result[0] -is [System.String]) {
                 $result = $result -Join "`r`n"
