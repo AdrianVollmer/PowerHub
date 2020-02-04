@@ -659,6 +659,7 @@ Return some basic information about the underlying system
         arch = $SysInfo.OSArchitecture;
         version = $SysInfo.version;
         hostname = $SysInfo.csname;
+        releaseid = (Get-Item "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion").GetValue('ReleaseID');
         IPs = $IPs
     }
 }
