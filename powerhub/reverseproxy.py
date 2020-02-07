@@ -13,6 +13,8 @@ from twisted.web.proxy import ReverseProxyResource
 from twisted.web.server import Site
 from twisted.web.resource import Resource
 
+from OpenSSL import crypto
+
 from powerhub.args import args
 from powerhub.tools import get_self_signed_cert
 from powerhub.logging import log
@@ -70,6 +72,11 @@ def run_proxy():
 
     if not args.SSL_KEY or not args.SSL_CERT:
         args.SSL_CERT, args.SSL_KEY = get_self_signed_cert(args.URI_HOST)
+    with open(args.SSL_CERT, "br") as f:
+        cert = f.read()
+    cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
+    global FINGERPRINT
+    FINGERPRINT = cert.digest("sha1").decode()
     reactor.listenSSL(args.SSL_PORT,
                       site,
                       ssl.DefaultOpenSSLContextFactory(

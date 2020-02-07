@@ -11,8 +11,6 @@ from powerhub.directories import CERT_DIR
 from powerhub.sql import get_setting, set_setting
 from powerhub.logging import log
 
-FINGERPRINT = ""
-
 
 def create_self_signed_cert(hostname,
                             cert_file,
@@ -55,8 +53,6 @@ def get_self_signed_cert(hostname):
     cert = crypto.load_certificate(crypto.FILETYPE_PEM, f)
     log.info("Loaded SSL certificate for '%s' with SHA1 fingerprint: %s"
              % (hostname, cert.digest("sha1").decode()))
-    global FINGERPRINT
-    FINGERPRINT = cert.digest("sha1").decode()
     return (cert_file, key_file)
 
 
