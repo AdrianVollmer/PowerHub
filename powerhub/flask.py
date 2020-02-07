@@ -21,7 +21,7 @@ from powerhub.stager import modules, build_cradle, callback_urls, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
 from powerhub.directories import UPLOAD_DIR, DB_FILENAME, \
-        XDG_DATA_HOME
+        XDG_DATA_HOME, STATIC_DIR
 from powerhub.tools import encrypt, compress, KEY
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
@@ -558,3 +558,13 @@ def shell_card():
 @socketio.on('connect', namespace="/push-notifications")
 def test_connect():
     log.debug("Websockt client connected")
+
+
+@app.route('/static/<filename>')
+def server_static(filename):
+    try:
+        return send_from_directory(STATIC_DIR,
+                                   filename,
+                                   as_attachment=True)
+    except PermissionError:
+        abort(403)
