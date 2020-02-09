@@ -249,6 +249,16 @@ def del_clipboard():
     return ""
 
 
+@app.route('/clipboard/edit', methods=["POST"])
+@requires_auth
+def edit_clipboard():
+    """Edit a clipboard entry"""
+    id = int(request.form.get("id"))
+    content = request.form.get("content")
+    cb.edit(id, content)
+    return ""
+
+
 @app.route('/clipboard/del-all', methods=["POST"])
 @requires_auth
 def del_all_clipboard():

@@ -190,6 +190,9 @@ def get_clipboard_without_db():
             self.next_id += 1
             return e
 
+        def edit(self, id, content):
+            self.entries[id] = content
+
         def delete(self, id):
             del self.entries[id]
             return
@@ -228,6 +231,12 @@ def get_clipboard_with_db(db):
             db.session.commit()
             self.entries[e.id] = e
             return None
+
+        def edit(self, id, content):
+            e = Entry.query.filter_by(id=id).first()
+            e.content = content
+            db.session.commit()
+            self.entries[e.id] = e
 
         def delete(self, id):
             e = self.entries[id]

@@ -32,10 +32,40 @@ function toggleDiv(id) {
     div.style.display = div.style.display == "none" ? "block" : "none";
 }
 
+$('.edit-clipboard').click(function(){
+    var id = $(this).attr('data-id');
+    var textbox = $(document.createElement('textarea'));
+    var pre = $('#card-'+id).find('pre');
+    textbox.text(pre.html());
+    textbox.attr('class', 'form-control');
+    pre.replaceWith(textbox);
+    $('#buttons-'+id).collapse('show');
+});
+
+$('.edit-ok').click(function(){
+    var id = $(this).attr('data-id');
+    var textbox = $('#card-'+id).find('textarea');
+    console.log(textbox.val());
+    $.post({
+        url: "clipboard/edit",
+        data: {"id": id, "content": textbox.val()},
+        success: function() { location.reload(); },
+    });
+});
+
+$('.edit-cancel').click(function(){
+    var id = $(this).attr('data-id');
+    $('#buttons-'+id).collapse('hide');
+    var pre= $(document.createElement('pre'));
+    var textbox = $('#card-'+id).find('textarea');
+    pre.html(textbox.text());
+    textbox.replaceWith(pre);
+});
+
 $('.delete-clipboard').click(function(){
     var id = $(this).attr('data-id');
-     $.post("clipboard/delete", {id: id});
-     $("#card-" + id).remove();
+    $.post("clipboard/delete", {id: id});
+    $("#card-" + id).remove();
 });
 
 $('#reloadbutton').click(function(){

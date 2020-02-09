@@ -50,6 +50,11 @@
             <h5 class="card-title">{{c.time}}
             <div class="card-id">{{c.id}}</div>
               <sup>
+                <a href="#" class="card-link edit-clipboard" data-id="{{c.id}}">
+                    <span data-feather="edit">edit</span>
+                </a>
+              </sup>
+              <sup>
                 <a href="#" class="card-link delete-clipboard" data-id="{{c.id}}">
                     <span data-feather="trash-2">delete</span>
                 </a>
@@ -57,6 +62,16 @@
             </h5>
             <h6 class="card-subtitle mb-2 text-muted">{{c.IP}}</h6>
             <pre style="white-space: pre-wrap; word-break: break-all;">{{ c.content }}</pre>
+            <div id="buttons-{{c.id}}" class="pt-2 col-sm text-right collapse">
+                <a href="#" class="btn btn-primary btn-sm flush-right
+                edit-ok" data-id="{{c.id}}">
+                    OK
+                </a>
+                <a href="#" class="btn btn-secondary btn-sm flush-right
+                edit-cancel" data-id="{{c.id}}">
+                    Cancel
+                </a>
+            </div>
           </div>
         </div>
     {% endfor %}

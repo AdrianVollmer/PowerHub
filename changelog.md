@@ -8,6 +8,7 @@ Version 1.4
 * New feature: executing clipboard entry content upon executing PowerHub on
   target
 * New feature: Offer options in the download cradle builder
+* New feature: Clipboard entries are now editable
 * Let the user choose the AMSI bypass (several included)
 * New feature: certificate pinning for self-sigend certs
 * PushTo-Hub now encrypts the data before sending it
