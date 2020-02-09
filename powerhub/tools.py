@@ -3,11 +3,12 @@ import gzip
 import os
 import random
 import string
+import itertools
 
 from OpenSSL import crypto
 
 from powerhub.directories import CERT_DIR
-from powerhub.settings import get_setting, set_setting
+from powerhub.sql import get_setting, set_setting
 from powerhub.logging import log
 
 
@@ -48,11 +49,10 @@ def get_self_signed_cert(hostname):
 
         log.info("No SSL certificate found, generating a self-signed one...")
         create_self_signed_cert(hostname, cert_file, key_file)
-    else:
-        f = open(cert_file, "br").read()
-        cert = crypto.load_certificate(crypto.FILETYPE_PEM, f)
-        log.info("Loaded SSL certificate for '%s' with SHA1 fingerprint: %s"
-                 % (hostname, cert.digest("sha1").decode()))
+    f = open(cert_file, "br").read()
+    cert = crypto.load_certificate(crypto.FILETYPE_PEM, f)
+    log.info("Loaded SSL certificate for '%s' with SHA1 fingerprint: %s"
+             % (hostname, cert.digest("sha1").decode()))
     return (cert_file, key_file)
 
 
@@ -98,3 +98,19 @@ def encrypt(data, key):
         out.append(char ^ S[(S[i] + S[j]) % 256])
 
     return (bytes(out))
+
+
+def unique(a):
+    result = []
+    for each in a:
+        if each not in result:
+            result.append(each)
+    return result
+
+
+def flatten(l):
+    flatten = itertools.chain.from_iterable
+    return list(flatten(l))
+
+
+KEY = get_secret_key()

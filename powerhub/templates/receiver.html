@@ -16,9 +16,16 @@
         </a>
     </sup>
 </h2>
-<p>Paste this in PowerShell:</p>
-<div class="code_div" contenteditable='true'><code id='dlcradle'>{{ dl_str }}</code></div>
-<hr/>
+<p>Paste this in you launcher (PowerShell/CMD/Bash command):</p>
+    <div class="code_div mb-3" contenteditable='true'>
+        <code id='dlcradle' data-flavor="reverse_shell">{{ dl_str }}</code>
+    </div>
+
+<div id="cradle-options">{% include "cradle-options.html" %}</div>
+
+
+<hr>
+
 <div class="container">
 {% if shells|length == 0 %}
 <div id="noshell-note">No shells received yet.</div>
@@ -26,7 +33,7 @@
 <div id="shell-list" {% if shells|length == 0 %}class="d-none"{% endif %}>
   <div id="accordion">
     {% for s in shells %}
-      {% include "receiver-shellcard.html" %}
+      {% include "receiver/receiver-shellcard.html" %}
     {% endfor %}
   </div>
   <div class="row my-3">

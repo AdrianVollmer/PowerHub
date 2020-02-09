@@ -13,6 +13,8 @@ from twisted.web.proxy import ReverseProxyResource
 from twisted.web.server import Site
 from twisted.web.resource import Resource
 
+from OpenSSL import crypto
+
 from powerhub.args import args
 from powerhub.tools import get_self_signed_cert
 from powerhub.logging import log
@@ -31,7 +33,10 @@ class DynamicProxy(Resource):
         host = '127.0.0.1'
         x_forwarded_for = request.client.host
         x_for_host = request.requestHeaders.getRawHeaders('host')
-        x_for_host = x_for_host[0].split(':')[0]
+        if x_for_host:
+            x_for_host = x_for_host[0].split(':')[0]
+        else:
+            x_for_host = ""
         x_for_port = request.host.port
         if x_for_port == args.SSL_PORT:
             x_for_proto = "https"
@@ -67,6 +72,11 @@ def run_proxy():
 
     if not args.SSL_KEY or not args.SSL_CERT:
         args.SSL_CERT, args.SSL_KEY = get_self_signed_cert(args.URI_HOST)
+    with open(args.SSL_CERT, "br") as f:
+        cert = f.read()
+    cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
+    global FINGERPRINT
+    FINGERPRINT = cert.digest("sha1").decode()
     reactor.listenSSL(args.SSL_PORT,
                       site,
                       ssl.DefaultOpenSSLContextFactory(

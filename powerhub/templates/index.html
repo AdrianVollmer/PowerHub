@@ -51,43 +51,39 @@
     <div class="dropdown-item"><a title="github source" target="_blank" href="https://github.com/AdrianVollmer/PowerHub">github.com/AdrianVollmer/PowerHub</a></div>
   </div>
   <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">PowerHub</a>
-  <div class="collapse" id="navbarToggleExternalContent">
-    <div class="bg-dark p-4">
-      <h4 class="text-white">Collapsed content</h4>
-      <span class="text-muted">Toggleable via the navbar brand.</span>
-    </div>
-  </div>
+
+  <ul class="nav nav-pills">
+    <li class="nav-item">
+      <a class="nav-link {% block hub_active %}{% endblock %}"
+         href="/hub">Hub</a>
+    </li>
+    {#
+    <li class="nav-item">
+      <a class="nav-link {% block receiver_active %}{% endblock %}"
+         href="/receiver">Receiver</a>
+    </li>
+    #}
+    <li class="nav-item">
+      <a class="nav-link {% block loot_active %}{% endblock %}"
+         href="/loot">Loot</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% block clipboard_active %}{% endblock %}"
+         href="/clipboard">Clipboard</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% block fileexchange_active %}{% endblock %}"
+         href="/fileexchange">File Exchange</a>
+    </li>
+  </ul>
 </nav>
 
-{% include "toasts.html" %}
-
-<div class="container">
-    <h1>PowerHub</h1>
-    <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link {% block hub_active %}{% endblock %}" id="hub-tab" href="/hub" role="tab"
-               aria-controls="hub" aria-selected="{% block hub_selected %}{% endblock %}">Hub</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {% block receiver_active %}{% endblock %}" id="receiver-tab" href="/receiver" role="tab"
-               aria-controls="receiver" aria-selected="{% block receiver_selected %}{% endblock %}">Receiver</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {% block clipboard_active %}{% endblock %}" id="clipboard-tab"
-                href="/clipboard" role="tab" aria-controls="clipboard" aria-selected="{% block clipboard_selected %}{% endblock %}">Clipboard</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {% block fileexchange_active %}{% endblock %}" id="fileexchange-tab" href="/fileexchange" role="tab" aria-controls="fileexchange"
-                aria-selected="{% block fileexchange_selected %}{% endblock %}">File Exchange</a>
-        </li>
-    </ul>
-    <div class="tab-content" id="myTabContent">
-        <div class="tab-pane fade show active" id="hub" role="tabpanel"
-            aria-labelledby="tab">{% block content %}{% endblock %}</div>
-    </div>
-
-    {% include "messages.html" %}
+<div class="container pt-5">
+    {% block content %}{% endblock %}
 </div>
+
+{% include "toasts.html" %}
+{% include "messages.html" %}
 
 
 <script src="/js/jquery-3.3.1.min.js"></script>

