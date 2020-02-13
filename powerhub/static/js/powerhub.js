@@ -19,7 +19,7 @@ function update_cradle() {
     });
     $.get(
         "dlcradle",
-        parameters,
+        parameters
     ).done(function(data) { $('#dlcradle').text(data); });
 };
 
@@ -45,7 +45,6 @@ $('.edit-clipboard').click(function(){
 $('.edit-ok').click(function(){
     var id = $(this).attr('data-id');
     var textbox = $('#card-'+id).find('textarea');
-    console.log(textbox.val());
     $.post({
         url: "clipboard/edit",
         data: {"id": id, "content": textbox.val()},
