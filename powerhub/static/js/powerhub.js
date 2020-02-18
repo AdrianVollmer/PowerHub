@@ -32,7 +32,8 @@ function toggleDiv(id) {
     div.style.display = div.style.display == "none" ? "block" : "none";
 }
 
-$('.edit-clipboard').click(function(){
+$('.edit-clipboard').click(function(e){
+    e.preventDefault();
     var id = $(this).attr('data-id');
     var textbox = $(document.createElement('textarea'));
     var pre = $('#card-'+id).find('pre');
@@ -52,7 +53,8 @@ $('.edit-ok').click(function(){
     });
 });
 
-$('.edit-cancel').click(function(){
+$('.edit-cancel').click(function(e){
+    e.preventDefault();
     var id = $(this).attr('data-id');
     $('#buttons-'+id).collapse('hide');
     var pre= $(document.createElement('pre'));
@@ -61,7 +63,8 @@ $('.edit-cancel').click(function(){
     textbox.replaceWith(pre);
 });
 
-$('.delete-clipboard').click(function(){
+$('.delete-clipboard').click(function(e){
+    e.preventDefault();
     var id = $(this).attr('data-id');
     $.post("clipboard/delete", {id: id});
     $("#card-" + id).remove();
