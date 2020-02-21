@@ -443,9 +443,11 @@ def upload():
 def download_file(filename):
     """Download a file"""
     try:
-        return send_from_directory(UPLOAD_DIR,
-                                   filename,
-                                   as_attachment=True)
+        return send_from_directory(
+            UPLOAD_DIR,
+            filename,
+            as_attachment='dl' in request.args,
+        )
     except PermissionError:
         abort(403)
 

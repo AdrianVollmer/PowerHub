@@ -1,3 +1,9 @@
+Version 1.5
+===========
+
+* Add ability to either open files in the File Exchange in browser or
+  download them
+
 Version 1.4
 ===========
 
