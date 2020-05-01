@@ -577,6 +577,6 @@ def server_static(filename):
     try:
         return send_from_directory(STATIC_DIR,
                                    filename,
-                                   as_attachment=True)
+                                   as_attachment=False)
     except PermissionError:
         abort(403)
