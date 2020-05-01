@@ -68,22 +68,6 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-rp', '--receiver-port', default=3333,
-    dest="REC_PORT",
-    type=int,
-    help="the local port to listen on for the receiver "
-         "(default: %(default)s)"
-)
-
-parser.add_argument(
-    '-rh', '--receiver-host', default='0.0.0.0',
-    dest="REC_HOST",
-    type=str,
-    help="the local bind address to listen on for the receiver "
-         "(default: %(default)s)"
-)
-
-parser.add_argument(
     dest="URI_HOST", type=str,
     help="the hostname or IP address where the target can reach the server"
 )

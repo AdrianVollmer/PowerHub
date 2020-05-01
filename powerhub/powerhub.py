@@ -6,7 +6,6 @@ import signal
 
 import powerhub.flask
 import powerhub.reverseproxy
-from powerhub.args import args
 from powerhub.logging import log
 try:
     from powerhub.webdav import run_webdav
@@ -35,9 +34,6 @@ def main(fully_threaded=False):
         start_thread(run_webdav)
     except NameError:
         pass
-    start_thread(powerhub.flask.shell_receiver.run_receiver,
-                 args.REC_HOST, args.REC_PORT)
-    start_thread(powerhub.flask.shell_receiver.run_provider)
     start_thread(powerhub.flask.run_flask_app)
     if fully_threaded:
         start_thread(powerhub.reverseproxy.run_proxy)

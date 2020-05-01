@@ -39,12 +39,6 @@ def test_hub_page(flask_app):
     assert b"Paste this" in response.data
 
 
-def test_receiver_page(flask_app):
-    response = flask_app.get('/receiver')
-    assert b"PowerHub" in response.data
-    assert b"Receiver" in response.data
-
-
 def test_clipboard_page(flask_app):
     response = flask_app.get('/clipboard')
     assert b"PowerHub" in response.data
