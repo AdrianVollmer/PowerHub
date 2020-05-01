@@ -43,15 +43,21 @@
       <th scope="col">Name</th>
       <th scope="col">Size</th>
       <th scope="col">Date</th>
+      <th scope="col"><span class="align-baseline" data-feather="download"></span></th>
     </tr>
   </thead>
   <tbody>
 {% for f in files %}
     <tr>
       <th scope="row">{{loop.index}}</th>
-      <td><a href="/d/{{f.name}}" title="{{f.name}}">{{f.name}}</a></td>
+      <td><a href="/d/{{f.name}}" title="Open in Browser: {{f.name}}">{{f.name}}</a></td>
       <td>{{f.size}}</td>
       <td>{{f.date}}</td>
+      <td scope="col">
+        <a href="/d/{{f.name}}?dl" title="Download: {{f.name}}">
+          <span class="align-baseline" data-feather="download"></span>
+        </a>
+      </td>
     </tr>
 {% endfor %}
   </tbody>

@@ -39,12 +39,6 @@ def test_hub_page(flask_app):
     assert b"Paste this" in response.data
 
 
-def test_receiver_page(flask_app):
-    response = flask_app.get('/receiver')
-    assert b"PowerHub" in response.data
-    assert b"Receiver" in response.data
-
-
 def test_clipboard_page(flask_app):
     response = flask_app.get('/clipboard')
     assert b"PowerHub" in response.data
@@ -95,6 +89,17 @@ def test_fileexchange_page(flask_app):
     assert os.path.basename(f.name) in response
     assert "<td>%d</td>" % size in response
 
+
+def test_static(flask_app):
+    from powerhub.directories import STATIC_DIR
+    f = tempfile.NamedTemporaryFile("w+", dir=STATIC_DIR)
+    basename = os.path.basename(f.name)
+    size = 617
+    f.write("0"*size)
+    f.flush()
+    response = flask_app.get('/static/'+basename).data.decode()
+    assert "0"*size == response
+
 #  TODO:
 #      * retrieve download cradle
 #      * stager generation
@@ -102,7 +107,6 @@ def test_fileexchange_page(flask_app):
 #      * test webdav
 #      * basic authentication
 #      * parsing
-#      * reverse shell
 #      * upload function
 
 #  def test_argparse(capsys):

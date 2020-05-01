@@ -2,8 +2,10 @@ import os
 
 _HOME = os.path.expanduser('~')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-XDG_DATA_HOME = os.environ.get('XDG_DATA_HOME') or \
-        os.path.join(_HOME, '.local', 'share', 'powerhub')
+XDG_DATA_HOME = os.path.join(
+    os.environ.get('XDG_DATA_HOME') or os.path.join(_HOME, '.local', 'share'),
+    'powerhub',
+)
 UPLOAD_DIR = os.path.join(XDG_DATA_HOME, "upload")
 LOOT_DIR = os.path.join(XDG_DATA_HOME, "loot")
 MOD_DIR = os.path.join(XDG_DATA_HOME, 'modules')

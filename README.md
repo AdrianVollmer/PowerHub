@@ -45,8 +45,6 @@ ps1/PowerSploit/Recon/PowerView.ps1 ps1  29   True
 PS C:\Users\avollmer> Get-LocalGroup | pth -Name groups.json
 ```
 
-![PowerHub in action](https://github.com/AdrianVollmer/PowerHub/blob/master/img/inaction.png)
-
 
 Installation
 ============

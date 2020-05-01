@@ -1,3 +1,11 @@
+Version 1.5
+===========
+
+* New feautre: Ability to either open files in the File Exchange in browser or
+  download them
+* New feautre: A 'static' directory, so PowerHub can be used to serve static files
+* Fix: Things didn't work if `$XDG_DATA_HOME` was non-empty
+
 Version 1.4
 ===========
 

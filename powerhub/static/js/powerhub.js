@@ -32,7 +32,8 @@ function toggleDiv(id) {
     div.style.display = div.style.display == "none" ? "block" : "none";
 }
 
-$('.edit-clipboard').click(function(){
+$('.edit-clipboard').click(function(e){
+    e.preventDefault();
     var id = $(this).attr('data-id');
     var textbox = $(document.createElement('textarea'));
     var pre = $('#card-'+id).find('pre');
@@ -52,7 +53,8 @@ $('.edit-ok').click(function(){
     });
 });
 
-$('.edit-cancel').click(function(){
+$('.edit-cancel').click(function(e){
+    e.preventDefault();
     var id = $(this).attr('data-id');
     $('#buttons-'+id).collapse('hide');
     var pre= $(document.createElement('pre'));
@@ -61,7 +63,8 @@ $('.edit-cancel').click(function(){
     textbox.replaceWith(pre);
 });
 
-$('.delete-clipboard').click(function(){
+$('.delete-clipboard').click(function(e){
+    e.preventDefault();
     var id = $(this).attr('data-id');
     $.post("clipboard/delete", {id: id});
     $("#card-" + id).remove();
@@ -73,54 +76,6 @@ $('#reloadbutton').click(function(){
         success: function() { location.reload(); },
     });
 });
-
-$(function() {
-    $('[data-toggle="popover"]').popover(
-         {
-             html: true,
-             sanitize: false,
-             content: function () {
-                 var id = $(this).attr('data-shellid');
-                 var result = $('#popover-content-' + id + " table").html();
-                 return result;
-             }
-        }
-    );
-});
-
-function update_shell_buttons() {
-    $("#shell-log-modal").on("show.bs.modal", function(e) {
-        var link = $(e.relatedTarget).attr("href");
-        $(this).find(".modal-body").load(link);
-        $(this).find(".modal-footer a").attr("href", link+"&content=raw");
-    });
-
-    $('.kill-shell').click(function(){
-        var id = $(this).closest('.card').find('.shell-tooltip').attr('data-shellid');
-        $.post({
-            url: "kill-shell",
-            data: {"shellid": id},
-            success: function() { location.reload(); },
-        });
-    });
-
-    $('.forget-shell').click(function(){
-        var id = $(this).closest('.card').find('.shell-tooltip').attr('data-shellid');
-        $.post({
-            url: "forget-shell",
-            data: {"shellid": id},
-            success: function() { location.reload(); },
-        });
-    });
-
-    $('#kill-all').click(function(){
-        $.post({
-            url: "kill-all",
-            success: function() { location.reload(); },
-        });
-    });
-};
-update_shell_buttons();
 
 var socket;
 $(document).ready(function(){
@@ -144,20 +99,7 @@ $(document).ready(function(){
 });
 
 function actOnPushMsg(msg) {
-    console.log(window.location.pathname);
-    if (msg.msg.startsWith("Reverse shell caught")) {
-        $("#noshell-note").addClass('d-none');
-        $("#shell-list").removeClass('d-none');
-        $.get(
-            "receiver/shellcard",
-            {
-                "shell-id": msg.shellid,
-            }
-        ).done(function(data) {
-            $(data).hide().appendTo('#accordion').fadeIn(750);
-            update_shell_buttons();
-        });
-    } else if (msg.msg.startsWith("Update Clipboard")
+    if (msg.msg.startsWith("Update Clipboard")
             && window.location.pathname == "/clipboard") {
             location.reload();
     } else if (msg.msg.startsWith("Update Fileexchange")
