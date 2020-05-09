@@ -8,7 +8,7 @@ import shutil
 from tempfile import TemporaryDirectory
 
 from flask import Flask, render_template, request, Response, redirect, \
-         send_from_directory, flash, abort, jsonify
+         send_from_directory, flash, abort, jsonify, make_response
 
 from werkzeug.exceptions import BadRequestKeyError
 from werkzeug.serving import WSGIRequestHandler, _log
@@ -22,6 +22,7 @@ from powerhub.stager import modules, build_cradle, callback_urls, \
 from powerhub.upload import save_file, get_filelist
 from powerhub.directories import UPLOAD_DIR, DB_FILENAME, \
         XDG_DATA_HOME, STATIC_DIR
+from powerhub.payloads import create_payload
 from powerhub.tools import encrypt, compress, KEY
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
@@ -500,3 +501,18 @@ def server_static(filename):
                                    as_attachment=False)
     except PermissionError:
         abort(403)
+
+
+@app.route('/dl')
+@requires_auth
+def download_cradle():
+    """Download payload as a file cradle"""
+    filename, binary = create_payload(request.args)
+    response = make_response(binary)
+    response.headers.set('Content-Type', 'application/octet-stream')
+    response.headers.set(
+        'Content-Disposition',
+        'attachment',
+        filename=filename,
+    )
+    return response
