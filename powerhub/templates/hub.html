@@ -15,11 +15,16 @@ you need to place or symlink the modules in the <code>module</code> directory fi
 The stuff in <code>$XDG_DATA_HOME/powerhub/profile.ps1</code> will be
 executed automatically. Have fun!"><span data-feather="help-circle"></span></a></sup>
 </h2>
-<p>Paste this in you launcher (PowerShell/CMD/Bash command):</p>
+<div id='text-cradle'>
+    <p>Paste this in you launcher (PowerShell/CMD/Bash command):</p>
     <div class="code_div mb-3" contenteditable='true'>
         <code id='dlcradle' data-flavor="hub">{{ dl_str }}</code>
     </div>
-
+</div>
+<div id='file-cradle'>
+    <p>Download the payload: <a class='ml-2 btn btn-warning btn-sm'
+    id='file-cradle-dl-button'><span data-feather="download"></span></a></p>
+</div>
 <div id="cradle-options">{% include "hub/cradle-options.html" %}</div>
 
 <hr>
