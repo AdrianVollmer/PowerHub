@@ -1,3 +1,6 @@
+// enable popover help
+$(function() { $('[data-toggle="popover"]').popover(); });
+
 function update_cradle() {
     if (!$('#dlcradle').length) {
         return
