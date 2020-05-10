@@ -113,12 +113,12 @@ endpoints = {
 
 def build_cradle(get_args, flavor="hub"):
     result = ""
-    from powerhub.reverseproxy import FINGERPRINT
     if get_args['GroupTransport'] == 'https':
         if get_args['RadioNoVerification'] == 'true':
             result += ("[System.Net.ServicePointManager]::ServerCertificate"
                        "ValidationCallback={$true};")
         elif get_args['RadioFingerprint'] == 'true':
+            from powerhub.reverseproxy import FINGERPRINT
             result += ("[System.Net.ServicePointManager]::ServerCertificate"
                        "ValidationCallback={param($1,$2);"
                        "$2.Thumbprint -eq '%s'};" %
