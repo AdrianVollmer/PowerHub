@@ -6,6 +6,7 @@ import jinja2
 
 from powerhub.tools import encrypt, generate_random_key
 from powerhub.stager import build_cradle
+from powerhub.logging import log
 
 
 def load_template(filename, **kwargs):
@@ -75,12 +76,16 @@ def create_exe(args):
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
         )
-        pipe.communicate(c_code.encode())
+        out = pipe.communicate(c_code.encode())
         if pipe.returncode == 0:
             with open(outfile, 'rb') as f:
                 result = f.read()
         else:
-            raise Exception  # TODO choose right exception
+            raise RuntimeError('Compiling the payload failed, '
+                               'see console output')
+            log.error('Compiling the payload failed, see console output')
+            log.error(out)
+
     return filename, result
 
 
