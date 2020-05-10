@@ -1,4 +1,3 @@
-import random
 import subprocess
 import tempfile
 import os
@@ -19,10 +18,6 @@ def load_template(filename, **kwargs):
     template = templateEnv.get_template(TEMPLATE_FILE)
     outputText = template.render(**kwargs)
     return outputText
-
-
-def generate_shellcode(args):
-    pass
 
 
 def create_filename(args):
