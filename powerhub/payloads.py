@@ -12,7 +12,7 @@ from powerhub.logging import log
 def load_template(filename, **kwargs):
     """Wrapper for loading a jinja2 template from file"""
     templateLoader = jinja2.FileSystemLoader(
-        searchpath="./powerhub/templates/assets/"
+        searchpath="./powerhub/templates/payloads/"
     )
     templateEnv = jinja2.Environment(loader=templateLoader)
     TEMPLATE_FILE = filename
