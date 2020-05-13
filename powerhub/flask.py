@@ -55,6 +55,16 @@ cb = get_clipboard()
 socketio = SocketIO(
     app,
     async_mode="threading",
+    cors_allowed_origins=[
+        "http://%s:%d" % (
+            args.URI_HOST,
+            args.LPORT,
+        ),
+        "https://%s:%d" % (
+            args.URI_HOST,
+            args.SSL_PORT,
+        ),
+    ],
 )
 
 if not args.DEBUG:
@@ -73,8 +83,6 @@ def push_notification(type, msg, title, subtitle="", **kwargs):
     socketio.emit('push',
                   arguments,
                   namespace="/push-notifications")
-
-
 
 
 class MyRequestHandler(WSGIRequestHandler):
