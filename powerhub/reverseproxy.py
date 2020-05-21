@@ -85,4 +85,7 @@ def run_proxy():
                       ),
                       interface=args.LHOST,
                       )
+    log.info("Web interface accessible on http//%s:%d and https://%s:%d" % (
+        args.URI_HOST, args.LPORT, args.URI_HOST, args.SSL_PORT,
+    ))
     reactor.run()
