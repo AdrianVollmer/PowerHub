@@ -167,13 +167,13 @@ def loot_tab():
     lootbox = get_loot()
     loot = [{
         "nonpersistent": db is None,
-        "id": l.id,
-        "lsass": get_lsass_goodies(l.lsass),
-        "lsass_full": l.lsass,
-        "hive": get_hive_goodies(l.hive),
-        "hive_full": l.hive,
-        "sysinfo": parse_sysinfo(l.sysinfo,)
-    } for l in lootbox]
+        "id": lb.id,
+        "lsass": get_lsass_goodies(lb.lsass),
+        "lsass_full": lb.lsass,
+        "hive": get_hive_goodies(lb.hive),
+        "hive_full": lb.hive,
+        "sysinfo": parse_sysinfo(lb.sysinfo,)
+    } for lb in lootbox]
     context = {
         "loot": loot,
         "AUTH": args.AUTH,
@@ -284,11 +284,11 @@ def export_loot():
     """Export all loot entries"""
     lootbox = get_loot()
     loot = [{
-        "id": l.id,
-        "lsass": get_lsass_goodies(l.lsass),
-        "hive": get_hive_goodies(l.hive),
-        "sysinfo": parse_sysinfo(l.sysinfo,)
-    } for l in lootbox]
+        "id": lb.id,
+        "lsass": get_lsass_goodies(lb.lsass),
+        "hive": get_hive_goodies(lb.hive),
+        "sysinfo": parse_sysinfo(lb.sysinfo,)
+    } for lb in lootbox]
     return jsonify(loot)
 
 
