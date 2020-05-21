@@ -101,15 +101,13 @@ def compile_source(args, source_file, compile_cmd, formatter):
             stdout=subprocess.PIPE,
         )
         out = pipe.communicate()
-        print(out)
         if pipe.returncode == 0:
             with open(outfile, 'rb') as f:
                 result = f.read()
         else:
             raise RuntimeError('Compiling the payload failed, '
                                'see console output')
-            log.error('Compiling the payload failed, see console output')
-            log.error(out)
+            log.error('Compiling the payload failed: ' + out)
 
     return filename, result
 
