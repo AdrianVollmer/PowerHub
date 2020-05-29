@@ -8,5 +8,4 @@ flask-sqlalchemy>=2.1
 werkzeug>=0.15
 pyOpenSSL
 service_identity
-bson>=0.5.0
 pypykatz>=0.2.2
