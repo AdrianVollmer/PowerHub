@@ -1,5 +1,4 @@
 function {{symbol_name("Decrypt-Code")}} {
-    # RC4
     param(
         [Byte[]]$buffer,
         [Byte[]]$key
