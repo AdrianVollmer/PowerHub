@@ -1,8 +1,10 @@
 import os
 import shutil
 import sys
+from subprocess import check_output
+from shlex import split
 
-from test_config import TEST_URI, TEST_COMMANDS
+from test_config import TEST_URI, TEST_COMMANDS  # noqa
 # test_config must define these variables. they are local to the computer
 # you are running this on, so the file is not tracked by git.
 # mine looks something like this:
@@ -28,3 +30,12 @@ def init_tests():
     except FileNotFoundError:
         pass
     os.makedirs(NEW_XDG_DATA_HOME)
+
+
+def execute_cmd(cmd):
+    env = os.environ
+    env["PYTHONIOENCODING"] = "utf8"
+    return check_output(
+        split(cmd),
+        env=env,
+    )[:-1].decode()

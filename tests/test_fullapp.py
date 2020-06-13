@@ -4,8 +4,6 @@
 import os
 import sys
 import time
-from subprocess import check_output
-from shlex import split
 #  import tempfile
 import re
 import requests
@@ -14,7 +12,7 @@ import pytest
 
 # https://stackoverflow.com/a/33515264/1308830
 sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
-from test_init import TEST_URI, TEST_COMMANDS, init_tests  # noqa
+from test_init import TEST_URI, TEST_COMMANDS, init_tests, execute_cmd  # noqa
 
 
 MAX_TEST_MODULE_PS1 = 103
@@ -78,15 +76,6 @@ def get_stager():
     return result
 
 
-def execute_cradle(cmd):
-    env = os.environ
-    env["PYTHONIOENCODING"] = "utf8"
-    return check_output(
-        split(cmd),
-        env=env,
-    )[:-1].decode()
-
-
 def create_modules():
     func = "function Invoke-Testfunc%(n)d { Write-Host 'Test%(n)d' }"
     from powerhub.directories import MOD_DIR
@@ -136,15 +125,15 @@ def test_stager(full_app):
 
 
 def run_test_remote(cmd):
-    out = execute_cradle(cmd(""))
+    out = execute_cmd(cmd(""))
     assert "Adrian Vollmer" in out
     assert "Run 'Help-PowerHub' for help" in out
 
-    out = execute_cradle(cmd("lshm"))
+    out = execute_cmd(cmd("lshm"))
     for i in range(MAX_TEST_MODULE_PS1):
         assert "psmod%d" % i in out
 
-    out = execute_cradle(cmd("lhm psmod53|fl;Invoke-Testfunc53"))
+    out = execute_cmd(cmd("lhm psmod53|fl;Invoke-Testfunc53"))
     assert "Test53" in out
     assert "psmod53" in out
     assert re.search("Name *: ps1/psmod53.ps1\r\n", out)
@@ -152,7 +141,7 @@ def run_test_remote(cmd):
     assert re.search("N *: 72\r\n", out)
     assert re.search("Loaded *: True\r\n", out)
 
-    out = execute_cradle(
+    out = execute_cmd(
         cmd('$p="72-74,77";lhm $p;Invoke-Testfunc53;'
             + "Invoke-Testfunc99;Invoke-Testfunc47;Invoke-Testfunc72;")
     )
@@ -165,7 +154,7 @@ def run_test_remote(cmd):
 
     from powerhub.directories import UPLOAD_DIR
     testfile = "testfile.dat"
-    out = execute_cradle(
+    out = execute_cmd(
         cmd(('$p=-join ($env:TEMP,"\\\\%s");'
              + '[io.file]::WriteAllBytes($p,(1..255));'
              + 'pth $p;rm $p') % testfile)
@@ -175,7 +164,7 @@ def run_test_remote(cmd):
         data = f.read()
     assert data == bytes(range(1, 256))
 
-    out = execute_cradle(
+    out = execute_cmd(
         cmd('$p="FooBar123";$p|pth -name %s;' % testfile)
     )
     time.sleep(1)
