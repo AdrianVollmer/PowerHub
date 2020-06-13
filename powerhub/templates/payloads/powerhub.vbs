@@ -1,3 +1,8 @@
+Function {{symbol_name("Xor")}}(byVal {{symbol_name("A")}}, byVal {{symbol_name("B")}})
+    {{symbol_name("Xor")}} = (NOT({{symbol_name("A")}} AND {{symbol_name("B")}})) AND (NOT(NOT {{symbol_name("A")}} AND NOT {{symbol_name("B")}}))
+    {# A Xor B = (NOT(A AND B)) AND (NOT(NOT A AND NOT B)) #}
+end Function
+
 Function {{symbol_name("RC4")}}(byVal {{symbol_name("bytes")}}, byVal {{symbol_name("key")}})
     dim s(256), k(256)
     dim  i, j, t, p
@@ -24,7 +29,7 @@ Function {{symbol_name("RC4")}}(byVal {{symbol_name("bytes")}}, byVal {{symbol_n
         s(j) = s(i)
         s(i) = t
         t = (s(i) + (s(j) Mod 256)) Mod 256
-        {{symbol_name("bytes")}}(p) = {{symbol_name("bytes")}}(p) Xor s(t)
+        {{symbol_name("bytes")}}(p) = {{symbol_name("Xor")}}({{symbol_name("bytes")}}(p), s(t))
     Next
     {{symbol_name("RC4")}} = {{symbol_name("bytes")}}
 end Function
