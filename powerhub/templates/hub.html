@@ -47,15 +47,7 @@ There {% if modules|length == 1 %}is <strong>1</strong> module{% else %}are
             {% if modules %}
                 {% include "hub/modulelist.html" %}
             {% else %}
-                You probably didn't put anything in the <code>modules</code>
-                directory. It's in either
-                <code>$XDG_DATA_HOME/powerhub</code> or
-                </code>$HOME/.local/share/powerhub</code>. If you already
-                have those modules on your hard drive, it make sense to
-                symlink them. But if you don't, or if you are really lazy,
-                for your convenience, you can perform a shallow clone of
-                some popular PowerShell repositories by clicking on "Need
-                more?".
+                {{ help.hub_no_modules|safe }}
             {% endif %}
         </div>
         <div class="modal-footer">

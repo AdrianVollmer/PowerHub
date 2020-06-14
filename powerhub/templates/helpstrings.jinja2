@@ -12,6 +12,14 @@ selected repository in the 'ps1' directory. Alternatively, you can specify a
 URL which will be cloned in the 'ps1' directory if it ends in '.git', or
 downloaded to the correct directory if it ends in '.ps1' or '.exe'." %}
 
+{% set hub_no_modules = "You probably didn't put anything in the
+<code>modules</code> directory. It's in either
+<code>$XDG_DATA_HOME/powerhub</code> or
+<code>$HOME/.local/share/powerhub</code>. If you already have those modules
+on your hard drive, it make sense to symlink them. But if you don't, or if
+you are really lazy, for your convenience, you can perform a shallow clone
+of some popular PowerShell repositories by clicking on \"Need more?\"." %}
+
 {% set loot_main = "This is your loot. Collect more by executing 'Get-Loot'
 on your targets, which will attempt to retrieve the files SAM, SECURITY,
 SYSTEM and SOFTWARE as well as a dump of the LSASS process, pares them with
