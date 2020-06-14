@@ -1,0 +1,26 @@
+{% set hub_main = "This is the Hub. Most of its functionality lies in its
+PowerShell script. Paste the command below in a PowerShell/Bash command/CMD
+and follow the instructions. You will be able to easily transfer and execute
+more PowerShell modules and binary code in-memory (compressed and
+encrypted). The endpoint protection will most likely not care. Note that you
+need to place or symlink the modules in the <code>module</code> directory
+first.  The stuff in <code>$XDG_DATA_HOME/powerhub/profile.ps1</code> will
+be executed automatically. Have fun!" %}
+
+{% set modules = "Click on 'clone' to perform a shallow clone of the
+selected repository in the 'ps1' directory. Alternatively, you can specify a
+URL which will be cloned in the 'ps1' directory if it ends in '.git', or
+downloaded to the correct directory if it ends in '.ps1' or '.exe'." %}
+
+{% set loot_main = "This is your loot. Collect more by executing 'Get-Loot'
+on your targets, which will attempt to retrieve the files SAM, SECURITY,
+SYSTEM and SOFTWARE as well as a dump of the LSASS process, pares them with
+<a href='https://github.com/skelsec/pypykatz' target='_blank'>pypykatz</a>
+and display the result here." %}
+
+{% set fileexchange_main = "This is the File Exchange. Here you can upload
+and download files via HTTP. Think Droopy." %}
+
+{% set clipboard_main = "This is the Clipboard. It's for transfering small
+code snippets, passwords, hashes, and so forth. You can also configure the
+launcher to automatically execute contents of a particular clipboard entry." %}
