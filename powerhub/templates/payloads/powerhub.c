@@ -7,11 +7,11 @@
     y = _x;                \
 } while(0)
 
-unsigned char bytes[] = "{{CMD}}";
+char bytes[] = "{{CMD}}";
 unsigned int len = {{LEN_CMD}};
-unsigned char key[] = "{{KEY}}";
+char key[] = "{{KEY}}";
 
-void rc4_encode(unsigned char *bytes, unsigned int len, unsigned char key[16]) {
+void rc4_encode(char *bytes, unsigned int len, char key[16]) {
     unsigned char s[256], k[256];
     unsigned short i, j, t;
     int p;
