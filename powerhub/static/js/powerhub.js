@@ -2,18 +2,12 @@
 $(function() { $('[data-toggle="popover"]').popover(); });
 
 function update_cradle() {
-    if (!$('#dlcradle').length) {
+    if (!$('#download-cradle').length) {
         return
-    } else {
-        var flavor = $('#dlcradle').attr('data-flavor');
     };
-    var parameters = {"flavor": flavor};
-    var is_file = false;
+    var parameters = {};
     $('#cradle-options select').each(function(){
         parameters[this.id] = this.value;
-        if (this.id == 'GroupLauncher') {
-            is_file = ($('option:selected', this).attr('data-file') == 'true');
-        };
     });
     $('#cradle-options input').each(function(){
         parameters[this.id] = $(this).is(':checked');
@@ -24,18 +18,13 @@ function update_cradle() {
             $(this).show();
         });
     });
-    if (is_file) {
-        $('#text-cradle').hide();
-        $('#file-cradle').show();
-        $('#file-cradle-dl-button').attr('href', '/dl?'+$.param(parameters));
-    } else {
-        $.get(
-            "dlcradle",
-            parameters
-        ).done(function(data) { $('#dlcradle').text(data); });
-        $('#text-cradle').show();
-        $('#file-cradle').hide();
-    };
+    $.get(
+        "dlcradle",
+        parameters
+    ).done(function(data) {
+        $('#download-cradle').html(data);
+        feather.replace();
+    });
 };
 
 $(window).on('load', update_cradle);

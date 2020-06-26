@@ -399,9 +399,29 @@ def hub_modules():
 @app.route('/dlcradle')
 def dlcradle():
     try:
-        return build_cradle(request.args, flavor=request.args["flavor"])
+        if request.args['Launcher'] in [
+            'powershell',
+            'cmd',
+            'cmd_enc',
+            'bash',
+        ]:
+            cmd = build_cradle(request.args)
+            return render_template(
+                "hub/download-cradle.html",
+                dl_str=cmd,
+            )
+        else:
+            import urllib
+            href = urllib.parse.urlencode(request.args)
+            return render_template(
+                "hub/download-cradle.html",
+                dl_str=None,
+                href='/dl?' + href,
+            )
+
     except BadRequestKeyError as e:
-        log.error("Unknown key, must be one of %s" % str(request.args))
+        log.error("Unknown key, must be one of %s" %
+                  str(list(request.args.keys())))
         return (str(e), 500)
 
 
