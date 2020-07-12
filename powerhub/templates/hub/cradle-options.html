@@ -1,24 +1,28 @@
 <div class="input-group input-group-sm mb-3">
   <div class="input-group-prepend">
-      <label class="input-group-text" for="GroupLauncher" style="width: 150px;">Launcher</label>
+      <label class="input-group-text" for="Launcher" style="width: 150px;">Launcher</label>
   </div>
-  <select class="custom-select" id="GroupLauncher">
+  <select class="custom-select" id="Launcher">
       <option selected value="powershell">PowerShell</option>
       <option value="cmd">CMD</option>
       <option value="cmd_enc">CMD Encoded</option>
       <option value="bash">Bash</option>
+      <option value="mingw32-32bit">Mingw32 32 Bit Executable</option>
+      <option value="mingw32-64bit">Mingw32 64 Bit Executable</option>
+      <option value="dotnetexe-32bit">.NET Executable 32 Bit</option>
+      <option value="dotnetexe-64bit">.NET Executable 64 Bit</option>
+      <option value="vbs">VBScript</option>
+      <option value="wordmacro" disabled>MS Word Macro (not yet implemented)</option>
       <option value="rundll32" disabled>Rundll32 (not yet implemented)</option>
       <option value="installutil" disabled>InstallUtil (not yet implemented)</option>
-      <option value="dotnetexe" disabled>.NET Executable (not yet implemented)</option>
-      <option value="wordmacro" disabled>MS Word Macro (not yet implemented)</option>
   </select>
 </div>
 
 <div class="input-group input-group-sm mb-3">
   <div class="input-group-prepend">
-      <label class="input-group-text" for="GroupAmsi" style="width: 150px;">AMSI Bypass</label>
+      <label class="input-group-text" for="Amsi" style="width: 150px;">AMSI Bypass</label>
   </div>
-  <select class="custom-select" id="GroupAmsi">
+  <select class="custom-select" id="Amsi">
       <option selected value="reflection">Matt Graber's Reflection method</option>
       <option value="reflection2">Matt Graber's 2nd Reflection method</option>
       <option value="rasta-mouse">rasta-mouse</option>
@@ -31,9 +35,9 @@
 
 <div class="input-group input-group-sm mb-3">
   <div class="input-group-prepend">
-      <label class="input-group-text" for="GroupTransport" style="width: 150px;">Transport</label>
+      <label class="input-group-text" for="Transport" style="width: 150px;">Transport</label>
   </div>
-  <select class="custom-select" id="GroupTransport">
+  <select class="custom-select" id="Transport">
       <option selected value="http">HTTP</option>
       <option value="https">HTTPS</option>
       <option value="smb" disabled>SMB (not yet implemented)</option>
@@ -43,9 +47,9 @@
 
 <div class="input-group input-group-sm mb-3">
   <div class="input-group-prepend">
-      <label class="input-group-text" for="GroupClipExec" style="width: 150px;">Clip-Exec</label>
+      <label class="input-group-text" for="ClipExec" style="width: 150px;">Clip-Exec</label>
   </div>
-  <select class="custom-select" id="GroupClipExec">
+  <select class="custom-select" id="ClipExec">
       <option selected value="none">None</option>
       {% for entry in clip_entries %}
       <option value="{{entry['n']}}"><code>[{{entry['n']}}]</code> {{entry['text']}}</option>
@@ -54,26 +58,26 @@
 </div>
 
 <div class="form-check form-check-inline relevant-to-http relevant-to-https">
-  <input class="form-check-input" type="checkbox" id="CheckboxProxy" value="Proxy">
-  <label class="form-check-label" for="CheckboxProxy">Use Web Proxy</label>
+  <input class="form-check-input" type="checkbox" id="Proxy" value="Proxy">
+  <label class="form-check-label" for="Proxy">Use Web Proxy</label>
 </div>
 <div class="form-check form-check-inline relevant-to-https">
-  <input class="form-check-input" type="checkbox" id="CheckboxTLS1.2" value="TLSv1.2">
-  <label class="form-check-label" for="CheckboxTLS1.2">Force TLSv1.2</label>
+  <input class="form-check-input" type="checkbox" id="TLS1.2" value="TLSv1.2">
+  <label class="form-check-label" for="TLS1.2">Force TLSv1.2</label>
 </div>
 
 <div class="custom-control custom-radio custom-control-inline relevant-to-https">
-  <input type="radio" id="RadioFingerprint" name="RadioVerification" class="custom-control-input" checked>
-  <label class="custom-control-label" for="RadioFingerprint">Verify by fingerprint</label>
+  <input type="radio" id="Fingerprint" name="Verification" class="custom-control-input" checked>
+  <label class="custom-control-label" for="Fingerprint">Verify by fingerprint</label>
 </div>
 
 <div class="custom-control custom-radio custom-control-inline relevant-to-https">
-  <input type="radio" id="RadioNoVerification" name="RadioVerification" class="custom-control-input">
-  <label class="custom-control-label" for="RadioNoVerification">No TLS verification</label>
+  <input type="radio" id="NoVerification" name="Verification" class="custom-control-input">
+  <label class="custom-control-label" for="NoVerification">No TLS verification</label>
 </div>
 
 <div class="custom-control custom-radio custom-control-inline relevant-to-https">
-  <input type="radio" id="RadioCertStore" name="RadioVerification" class="custom-control-input">
-  <label class="custom-control-label" for="RadioCertStore">Use local certificate store</label>
+  <input type="radio" id="CertStore" name="Verification" class="custom-control-input">
+  <label class="custom-control-label" for="CertStore">Use local certificate store</label>
 </div>
 
