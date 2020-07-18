@@ -12,7 +12,7 @@ def get_loot_type(filename):
 
     Could be an LSA process dump or a registry hive or system info.
     """
-    if re.match(r".*lsass_[0-9]+.dmp(.[0-9]+)?", filename):
+    if re.match(r".*lsass_.*dmp.*", filename):
         return "DMP"
     elif re.match(r".*sam(.[0-9]+)?", filename):
         return "SAM"
@@ -38,6 +38,7 @@ def save_loot(file, loot_id, encrypted=False):
 
     filename = save_file(file, dir=LOOT_DIR, encrypted=encrypted)
     loot_type = get_loot_type(filename)
+    log.debug("Saving %s [%s]" % (filename, loot_type))
     try:
         if loot_type == "DMP":
             from pypykatz.pypykatz import pypykatz
