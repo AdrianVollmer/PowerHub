@@ -33,7 +33,10 @@ def create_filename(args):
         'mingw32',
         'dotnetexe',
     ]:
-        result += '-' + args['Arch']
+        if args['32bit'] == 'true':
+            result += '-' + '32bit'
+        else:
+            result += '-' + '64bit'
         result += '.exe'
     elif args['Launcher'] == 'vbs':
         result += ".vbs"
@@ -113,7 +116,8 @@ def compile_source(args, source_file, compile_cmd, formatter):
 
 
 def create_exe(args):
-    if args['Arch'] == '32bit':
+    print(args)
+    if args['32bit'] == 'true':
         mingw = 'i686-w64-mingw32-gcc'
     else:
         mingw = 'x86_64-w64-mingw32-gcc'
@@ -127,7 +131,7 @@ def create_exe(args):
 
 
 def create_dotnet(args):
-    if args['Arch'] == '32bit':
+    if args['32bit'] == 'true':
         platform = "x86"
     else:
         platform = "x64"

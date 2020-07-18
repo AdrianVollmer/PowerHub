@@ -15,7 +15,8 @@ def get_args():
         "Fingerprint": "true",
         "NoVerification": "false",
         "CertStore": "false",
-        "Arch": "64bit",
+        "32bit": "false",
+        "64bit": "true",
     }
     yield args
 

@@ -502,9 +502,19 @@ def reload_modules():
     try:
         global modules
         modules = import_modules()
-        flash("Modules reloaded (press F5 to see them)", "success")
+        msg = {
+            'title': "Success",
+            'body': "Modules reloaded (press F5 to see them)",
+            'category': 'success',
+        }
     except Exception as e:
-        flash("Error while reloading modules: %s" % str(e), "danger")
+        msg = {
+            'title': "An error occured",
+            'body': str(e),
+            'category': 'danger',
+        }
+        log.exception(e)
+    flash(msg)
     return ('OK', 200)
 
 
@@ -539,6 +549,11 @@ def download_cradle():
         )
         return response
     except Exception as e:
-        flash(str(e), 'danger')
+        msg = {
+            'title': 'An error occurred',
+            'body': str(e),
+            'category': 'danger',
+        }
+        flash(msg)
         log.exception(e)
         return redirect('/hub')

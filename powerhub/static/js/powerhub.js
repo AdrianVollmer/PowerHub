@@ -112,4 +112,7 @@ function actOnPushMsg(msg) {
     };
 };
 
+
+
+$('.toast').toast('show');
 feather.replace();

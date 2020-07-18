@@ -76,12 +76,12 @@
   </ul>
 </nav>
 
+{% include "toasts.html" %}
+
+
 <div class="container pt-5">
     {% block content %}{% endblock %}
-    {% include "messages.html" %}
 </div>
-
-{% include "toasts.html" %}
 
 
 <script src="/js/jquery-3.3.1.min.js"></script>
