@@ -527,12 +527,18 @@ def server_static(filename):
 @requires_auth
 def download_cradle():
     """Download payload as a file cradle"""
-    filename, binary = create_payload(request.args)
-    response = make_response(binary)
-    response.headers.set('Content-Type', 'application/octet-stream')
-    response.headers.set(
-        'Content-Disposition',
-        'attachment',
-        filename=filename,
-    )
-    return response
+    try:
+        filename, binary = create_payload(request.args)
+        response = make_response(binary)
+
+        response.headers.set('Content-Type', 'application/octet-stream')
+        response.headers.set(
+            'Content-Disposition',
+            'attachment',
+            filename=filename,
+        )
+        return response
+    except Exception as e:
+        flash(str(e), 'danger')
+        log.exception(e)
+        return redirect('/hub')
