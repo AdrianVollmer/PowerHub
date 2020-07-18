@@ -7,10 +7,8 @@
       <option value="cmd">CMD</option>
       <option value="cmd_enc">CMD Encoded</option>
       <option value="bash">Bash</option>
-      <option value="mingw32-32bit">Mingw32 32 Bit Executable</option>
-      <option value="mingw32-64bit">Mingw32 64 Bit Executable</option>
-      <option value="dotnetexe-32bit">.NET Executable 32 Bit</option>
-      <option value="dotnetexe-64bit">.NET Executable 64 Bit</option>
+      <option value="mingw32">Mingw32 Executable</option>
+      <option value="dotnetexe">.NET Executable</option>
       <option value="vbs">VBScript</option>
       <option value="wordmacro" disabled>MS Word Macro (not yet implemented)</option>
       <option value="rundll32" disabled>Rundll32 (not yet implemented)</option>
@@ -79,5 +77,15 @@
 <div class="custom-control custom-radio custom-control-inline relevant-to-https">
   <input type="radio" id="CertStore" name="Verification" class="custom-control-input">
   <label class="custom-control-label" for="CertStore">Use local certificate store</label>
+</div>
+
+<div class="custom-control custom-radio custom-control-inline relevant-to-mingw32 relevant-to-dotnetexe">
+  <input type="radio" id="32bit" name="Arch" class="custom-control-input">
+  <label class="custom-control-label" for="32bit">32 bit</label>
+</div>
+
+<div class="custom-control custom-radio custom-control-inline relevant-to-mingw32 relevant-to-dotnetexe">
+  <input type="radio" id="64bit" name="Arch" class="custom-control-input" checked>
+  <label class="custom-control-label" for="64bit">64 bit</label>
 </div>
 

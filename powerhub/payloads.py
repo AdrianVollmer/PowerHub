@@ -30,11 +30,10 @@ def create_filename(args):
     if args['ClipExec'] != 'none':
         result += '-' + args['ClipExec']
     if args['Launcher'] in [
-        'mingw32-32bit',
-        'mingw32-64bit',
-        'dotnetexe-32bit',
-        'dotnetexe-64bit',
+        'mingw32',
+        'dotnetexe',
     ]:
+        result += '-' + args['Arch']
         result += '.exe'
     elif args['Launcher'] == 'vbs':
         result += ".vbs"
@@ -43,10 +42,8 @@ def create_filename(args):
 
 def create_payload(args):
     payload_generators = {
-        "mingw32-32bit": create_exe,
-        "mingw32-64bit": create_exe,
-        "dotnetexe-32bit": create_dotnet,
-        "dotnetexe-64bit": create_dotnet,
+        "mingw32": create_exe,
+        "dotnetexe": create_dotnet,
         "vbs": create_vbs,
         #  "wordmacro": create_docx,
         #  "rundll32": create_exe,
@@ -116,7 +113,7 @@ def compile_source(args, source_file, compile_cmd, formatter):
 
 
 def create_exe(args):
-    if args['Launcher'] == 'mingw32-32bit':
+    if args['Arch'] == '32bit':
         mingw = 'i686-w64-mingw32-gcc'
     else:
         mingw = 'x86_64-w64-mingw32-gcc'
@@ -130,7 +127,7 @@ def create_exe(args):
 
 
 def create_dotnet(args):
-    if args['Launcher'] == 'dotnetexe-32bit':
+    if args['Arch'] == '32bit':
         platform = "x86"
     else:
         platform = "x64"

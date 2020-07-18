@@ -15,6 +15,7 @@ def get_args():
         "Fingerprint": "true",
         "NoVerification": "false",
         "CertStore": "false",
+        "Arch": "64bit",
     }
     yield args
 
@@ -55,9 +56,9 @@ def test_vbs(get_args):
 def test_gcc(get_args):
     from powerhub.payloads import create_exe
     args = get_args
-    args['Launcher'] = 'mingw32-64bit'
+    args['Launcher'] = 'mingw32'
     filename, payload = create_exe(args)
-    assert filename == 'powerhub-mingw32-64bit-reflection-http.exe'
+    assert filename == 'powerhub-mingw32-reflection-http-64bit.exe'
     assert b"DOS" in payload
     assert payload.startswith(b'MZ')
 
@@ -68,9 +69,9 @@ def test_gcc(get_args):
 def test_mcs(get_args):
     from powerhub.payloads import create_dotnet
     args = get_args
-    args['Launcher'] = 'dotnetexe-64bit'
+    args['Launcher'] = 'dotnetexe'
     filename, payload = create_dotnet(args)
-    assert filename == 'powerhub-dotnetexe-64bit-reflection-http.exe'
+    assert filename == 'powerhub-dotnetexe-reflection-http-64bit.exe'
     assert b"DOS" in payload
     assert payload.startswith(b'MZ')
 
