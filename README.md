@@ -57,6 +57,10 @@ virtual environment.
 
 Python2 is not supported.
 
+For building the payloads, you need the MinGW GCC and Mono C# compilers. On
+Debian-like systems, you can install them with `apt-get install mono-mcs
+gcc-mingw-w64-x86-64 gcc-mingw-w64-i686`.
+
 venv
 ----
 
