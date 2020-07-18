@@ -654,6 +654,7 @@ Return some basic information about the underlying system
 
     $IPs = (Get-WmiObject -Class Win32_NetworkAdapterConfiguration | where {$_.DefaultIPGateway -ne $null}).IPAddress
     $SysInfo = (Get-WMIObject win32_operatingsystem)
+    $ComputerInfo = (Get-WMIObject win32_computersystem)
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     $IsAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
     return  New-Object psobject -Property @{
@@ -661,7 +662,10 @@ Return some basic information about the underlying system
         arch = $SysInfo.OSArchitecture;
         version = $SysInfo.version;
         hostname = $SysInfo.csname;
+        manufacturer = $ComputerInfo.manufacturer;
+        model = $ComputerInfo.model;
         username = $env:username;
+        userdomain = $env:userdomain;
         isadmin = $IsAdmin;
         admins = (Get-LocalGroupMember -Sid S-1-5-32-544);
         releaseid = (Get-Item "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion").GetValue('ReleaseID');
