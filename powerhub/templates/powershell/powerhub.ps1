@@ -500,6 +500,7 @@ function Send-BytesViaHttp {
     $WebRequest.Method = "POST"
     $WebRequest.ContentType = "multipart/form-data; boundary=`"$boundary`""
     $WebRequest.Proxy = [System.Net.WebRequest]::GetSystemWebProxy()
+    $WebRequest.Proxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials;
     $PostStream = $WebRequest.GetRequestStream()
     $PostStream.Write($prebody, 0, $prebody.Length)
     $PostStream.Write($Body, 0, $Body.Length)
