@@ -505,7 +505,7 @@ def reload_modules():
         flash("Modules reloaded (press F5 to see them)", "success")
     except Exception as e:
         flash("Error while reloading modules: %s" % str(e), "danger")
-    return render_template("messages.html")
+    return ('OK', 200)
 
 
 @socketio.on('connect', namespace="/push-notifications")
