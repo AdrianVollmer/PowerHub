@@ -463,6 +463,7 @@ function Send-Bytes {
         $FileName = Get-Date -Format o
     }
 
+    {{'Write-Debug "Encrypting $Filename..."'|debug}}
     $Body = (Decrypt-Code $Body $KEY)
 
     if ("{{transport}}" -match "^https?$") {
