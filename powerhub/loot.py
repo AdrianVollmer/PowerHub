@@ -14,15 +14,15 @@ def get_loot_type(filename):
     """
     if re.match(r".*lsass_.*dmp.*", filename):
         return "DMP"
-    elif re.match(r".*sam(.[0-9]+)?", filename):
+    elif re.match(r".*sam_.*", filename):
         return "SAM"
-    elif re.match(r".*security(.[0-9]+)?", filename):
+    elif re.match(r".*security_.*", filename):
         return "SECURITY"
-    elif re.match(r".*system(.[0-9]+)?", filename):
+    elif re.match(r".*system_.*", filename):
         return "SYSTEM"
-    elif re.match(r".*software(.[0-9]+)?", filename):
+    elif re.match(r".*software_.*", filename):
         return "SOFTWARE"
-    elif re.match(r".*sysinfo(.[0-9]+)?", filename):
+    elif re.match(r".*sysinfo_.*", filename):
         return "SYSINFO"
     else:
         return None
