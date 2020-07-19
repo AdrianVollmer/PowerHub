@@ -148,13 +148,13 @@ def run_test_remote(cmd):
         cmd('$p="72-74,77";lhm $p;Invoke-Testfunc53;'
             + "Invoke-Testfunc99;Invoke-Testfunc47;Invoke-Testfunc72;")
     )
-    print(out)
     # I don't understand the order of the modules
     assert "Test53" in out
     assert "Test99" in out
     assert "Test47" in out
     assert "Test72" in out
 
+    # Test Upload
     from powerhub.directories import UPLOAD_DIR
     testfile = "testfile.dat"
     out = execute_cmd(
@@ -167,6 +167,7 @@ def run_test_remote(cmd):
         data = f.read()
     assert data == bytes(range(1, 256))
 
+    # Test PushTo-Hub
     out = execute_cmd(
         cmd('$p="FooBar123";$p|pth -name %s;' % testfile)
     )
@@ -174,3 +175,20 @@ def run_test_remote(cmd):
     with open(os.path.join(UPLOAD_DIR, testfile+".1"), "rb") as f:
         data = f.read()
     assert data == b"FooBar123"
+
+    # Test Get-Loot
+    from powerhub import sql
+    out = execute_cmd(
+        cmd('glo')
+    )
+    for i in range(60):
+        time.sleep(1)
+        loot = sql.get_loot()
+        if (loot and loot[0].lsass and loot[0].hive and loot[0].sysinfo):
+            break
+    assert i < 59
+    loot = loot[0]
+    assert "Administrator" in loot.hive
+    assert "500" in loot.hive
+    assert "Microsoft Windows" in loot.sysinfo
+    assert "session_id" in loot.lsass
