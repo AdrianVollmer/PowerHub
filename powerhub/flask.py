@@ -73,16 +73,15 @@ if not args.DEBUG:
     logging.getLogger("engineio").setLevel(logging.WARN)
 
 
-def push_notification(type, msg, title, subtitle="", **kwargs):
-    arguments = {
-        'msg': msg,
-        'title': title,
-        'subtitle': subtitle,
-        'type': type,
-    }
-    arguments.update(dict(**kwargs)),
+def push_notification(msg):
+    """Trigger a toast or an action on all windows
+
+    :msg: A dict either with keys [title, subtitle, body, category] or
+    [action, location]
+    """
+    # TODO make msg an object
     socketio.emit('push',
-                  arguments,
+                  msg,
                   namespace="/push-notifications")
 
 
@@ -231,7 +230,7 @@ def add_clipboard():
         str(datetime.utcnow()).split('.')[0],
         request.remote_addr
     )
-    push_notification("reload", "Update Clipboard", "")
+    push_notification({'action': 'reload', 'location': 'clipboard'})
     return redirect('/clipboard')
 
 

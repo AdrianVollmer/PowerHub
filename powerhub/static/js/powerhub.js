@@ -87,32 +87,30 @@ $(document).ready(function(){
     socket = io.connect('//' + document.domain + ':' + location.port + '/push-notifications');
     // this is a callback that triggers when the 'push' event is emitted by the server.
     socket.on('push', function(msg) {
-        var toast = $('#toast-container div').eq(0).clone(true).appendTo('#toast-container');
+        var toast = $('.toast').last().clone(true).appendTo('#toast-container');
         toast.find('.toast-title').text(msg.title);
         toast.find('.toast-subtitle').text(msg.subtitle);
-        toast.find('.toast-body').text(msg.msg);
+        toast.find('.toast-body').text(msg.body);
+        toast.find('.toast-title').addClass('text-' + msg.category);
         $('#toast-container .toast').last().on('hidden.bs.toast', function () {
             // remove the toast from the dom tree after it faded out
             $(this).remove();
         });
-        actOnPushMsg(msg);
-        if (msg.title != "") {
+        if ('title' in msg) {
             $('#toast-container .toast').last().toast('show');
+            $('#toast-container .toast').last().removeAttr('hidden');
+        } else {
+            actOnPushMsg(msg);
         };
     });
 });
 
 function actOnPushMsg(msg) {
-    if (msg.msg.startsWith("Update Clipboard")
-            && window.location.pathname == "/clipboard") {
-            location.reload();
-    } else if (msg.msg.startsWith("Update Fileexchange")
-            && window.location.pathname == "/fileexchange") {
+    if (msg.action == "reload" && window.location.pathname == "/" + msg.location) {
             location.reload();
     };
 };
 
 
-
-$('.toast').toast('show');
+$('#toast-container .toast').toast('show');
 feather.replace();
