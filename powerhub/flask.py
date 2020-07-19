@@ -431,6 +431,8 @@ def upload():
     file_list = request.files.getlist("file[]")
     is_from_script = "script" in request.args
     loot = "loot" in request.args and request.args["loot"]
+    remote_addr = request.remote_addr
+    msg = {}
     for file in file_list:
         if file.filename == '':
             return redirect(request.url)
@@ -438,16 +440,33 @@ def upload():
             if loot:
                 loot_id = request.args["loot"]
                 log.info("Loot received - %s" % loot_id)
-                save_loot(file, loot_id, encrypted=is_from_script)
+                try:
+                    save_loot(file, loot_id, encrypted=is_from_script)
+                    msg = {
+                        'title': "Loot received!",
+                        'body': "%s from %s has been stored." % (
+                            file.filename,
+                            remote_addr,
+                        ),
+                        'category': "success",
+                    }
+                except Exception as e:
+                    msg = {
+                        'title': "Error while processing loot",
+                        'body': str(e),
+                        'category': "danger",
+                    }
+                    log.exception(e)
             else:
                 log.info("File received - %s" % file.filename)
                 save_file(file, encrypted=is_from_script)
     if loot:
         decrypt_hive(loot_id)
-        push_notification("reload", "Update Loot", "")
+        push_notification({'action': 'reload', 'location': 'loot'})
     else:
-        push_notification("reload", "Update Fileexchange", "")
+        push_notification({'action': 'reload', 'location': 'fileexchange'})
     if is_from_script:
+        push_notification(msg)
         return ('OK', 200)
     else:
         return redirect('/fileexchange')
