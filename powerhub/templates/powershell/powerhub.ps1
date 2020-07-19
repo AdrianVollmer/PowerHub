@@ -658,6 +658,10 @@ Return some basic information about the underlying system
     $ComputerInfo = (Get-WMIObject win32_computersystem)
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     $IsAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+    if ($PS_VERSION -eq 2) { $admins = "" } else {
+        $admins = (Get-LocalGroupMember -Sid S-1-5-32-544);
+    }
     return  New-Object psobject -Property @{
         name = $SysInfo.name.split('|')[0];
         arch = $SysInfo.OSArchitecture;
@@ -668,7 +672,7 @@ Return some basic information about the underlying system
         username = $env:username;
         userdomain = $env:userdomain;
         isadmin = $IsAdmin;
-        admins = (Get-LocalGroupMember -Sid S-1-5-32-544);
+        admins = $admins;
         releaseid = (Get-Item "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion").GetValue('ReleaseID');
         IPs = $IPs
     }
