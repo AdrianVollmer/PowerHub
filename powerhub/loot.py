@@ -39,31 +39,22 @@ def save_loot(file, loot_id, encrypted=False):
     filename = save_file(file, dir=LOOT_DIR, encrypted=encrypted)
     loot_type = get_loot_type(filename)
     log.debug("Saving %s [%s]" % (filename, loot_type))
-    try:
-        if loot_type == "DMP":
-            from pypykatz.pypykatz import pypykatz
-            mimi = pypykatz.parse_minidump_file(filename)
-            creds = [json.loads(v.to_json())
-                     for _, v in mimi.logon_sessions.items()]
-            store_minidump(loot_id, json.dumps(creds), filename)
-        elif loot_type == "SYSINFO":
-            add_sysinfo(loot_id, filename)
-        else:  # registry hive
-            add_hive(loot_id, loot_type, filename)
-    except ImportError as e:
-        log.error("You have unmet dependencies, loot could not be processed")
-        log.exception(e)
+    if loot_type == "DMP":
+        from pypykatz.pypykatz import pypykatz
+        mimi = pypykatz.parse_minidump_file(filename)
+        creds = [json.loads(v.to_json())
+                 for _, v in mimi.logon_sessions.items()]
+        store_minidump(loot_id, json.dumps(creds), filename)
+    elif loot_type == "SYSINFO":
+        add_sysinfo(loot_id, filename)
+    else:  # registry hive
+        add_hive(loot_id, loot_type, filename)
 
 
 def parse_sysinfo(sysinfo):
     if not sysinfo:
         return {}
-    try:
-        return json.loads(sysinfo)
-    except Exception as e:
-        log.error("Error while parsing sysinfo")
-        log.exception(e)
-        return {}
+    return json.loads(sysinfo)
 
 
 def get_hive_goodies(hive):
