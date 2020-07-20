@@ -1,10 +1,13 @@
 Version 1.5
 ===========
 
-* New feautre: Ability to either open files in the File Exchange in browser or
+* New feature: Ability to either open files in the File Exchange in browser or
   download them
-* New feautre: A 'static' directory, so PowerHub can be used to serve static files
+* New feature: A 'static' directory, so PowerHub can be used to serve static files
+* New feature: Ability to generate payloads on the fly (exe, .NET, vbs)
 * Fix: Things didn't work if `$XDG_DATA_HOME` was non-empty
+* Change: Use bootstrap toasts instead of messages
+* Change: Include more information in Get-SysInfo
 
 Version 1.4
 ===========
