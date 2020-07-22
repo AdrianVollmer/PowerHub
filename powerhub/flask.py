@@ -424,48 +424,58 @@ def dlcradle():
         return (str(e), 500)
 
 
+def process_file(file, loot_id, is_from_script, remote_addr):
+    """Save the file or the loot and return a message for push notification"""
+    if loot_id:
+        log.info("Loot received - %s" % loot_id)
+        try:
+            save_loot(file, loot_id, encrypted=is_from_script)
+            decrypt_hive(loot_id)
+            msg = {
+                'title': "Loot received!",
+                'body': "%s from %s has been stored." % (
+                    file.filename,
+                    remote_addr,
+                ),
+                'category': "success",
+            }
+        except Exception as e:
+            msg = {
+                'title': "Error while processing loot",
+                'body': str(e),
+                'category': "danger",
+            }
+            log.exception(e)
+    else:
+        log.info("File received - %s" % file.filename)
+        save_file(file, encrypted=is_from_script)
+        msg = {}
+    return msg
+
+
 @app.route('/u', methods=["POST"])
 def upload():
     """Upload one or more files"""
     file_list = request.files.getlist("file[]")
     is_from_script = "script" in request.args
-    loot = "loot" in request.args and request.args["loot"]
+    if "loot" in request.args:
+        loot_id = request.args["loot"]
+    else:
+        loot_id = None
     remote_addr = request.remote_addr
     msg = {}
     for file in file_list:
         if file.filename == '':
             return redirect(request.url)
         if file:
-            if loot:
-                loot_id = request.args["loot"]
-                log.info("Loot received - %s" % loot_id)
-                try:
-                    save_loot(file, loot_id, encrypted=is_from_script)
-                    msg = {
-                        'title': "Loot received!",
-                        'body': "%s from %s has been stored." % (
-                            file.filename,
-                            remote_addr,
-                        ),
-                        'category': "success",
-                    }
-                except Exception as e:
-                    msg = {
-                        'title': "Error while processing loot",
-                        'body': str(e),
-                        'category': "danger",
-                    }
-                    log.exception(e)
-            else:
-                log.info("File received - %s" % file.filename)
-                save_file(file, encrypted=is_from_script)
-    if loot:
-        decrypt_hive(loot_id)
+            msg = process_file(file, loot_id, is_from_script, remote_addr)
+    if loot_id:
         push_notification({'action': 'reload', 'location': 'loot'})
     else:
         push_notification({'action': 'reload', 'location': 'fileexchange'})
     if is_from_script:
-        push_notification(msg)
+        if msg:
+            push_notification(msg)
         return ('OK', 200)
     else:
         return redirect('/fileexchange')
