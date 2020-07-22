@@ -124,9 +124,9 @@ def unique(a):
     return result
 
 
-def flatten(l):
+def flatten(lst):
     flatten = itertools.chain.from_iterable
-    return list(flatten(l))
+    return list(flatten(lst))
 
 
 KEY = get_secret_key()
