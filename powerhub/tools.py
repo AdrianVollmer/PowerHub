@@ -4,6 +4,7 @@ import os
 import random
 import string
 import itertools
+from Cryptodome.Cipher import AES
 
 from OpenSSL import crypto
 
@@ -98,6 +99,21 @@ def encrypt(data, key):
         out.append(char ^ S[(S[i] + S[j]) % 256])
 
     return (bytes(out))
+
+
+def decrypt_aes(data, key):
+    """Decrypt AES128 with IV"""
+
+    def unpad(s):
+        return s[:-ord(s[len(s)-1:])]
+
+    BLOCK_SIZE = 16
+    IV = data[:BLOCK_SIZE]
+    key = key[:BLOCK_SIZE].encode()
+    aes = AES.new(key, AES.MODE_CBC, iv=IV)
+    result = aes.decrypt(data[BLOCK_SIZE:])
+    result = unpad(result)
+    return result
 
 
 def unique(a):

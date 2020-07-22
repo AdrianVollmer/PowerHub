@@ -18,6 +18,27 @@ $ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
 {{'$DebugPreference = "Continue"'|debug}}
 
+function Encrypt-AES {
+    param(
+        [Byte[]]$buffer,
+        [Byte[]]$key
+  	)
+
+    $aesManaged = New-Object "System.Security.Cryptography.AesManaged"
+    $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC
+    $aesManaged.Padding = [System.Security.Cryptography.PaddingMode]::PKCS7
+    $aesManaged.BlockSize = 128
+    $aesManaged.KeySize = 128
+    $aesManaged.Key = [byte[]]$key[0..15]
+
+    $encryptor = $aesManaged.CreateEncryptor()
+    $encryptedData = $encryptor.TransformFinalBlock($buffer, 0, $buffer.Length);
+    [byte[]] $fullData = $aesManaged.IV + $encryptedData
+
+    try{$aesManaged.Dispose()}catch{} {# This method does not exist in PS2 #}
+    $fullData
+}
+
 function Unzip-Code {
      Param ( [byte[]] $byteArray )
      if ($PS_VERSION -eq 2) {
