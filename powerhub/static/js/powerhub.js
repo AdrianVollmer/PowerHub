@@ -41,7 +41,7 @@ $('.edit-clipboard').click(function(e){
     var id = $(this).attr('data-id');
     var textbox = $(document.createElement('textarea'));
     var pre = $('#card-'+id).find('pre');
-    textbox.text(pre.html());
+    textbox.html(pre.html()).text();
     textbox.attr('class', 'form-control');
     pre.replaceWith(textbox);
     $('#buttons-'+id).collapse('show');
