@@ -1,6 +1,15 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+
 from test_init import execute_cmd
 
 import pytest
+
+sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
+from test_init import TEST_URI, TEST_COMMANDS, init_tests, execute_cmd  # noqa
 
 
 @pytest.fixture
