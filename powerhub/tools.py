@@ -4,9 +4,13 @@ import os
 import random
 import string
 import itertools
+import datetime
 from Cryptodome.Cipher import AES
 
-from OpenSSL import crypto
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 from powerhub.directories import CERT_DIR
 from powerhub.sql import get_setting, set_setting
@@ -17,27 +21,44 @@ def create_self_signed_cert(hostname,
                             cert_file,
                             key_file,
                             ):
-    # create a key pair
-    k = crypto.PKey()
-    k.generate_key(crypto.TYPE_RSA, 2048)
 
-    # create a self-signed cert
-    cert = crypto.X509()
-    cert.get_subject().O = "PowerHub"  # noqa
-    cert.get_subject().CN = hostname
-    cert.set_serial_number(random.randint(1, 10000))
-    cert.gmtime_adj_notBefore(0)
-    cert.gmtime_adj_notAfter(10*365*24*60*60)
-    cert.set_issuer(cert.get_subject())
-    cert.set_pubkey(k)
-    cert.sign(k, 'sha256')
+    key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+        backend=default_backend()
+    )
+    subject = x509.Name([
+        x509.NameAttribute(x509.NameOID.ORGANIZATION_NAME, "PowerHub"),
+        x509.NameAttribute(x509.NameOID.COMMON_NAME, hostname)
+    ])
+    hash_algo = hashes.SHA256()
+    cert = x509.CertificateBuilder().subject_name(
+        subject
+    ).issuer_name(
+        subject
+    ).public_key(
+        key.public_key()
+    ).serial_number(
+        x509.random_serial_number()
+    ).add_extension(
+        x509.BasicConstraints(ca=True, path_length=None), critical=True
+    ).not_valid_before(
+        datetime.datetime.utcnow()
+    ).not_valid_after(
+        datetime.datetime.utcnow() + datetime.timedelta(days=365)
+    ).sign(key, hash_algo, default_backend())
+
     log.info("Generated a self-signed certifiate for '%s' with SHA-1 "
-             "fingerprint: %s" % (hostname, cert.digest("sha1").decode()))
+             "fingerprint: %s" % (hostname, cert.fingerprint(hash_algo).hex()))
 
-    open(cert_file, "bw+").write(
-        crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-    open(key_file, "bw+").write(
-        crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
+    with open(cert_file, "wb") as f:
+        f.write(cert.public_bytes(serialization.Encoding.PEM))
+    with open(key_file, "wb") as f:
+        f.write(key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption()
+        ))
 
 
 def get_self_signed_cert(hostname):
@@ -50,10 +71,11 @@ def get_self_signed_cert(hostname):
 
         log.info("No SSL certificate found, generating a self-signed one...")
         create_self_signed_cert(hostname, cert_file, key_file)
-    f = open(cert_file, "br").read()
-    cert = crypto.load_certificate(crypto.FILETYPE_PEM, f)
+    pem_data = open(cert_file, "br").read()
+    cert = x509.load_pem_x509_certificate(pem_data, default_backend())
+    hash_algo = hashes.SHA256()
     log.info("Loaded SSL certificate for '%s' with SHA1 fingerprint: %s"
-             % (hostname, cert.digest("sha1").decode()))
+             % (hostname, cert.fingerprint(hash_algo).hex()))
     return (cert_file, key_file)
 
 

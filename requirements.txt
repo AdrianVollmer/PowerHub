@@ -6,7 +6,7 @@ watchdog
 twisted>=18.9.0
 flask-sqlalchemy>=2.1
 werkzeug>=0.15
-pyOpenSSL
+cryptography
 service_identity
 pypykatz>=0.2.2
 pycryptodomex

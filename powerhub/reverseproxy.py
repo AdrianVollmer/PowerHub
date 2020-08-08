@@ -13,7 +13,9 @@ from twisted.web.proxy import ReverseProxyResource
 from twisted.web.server import Site
 from twisted.web.resource import Resource
 
-from OpenSSL import crypto
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
 
 from powerhub.args import args
 from powerhub.tools import get_self_signed_cert
@@ -72,19 +74,19 @@ def run_proxy():
 
     if not args.SSL_KEY or not args.SSL_CERT:
         args.SSL_CERT, args.SSL_KEY = get_self_signed_cert(args.URI_HOST)
-    with open(args.SSL_CERT, "br") as f:
-        cert = f.read()
-    cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
+    pem_data = open(args.SSL_CERT, "br").read()
+    cert = x509.load_pem_x509_certificate(pem_data, default_backend())
     global FINGERPRINT
-    FINGERPRINT = cert.digest("sha1").decode()
-    reactor.listenSSL(args.SSL_PORT,
-                      site,
-                      ssl.DefaultOpenSSLContextFactory(
-                          args.SSL_KEY.encode(),
-                          args.SSL_CERT.encode(),
-                      ),
-                      interface=args.LHOST,
-                      )
+    FINGERPRINT = cert.fingerprint(hashes.SHA1()).hex()
+    reactor.listenSSL(
+        args.SSL_PORT,
+        site,
+        ssl.DefaultOpenSSLContextFactory(
+            args.SSL_KEY.encode(),
+            args.SSL_CERT.encode(),
+        ),
+        interface=args.LHOST,
+    )
     log.info("Web interface accessible on http://%s:%d and https://%s:%d" % (
         args.URI_HOST, args.LPORT, args.URI_HOST, args.SSL_PORT,
     ))
