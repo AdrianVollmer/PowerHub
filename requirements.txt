@@ -9,4 +9,3 @@ werkzeug>=0.15
 cryptography
 service_identity
 pypykatz>=0.2.2
-pycryptodomex

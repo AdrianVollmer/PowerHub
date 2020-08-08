@@ -5,12 +5,12 @@ import random
 import string
 import itertools
 import datetime
-from Cryptodome.Cipher import AES
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 from powerhub.directories import CERT_DIR
 from powerhub.sql import get_setting, set_setting
@@ -130,12 +130,16 @@ def decrypt_aes(data, key):
         return s[:-ord(s[len(s)-1:])]
 
     BLOCK_SIZE = 16
-    IV = data[:BLOCK_SIZE]
+    iv = data[:BLOCK_SIZE]
     key = key[:BLOCK_SIZE].encode()
-    aes = AES.new(key, AES.MODE_CBC, iv=IV)
-    result = aes.decrypt(data[BLOCK_SIZE:])
-    result = unpad(result)
-    return result
+
+    cipher = Cipher(algorithms.AES(key),
+                    modes.CBC(iv),
+                    backend=default_backend())
+    decryptor = cipher.decryptor()
+    result = decryptor.update(data[BLOCK_SIZE:]) + decryptor.finalize()
+
+    return unpad(result)
 
 
 def unique(a):
