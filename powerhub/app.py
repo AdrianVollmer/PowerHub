@@ -40,15 +40,26 @@ class MyRequestHandler(WSGIRequestHandler):
 
 
 class PowerHubApp(object):
-    def __init__(self, argv=None):
-        """TODO: Docstring for __init__.
-        :returns: TODO
+    """This is the main app class
+
+    It is a singleton and a reference will be stored in powerhub.env.
+
+    It holds all parameters, settings and "sub apps", such as the flask app,
+    the reverse proxy, the database, etc.
+
+    """
+    def __init__(self, argv: list = None):
+        """
+        You can pass arguments to PowerHub by putting them in argv. If
+        empty, sys.argv will be used (i.e. the command line arguments).
 
         """
         if not env.powerhub_app:
             env.powerhub_app = self
 
         self.args = parse_args(argv)
+        # log depends on args, so it must be imported after args have been
+        # parsed
         from powerhub.logging import log
         global log
         self.init_flask()
@@ -59,10 +70,6 @@ class PowerHubApp(object):
         self.init_settings()
 
     def init_socketio(self):
-        """
-        :returns: TODO
-
-        """
         self.socketio = SocketIO(
             self.flask_app,
             async_mode="threading",
@@ -79,10 +86,6 @@ class PowerHubApp(object):
         )
 
     def init_flask(self):
-        """TODO: Docstring for init_flask.
-        :returns: TODO
-
-        """
         from powerhub.flask import app as flask_blueprint
         self.flask_app = Flask(__name__)
         self.flask_app.register_blueprint(flask_blueprint)
@@ -132,11 +135,7 @@ class PowerHubApp(object):
             request_handler=MyRequestHandler,
         )
 
-    def run(self, fully_threaded=False):
-        """
-        :returns: TODO
-
-        """
+    def run(self, background=False):
         import powerhub.reverseproxy
         signal.signal(signal.SIGINT, signal_handler)
         try:
@@ -147,15 +146,11 @@ class PowerHubApp(object):
             print("You have unmet dependencies. WebDAV won't be available. "
                   "Consult the README.")
         start_thread(self.run_flask_app)
-        if fully_threaded:
+        if background:
             start_thread(powerhub.reverseproxy.run_proxy)
         else:
             powerhub.reverseproxy.run_proxy()
 
     def stop(self):
-        """TODO: Docstring for stop.
-        :returns: TODO
-
-        """
         from powerhub import reverseproxy
         reverseproxy.reactor.stop()

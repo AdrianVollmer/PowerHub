@@ -94,7 +94,7 @@ def create_modules():
 def full_app():
     from powerhub.app import PowerHubApp
     app = PowerHubApp()
-    app.run(fully_threaded=True)
+    app.run(background=True)
     create_modules()
     yield get_stager()
     app.stop()

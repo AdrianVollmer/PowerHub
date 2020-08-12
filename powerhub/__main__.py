@@ -4,5 +4,5 @@
 from powerhub.app import PowerHubApp
 
 
-def main(fully_threaded=False):
-    PowerHubApp().run(fully_threaded=fully_threaded)
+def main(background=False):
+    PowerHubApp().run(background=background)
