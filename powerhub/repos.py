@@ -6,9 +6,10 @@ from powerhub.directories import MOD_DIR
 
 repositories = {
     "AdrianVollmer/PowerSploit":
-    "https://github.com/AdrianVollmer/PowerSploit.git",
+        "https://github.com/AdrianVollmer/PowerSploit.git",
     "BloodHound": "https://github.com/BloodHoundAD/BloodHound.git",
     "ASREPRoast": "https://github.com/HarmJ0y/ASREPRoast.git",
+    "Nishang": "https://github.com/samratashok/nishang.git",
 }
 
 
