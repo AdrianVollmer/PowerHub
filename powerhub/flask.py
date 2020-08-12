@@ -1,4 +1,3 @@
-
 from base64 import b64encode
 from binascii import unhexlify
 from datetime import datetime
@@ -7,21 +6,19 @@ import os
 import shutil
 from tempfile import TemporaryDirectory
 
-from flask import Flask, render_template, request, Response, redirect, \
+from flask import Blueprint, render_template, request, Response, redirect, \
          send_from_directory, flash, abort, jsonify, make_response
 
 from werkzeug.exceptions import BadRequestKeyError
-from werkzeug.serving import WSGIRequestHandler, _log
-from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_socketio import SocketIO  # , emit
 
-from powerhub.sql import get_clipboard, init_db, decrypt_hive, get_loot, \
+from powerhub.env import powerhub_app as ph_app
+
+from powerhub.sql import decrypt_hive, get_loot, \
         delete_loot, get_clip_entry_list
 from powerhub.stager import modules, build_cradle, callback_urls, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
-from powerhub.directories import UPLOAD_DIR, DB_FILENAME, \
-        XDG_DATA_HOME, STATIC_DIR
+from powerhub.directories import UPLOAD_DIR, XDG_DATA_HOME, STATIC_DIR
 from powerhub.payloads import create_payload
 from powerhub.tools import encrypt, compress, KEY
 from powerhub.auth import requires_auth
@@ -29,46 +26,13 @@ from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
 from powerhub.loot import save_loot, get_lsass_goodies, get_hive_goodies, \
         parse_sysinfo
-from powerhub.args import args
 from powerhub.logging import log
 from powerhub._version import __version__
 
 
-app = Flask(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1, x_port=1)
-app.config.update(
-    DEBUG=args.DEBUG,
-    SECRET_KEY=os.urandom(16),
-    SQLALCHEMY_DATABASE_URI='sqlite:///' + DB_FILENAME,
-    SQLALCHEMY_TRACK_MODIFICATIONS=False,
-)
+app = Blueprint('app', __name__)
 
-try:
-    from flask_sqlalchemy import SQLAlchemy
-    db = SQLAlchemy(app)
-    init_db(db)
-except ImportError as e:
-    log.error("You have unmet dependencies, database will not be available")
-    log.exception(e)
-    db = None
-cb = get_clipboard()
-
-socketio = SocketIO(
-    app,
-    async_mode="threading",
-    cors_allowed_origins=[
-        "http://%s:%d" % (
-            args.URI_HOST,
-            args.LPORT,
-        ),
-        "https://%s:%d" % (
-            args.URI_HOST,
-            args.SSL_PORT,
-        ),
-    ],
-)
-
-if not args.DEBUG:
+if not ph_app.args.DEBUG:
     logging.getLogger("socketio").setLevel(logging.WARN)
     logging.getLogger("engineio").setLevel(logging.WARN)
 
@@ -80,57 +44,34 @@ def push_notification(msg):
     [action, location]
     """
     # TODO make msg an object
-    socketio.emit('push',
-                  msg,
-                  namespace="/push-notifications")
+    ph_app.socketio.emit('push',
+                         msg,
+                         namespace="/push-notifications")
 
 
-class MyRequestHandler(WSGIRequestHandler):
-    def address_string(self):
-        if 'x-forwarded-for' in dict(self.headers._headers):
-            return dict(self.headers._headers)['x-forwarded-for']
-        else:
-            return self.client_address[0]
-
-    def log(self, type, message, *largs):
-        # don't log datetime again
-        if " /socket.io/?" not in largs[0] or args.DEBUG:
-            _log(type, '%s %s\n' % (self.address_string(), message % largs))
-
-
-def run_flask_app():
-    socketio.run(
-        app,
-        port=args.FLASK_PORT,
-        host='127.0.0.1',
-        use_reloader=False,
-        request_handler=MyRequestHandler,
-    )
-
-
-@app.template_filter()
+@app.add_app_template_filter
 def debug(msg):
     """This is a function for debugging statements in jinja2 templates"""
-    if args.DEBUG:
+    if ph_app.args.DEBUG:
         return msg
     return ""
 
 
-@app.template_filter()
+@app.add_app_template_filter
 def nodebug(msg):
     """This is a function for (no) debugging statements in jinja2 templates"""
-    if not args.DEBUG:
+    if not ph_app.args.DEBUG:
         return msg
     return ""
 
 
-@app.template_filter()
+@app.add_app_template_filter
 def rc4encrypt(msg):
     """This is a function for encrypting strings in jinja2 templates"""
     return b64encode(encrypt(msg.encode(), KEY)).decode()
 
 
-@app.template_filter()
+@app.add_app_template_filter
 def rc4byteencrypt(data):
     """This is a function for encrypting bytes in jinja2 templates
 
@@ -148,13 +89,13 @@ def index():
 @app.route('/hub')
 @requires_auth
 def hub():
-    clip_entries = get_clip_entry_list(cb)
+    clip_entries = get_clip_entry_list(ph_app.clipboard)
     context = {
         "modules": modules,
         "clip_entries": clip_entries,
         "repositories": list(repositories.keys()),
-        "SSL": args.SSL_KEY is not None,
-        "AUTH": args.AUTH,
+        "SSL": ph_app.args.SSL_KEY is not None,
+        "AUTH": ph_app.args.AUTH,
         "VERSION": __version__,
     }
     return render_template("hub.html", **context)
@@ -166,7 +107,7 @@ def loot_tab():
     # turn sqlalchemy object 'lootbox' into dict/array
     lootbox = get_loot()
     loot = [{
-        "nonpersistent": db is None,
+        "nonpersistent": ph_app.db is None,
         "id": lb.id,
         "lsass": get_lsass_goodies(lb.lsass),
         "lsass_full": lb.lsass,
@@ -176,7 +117,7 @@ def loot_tab():
     } for lb in lootbox]
     context = {
         "loot": loot,
-        "AUTH": args.AUTH,
+        "AUTH": ph_app.args.AUTH,
         "VERSION": __version__,
     }
     return render_template("loot.html", **context)
@@ -186,9 +127,9 @@ def loot_tab():
 @requires_auth
 def clipboard():
     context = {
-        "nonpersistent": db is None,
-        "clipboard": list(cb.entries.values()),
-        "AUTH": args.AUTH,
+        "nonpersistent": ph_app.db is None,
+        "clipboard": list(ph_app.clipboard.entries.values()),
+        "AUTH": ph_app.args.AUTH,
         "VERSION": __version__,
     }
     return render_template("clipboard.html", **context)
@@ -199,7 +140,7 @@ def clipboard():
 def fileexchange():
     context = {
         "files": get_filelist(),
-        "AUTH": args.AUTH,
+        "AUTH": ph_app.args.AUTH,
         "VERSION": __version__,
     }
     return render_template("fileexchange.html", **context)
@@ -225,7 +166,7 @@ def send_img(path):
 def add_clipboard():
     """Add a clipboard entry"""
     content = request.form.get("content")
-    cb.add(
+    ph_app.clipboard.add(
         content,
         str(datetime.utcnow()).split('.')[0],
         request.remote_addr
@@ -239,7 +180,7 @@ def add_clipboard():
 def del_clipboard():
     """Delete a clipboard entry"""
     id = int(request.form.get("id"))
-    cb.delete(id)
+    ph_app.clipboard.delete(id)
     return ""
 
 
@@ -249,7 +190,7 @@ def edit_clipboard():
     """Edit a clipboard entry"""
     id = int(request.form.get("id"))
     content = request.form.get("content")
-    cb.edit(id, content)
+    ph_app.clipboard.edit(id, content)
     return ""
 
 
@@ -257,8 +198,8 @@ def edit_clipboard():
 @requires_auth
 def del_all_clipboard():
     """Delete all clipboard entries"""
-    for id in list(cb.entries.keys()):
-        cb.delete(id)
+    for id in list(ph_app.clipboard.entries.keys()):
+        ph_app.clipboard.delete(id)
     return redirect("/clipboard")
 
 
@@ -267,7 +208,7 @@ def del_all_clipboard():
 def export_clipboard():
     """Export all clipboard entries"""
     result = ""
-    for e in list(cb.entries.values()):
+    for e in list(ph_app.clipboard.entries.values()):
         headline = "%s (%s)\r\n" % (e.time, e.IP)
         result += headline
         result += "="*(len(headline)-2) + "\r\n"
@@ -327,7 +268,8 @@ def payload_0():
 
     try:
         clipboard_id = int(request.args.get('c'))
-        exec_clipboard_entry = cb.entries[clipboard_id].content
+        exec_clipboard_entry = ph_app.clipboard. \
+            entries[clipboard_id].content
     except TypeError:
         exec_clipboard_entry = ""
     amsi_bypass = request.args['a']
@@ -543,11 +485,6 @@ def reload_modules():
         log.exception(e)
     flash(msg)
     return ('OK', 200)
-
-
-@socketio.on('connect', namespace="/push-notifications")
-def test_connect():
-    log.debug("Websockt client connected")
 
 
 @app.route('/static/<filename>')

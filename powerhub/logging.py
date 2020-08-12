@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from powerhub.args import args
+import powerhub.env as env
 
 
 class FlaskFilter(logging.Filter):
@@ -11,7 +11,7 @@ class FlaskFilter(logging.Filter):
         return "* Running on http://" not in record.getMessage()
 
 
-if args.DEBUG:
+if env.powerhub_app.args.DEBUG:
     FORMAT = '%(levelname).1s %(asctime)-15s '
     FORMAT += '%(filename)s:%(lineno)d %(message)s'
 else:
@@ -20,7 +20,7 @@ else:
 
 logging.basicConfig(
     stream=sys.stdout,
-    level=logging.DEBUG if args.DEBUG else logging.INFO,
+    level=logging.DEBUG if env.powerhub_app.args.DEBUG else logging.INFO,
     format=FORMAT,
     datefmt="%Y-%m-%d %H:%M:%S",
 )

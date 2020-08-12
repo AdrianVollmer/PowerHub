@@ -1,7 +1,8 @@
-from powerhub.args import args
-from powerhub.directories import BASE_DIR, MOD_DIR
 import os
 import binascii
+
+from powerhub.env import powerhub_app as ph_app
+from powerhub.directories import BASE_DIR, MOD_DIR
 
 
 def import_module_type(mod_type, filter=lambda x: True):
@@ -88,21 +89,21 @@ modules = import_modules()
 
 callback_urls = {
     'http': 'http://%s:%d/%s' % (
-        args.URI_HOST,
-        args.URI_PORT if args.URI_PORT else args.LPORT,
-        args.URI_PATH+'/' if args.URI_PATH else '',
+        ph_app.args.URI_HOST,
+        ph_app.args.URI_PORT if ph_app.args.URI_PORT else ph_app.args.LPORT,
+        ph_app.args.URI_PATH+'/' if ph_app.args.URI_PATH else '',
     ),
     'https': 'https://%s:%d/%s' % (
-        args.URI_HOST,
-        args.URI_PORT if args.URI_PORT else args.SSL_PORT,
-        args.URI_PATH+'/' if args.URI_PATH else '',
+        ph_app.args.URI_HOST,
+        ph_app.args.URI_PORT if ph_app.args.URI_PORT else ph_app.args.SSL_PORT,
+        ph_app.args.URI_PATH+'/' if ph_app.args.URI_PATH else '',
     ),
 }
 
 # TODO consider https
 webdav_url = 'http://%s:%d/webdav' % (
-    args.URI_HOST,
-    args.LPORT,
+    ph_app.args.URI_HOST,
+    ph_app.args.LPORT,
 )
 
 
