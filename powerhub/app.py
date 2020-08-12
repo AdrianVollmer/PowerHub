@@ -51,12 +51,12 @@ class PowerHubApp(object):
         self.args = parse_args(argv)
         from powerhub.logging import log
         global log
-        #  self.settings = self.init_settings()
         self.init_flask()
         self.init_db()
         self.init_clipboard()
         self.init_loot()
         self.init_socketio()
+        self.init_settings()
 
     def init_socketio(self):
         """
@@ -118,6 +118,10 @@ class PowerHubApp(object):
 
     def init_loot(self):
         self.loot = None
+
+    def init_settings(self):
+        from powerhub.tools import get_secret_key
+        self.key = get_secret_key()
 
     def run_flask_app(self):
         self.socketio.run(

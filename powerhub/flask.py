@@ -20,7 +20,7 @@ from powerhub.stager import modules, build_cradle, callback_urls, \
 from powerhub.upload import save_file, get_filelist
 from powerhub.directories import UPLOAD_DIR, XDG_DATA_HOME, STATIC_DIR
 from powerhub.payloads import create_payload
-from powerhub.tools import encrypt, compress, KEY
+from powerhub.tools import encrypt, compress
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
@@ -68,7 +68,7 @@ def nodebug(msg):
 @app.add_app_template_filter
 def rc4encrypt(msg):
     """This is a function for encrypting strings in jinja2 templates"""
-    return b64encode(encrypt(msg.encode(), KEY)).decode()
+    return b64encode(encrypt(msg.encode(), ph_app.key)).decode()
 
 
 @app.add_app_template_filter
@@ -77,7 +77,7 @@ def rc4byteencrypt(data):
 
     data must be hexascii encoded.
     """
-    return b64encode(encrypt(b64encode(unhexlify(data)), KEY)).decode()
+    return b64encode(encrypt(b64encode(unhexlify(data)), ph_app.key)).decode()
 
 
 @app.route('/')
@@ -251,9 +251,9 @@ def payload_m():
     if n < len(modules):
         modules[n].activate()
         if 'c' in request.args:
-            resp = b64encode(encrypt(compress(modules[n].code), KEY)),
+            resp = b64encode(encrypt(compress(modules[n].code), ph_app.key)),
         else:
-            resp = b64encode(encrypt(modules[n].code, KEY)),
+            resp = b64encode(encrypt(modules[n].code, ph_app.key)),
         return Response(
             resp,
             content_type='text/plain; charset=utf-8'
@@ -284,7 +284,7 @@ def payload_0():
         "modules": modules,
         "callback_url": callback_urls[request.args['t']],
         "transport": request.args['t'],
-        "key": KEY,
+        "key": ph_app.key,
         "amsibypass": amsi_template,
         "symbol_name": symbol_name,
         "exec_clipboard_entry": exec_clipboard_entry,
@@ -316,7 +316,7 @@ def payload_h():
                     "powershell/powerhub.ps1",
                     **context,
     ).encode()
-    result = b64encode(encrypt(result, KEY))
+    result = b64encode(encrypt(result, ph_app.key))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
@@ -332,7 +332,7 @@ def hub_modules():
                     "powershell/modules.ps1",
                     **context,
     ).encode()
-    result = b64encode(encrypt((result), KEY))
+    result = b64encode(encrypt((result), ph_app.key))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 

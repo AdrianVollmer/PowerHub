@@ -1,8 +1,11 @@
 import os
 from datetime import datetime
 from operator import itemgetter
+
+from powerhub.env import powerhub_app as ph_app
+
 from powerhub.directories import UPLOAD_DIR
-from powerhub.tools import decrypt_aes, KEY
+from powerhub.tools import decrypt_aes
 
 
 def save_file(file, dir=UPLOAD_DIR, encrypted=False):
@@ -18,7 +21,7 @@ def save_file(file, dir=UPLOAD_DIR, encrypted=False):
         filename += ".%d" % count
     if encrypted:
         data = file.read()
-        data = decrypt_aes(data, KEY)
+        data = decrypt_aes(data, ph_app.key)
         with open(filename, 'bw') as f:
             f.write(data)
     else:
