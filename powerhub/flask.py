@@ -455,12 +455,24 @@ def download_all():
 @requires_auth
 def get_repo():
     """Download a specified repository"""
-    msg, msg_type = install_repo(
-        request.form['repo'],
-        request.form['custom-repo']
-    )
-    # possible types: success, info, danger, warning
-    flash(msg, msg_type)
+    try:
+        install_repo(
+            request.form['repo'],
+            request.form['custom-repo']
+        )
+        msg = {
+            'title': "Success",
+            'body': "%s has been installed" % request.form['repo'],
+            'category': 'success',
+        }
+    except Exception as e:
+        log.exception(e)
+        msg = {
+            'title': "Error",
+            'body': str(e),
+            'category': 'danger',
+        }
+    flash(msg, '')
     return redirect('/hub')
 
 
