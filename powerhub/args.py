@@ -106,17 +106,18 @@ parser.add_argument(
     '-v', '--version', action='version', version='PowerHub ' + __version__
 )
 
-args = parser.parse_args()
 
-if ((args.SSL_KEY and not args.SSL_CERT)
-        or (args.SSL_CERT and not args.SSL_KEY)):
-    print("If you supply one of SSL_CERT or SSL_KEY you must also supply "
-          "the other")
-    exit(1)
+def parse_args(argv):
+    args = parser.parse_args(argv)
 
-if args.SSL_KEY:
-    ssl_context = (args.SSL_CERT, args.SSL_KEY)
-    args.PROTOCOL = 'https'
-else:
-    ssl_context = None
-    args.PROTOCOL = 'http'
+    if ((args.SSL_KEY and not args.SSL_CERT)
+            or (args.SSL_CERT and not args.SSL_KEY)):
+        print("If you supply one of SSL_CERT or SSL_KEY you must also supply "
+              "the other")
+        exit(1)
+
+    if args.SSL_KEY:
+        args.PROTOCOL = 'https'
+    else:
+        args.PROTOCOL = 'http'
+    return args

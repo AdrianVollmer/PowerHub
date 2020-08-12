@@ -92,12 +92,12 @@ def create_modules():
 
 @pytest.fixture(scope="module")
 def full_app():
-    from powerhub.__main__ import main
-    from powerhub import reverseproxy
+    from powerhub.app import PowerHubApp
+    app = PowerHubApp()
+    app.run(background=True)
     create_modules()
-    main(fully_threaded=True)
     yield get_stager()
-    reverseproxy.reactor.stop()
+    app.stop()
 
 
 def test_stager(full_app):
