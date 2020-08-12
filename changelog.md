@@ -1,9 +1,18 @@
+Version 1.6
+===========
+
+* New feature: Ability to generate payloads on the fly (exe, .NET, vbs)
+* Change: Use bootstrap toasts instead of messages
+* Change: Include more information in Get-SysInfo
+* Change: Use AES instead of RC4 in some cases for more performance
+* Change: Clean up dependencies and add `setup.py`
+
 Version 1.5
 ===========
 
-* New feautre: Ability to either open files in the File Exchange in browser or
+* New feature: Ability to either open files in the File Exchange in browser or
   download them
-* New feautre: A 'static' directory, so PowerHub can be used to serve static files
+* New feature: A 'static' directory, so PowerHub can be used to serve static files
 * Fix: Things didn't work if `$XDG_DATA_HOME` was non-empty
 
 Version 1.4

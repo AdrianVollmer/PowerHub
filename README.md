@@ -55,7 +55,13 @@ However, there are a few dependencies. They are listed in the
 Install them either via `pip3 install --user -r requirements.txt` or use a
 virtual environment.
 
+If you do want to install PowerHub, you should do `pip3 install --user .`.
+
 Python2 is not supported.
+
+For building the payloads, you need the MinGW GCC and Mono C# compilers. On
+Debian-like systems, you can install them with `apt-get install mono-mcs
+gcc-mingw-w64-x86-64 gcc-mingw-w64-i686`.
 
 venv
 ----
@@ -64,7 +70,7 @@ venv
 python3-venv`.
 
 Run `python3 -m venv env` to create a virtual environment, then use `source
-env/bin/activate` to activate it. Now run `pip3 install -r requirements.txt`
+env/bin/activate` to activate it. Now run `pip3 install --user .`
 to install the depencendies inside the virtual environment.
 
 pipenv

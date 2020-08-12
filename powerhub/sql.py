@@ -130,26 +130,21 @@ def decrypt_hive(loot_id):
 
     loot = get_loot_entry(loot_id)
 
+    from pypykatz.registry.offline_parser import OffineRegistry
+
+    o = OffineRegistry()
     try:
-        from pypykatz.registry.offline_parser import OffineRegistry
-
-        o = OffineRegistry()
-        try:
-            o = o.from_files(
-                loot.system_file,
-                security_path=loot.security_file,
-                sam_path=loot.sam_file,
-                software_path=loot.software_file,
-            )
-        except TypeError:  # 'system' is not here yet, no biggie
-            return None
-        loot.hive = o.to_json()
-        _db.session.commit()
-        log.debug("Hive decrypted - %s" % loot_id)
-
-    except ImportError as e:
-        log.error("You have unmet dependencies, loot could not be processed")
-        log.exception(e)
+        o = o.from_files(
+            loot.system_file,
+            security_path=loot.security_file,
+            sam_path=loot.sam_file,
+            software_path=loot.software_file,
+        )
+    except TypeError:  # 'system' is not here yet, no biggie
+        return None
+    loot.hive = o.to_json()
+    _db.session.commit()
+    log.debug("Hive decrypted - %s" % loot_id)
 
 
 def get_loot():

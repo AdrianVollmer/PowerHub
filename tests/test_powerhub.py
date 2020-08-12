@@ -6,6 +6,7 @@ import tempfile
 import sys
 import re
 
+import flask
 import pytest
 
 # https://stackoverflow.com/a/33515264/1308830
@@ -18,10 +19,13 @@ init_tests()
 
 @pytest.fixture
 def flask_app():
-    sys.argv = ['./powerhub.py', TEST_URI, '--no-auth']
     temp_db = tempfile.mkstemp()[1]
-    from powerhub import flask
-    flask_app = flask.app.test_client()
+    from powerhub.app import PowerHubApp
+    PowerHubApp([TEST_URI, '--no-auth'])
+    from powerhub.flask import app as blueprint
+    flask_app = flask.Flask(__name__, template_folder="../powerhub/templates")
+    flask_app.register_blueprint(blueprint)
+    flask_app = flask_app.test_client()
     yield flask_app
     os.remove(temp_db)
 
@@ -36,7 +40,8 @@ def test_hub_page(flask_app):
     response = flask_app.get('/hub')
     assert b"PowerHub" in response.data
     assert b"Hub" in response.data
-    assert b"Paste this" in response.data
+    assert b"This is the Hub" in response.data
+    assert b"AMSI Bypass" in response.data
 
 
 def test_clipboard_page(flask_app):

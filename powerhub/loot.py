@@ -12,17 +12,17 @@ def get_loot_type(filename):
 
     Could be an LSA process dump or a registry hive or system info.
     """
-    if re.match(r".*lsass_[0-9]+.dmp(.[0-9]+)?", filename):
+    if re.match(r".*lsass_.*dmp.*", filename):
         return "DMP"
-    elif re.match(r".*sam(.[0-9]+)?", filename):
+    elif re.match(r".*sam_.*", filename):
         return "SAM"
-    elif re.match(r".*security(.[0-9]+)?", filename):
+    elif re.match(r".*security_.*", filename):
         return "SECURITY"
-    elif re.match(r".*system(.[0-9]+)?", filename):
+    elif re.match(r".*system_.*", filename):
         return "SYSTEM"
-    elif re.match(r".*software(.[0-9]+)?", filename):
+    elif re.match(r".*software_.*", filename):
         return "SOFTWARE"
-    elif re.match(r".*sysinfo(.[0-9]+)?", filename):
+    elif re.match(r".*sysinfo_.*", filename):
         return "SYSINFO"
     else:
         return None
@@ -38,31 +38,23 @@ def save_loot(file, loot_id, encrypted=False):
 
     filename = save_file(file, dir=LOOT_DIR, encrypted=encrypted)
     loot_type = get_loot_type(filename)
-    try:
-        if loot_type == "DMP":
-            from pypykatz.pypykatz import pypykatz
-            mimi = pypykatz.parse_minidump_file(filename)
-            creds = [json.loads(v.to_json())
-                     for _, v in mimi.logon_sessions.items()]
-            store_minidump(loot_id, json.dumps(creds), filename)
-        elif loot_type == "SYSINFO":
-            add_sysinfo(loot_id, filename)
-        else:  # registry hive
-            add_hive(loot_id, loot_type, filename)
-    except ImportError as e:
-        log.error("You have unmet dependencies, loot could not be processed")
-        log.exception(e)
+    log.debug("Saving %s [%s]" % (filename, loot_type))
+    if loot_type == "DMP":
+        from pypykatz.pypykatz import pypykatz
+        mimi = pypykatz.parse_minidump_file(filename)
+        creds = [json.loads(v.to_json())
+                 for _, v in mimi.logon_sessions.items()]
+        store_minidump(loot_id, json.dumps(creds), filename)
+    elif loot_type == "SYSINFO":
+        add_sysinfo(loot_id, filename)
+    else:  # registry hive
+        add_hive(loot_id, loot_type, filename)
 
 
 def parse_sysinfo(sysinfo):
     if not sysinfo:
         return {}
-    try:
-        return json.loads(sysinfo)
-    except Exception as e:
-        log.error("Error while parsing sysinfo")
-        log.exception(e)
-        return {}
+    return json.loads(sysinfo)
 
 
 def get_hive_goodies(hive):

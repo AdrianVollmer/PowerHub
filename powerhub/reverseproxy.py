@@ -13,9 +13,11 @@ from twisted.web.proxy import ReverseProxyResource
 from twisted.web.server import Site
 from twisted.web.resource import Resource
 
-from OpenSSL import crypto
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
 
-from powerhub.args import args
+from powerhub.env import powerhub_app as ph_app
 from powerhub.tools import get_self_signed_cert
 from powerhub.logging import log
 
@@ -38,7 +40,7 @@ class DynamicProxy(Resource):
         else:
             x_for_host = ""
         x_for_port = request.host.port
-        if x_for_port == args.SSL_PORT:
+        if x_for_port == ph_app.args.SSL_PORT:
             x_for_proto = "https"
         else:
             x_for_proto = "http"
@@ -56,33 +58,42 @@ class DynamicProxy(Resource):
                 new_path += b'/%s' % path
             log.debug("Forwarding request to WebDAV server: %s" %
                       path.decode())
-            return ReverseProxyResource(host, args.WEBDAV_PORT, new_path)
+            return ReverseProxyResource(host,
+                                        ph_app.args.WEBDAV_PORT,
+                                        new_path)
         else:
             log.debug("Forwarding request to Flask server")
             new_path = b'/%s' % (resource,)
             if path:
                 new_path += b'/%s' % path
-            return ReverseProxyResource(host, args.FLASK_PORT, new_path)
+            return ReverseProxyResource(host, ph_app.args.FLASK_PORT, new_path)
 
 
 def run_proxy():
     proxy = DynamicProxy()
     site = Site(proxy)
-    reactor.listenTCP(args.LPORT, site, interface=args.LHOST)
+    reactor.listenTCP(ph_app.args.LPORT, site, interface=ph_app.args.LHOST)
 
-    if not args.SSL_KEY or not args.SSL_CERT:
-        args.SSL_CERT, args.SSL_KEY = get_self_signed_cert(args.URI_HOST)
-    with open(args.SSL_CERT, "br") as f:
-        cert = f.read()
-    cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
+    if not ph_app.args.SSL_KEY or not ph_app.args.SSL_CERT:
+        ph_app.args.SSL_CERT, ph_app.args.SSL_KEY = \
+                get_self_signed_cert(ph_app.args.URI_HOST)
+    pem_data = open(ph_app.args.SSL_CERT, "br").read()
+    cert = x509.load_pem_x509_certificate(pem_data, default_backend())
     global FINGERPRINT
-    FINGERPRINT = cert.digest("sha1").decode()
-    reactor.listenSSL(args.SSL_PORT,
-                      site,
-                      ssl.DefaultOpenSSLContextFactory(
-                          args.SSL_KEY.encode(),
-                          args.SSL_CERT.encode(),
-                      ),
-                      interface=args.LHOST,
-                      )
+    FINGERPRINT = cert.fingerprint(hashes.SHA1()).hex()
+    reactor.listenSSL(
+        ph_app.args.SSL_PORT,
+        site,
+        ssl.DefaultOpenSSLContextFactory(
+            ph_app.args.SSL_KEY.encode(),
+            ph_app.args.SSL_CERT.encode(),
+        ),
+        interface=ph_app.args.LHOST,
+    )
+    log.info("Web interface accessible on http://%s:%d and https://%s:%d" % (
+        ph_app.args.URI_HOST,
+        ph_app.args.LPORT,
+        ph_app.args.URI_HOST,
+        ph_app.args.SSL_PORT,
+    ))
     reactor.run()

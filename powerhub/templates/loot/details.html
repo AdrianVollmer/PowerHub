@@ -46,7 +46,7 @@
 </table>
 {% endif %}
 
-{% if l.hive %}
+{% if l.hive["local_users"] %}
 <h6>Local Users</h6>
 <table class="table">
   <thead>
@@ -68,7 +68,9 @@
     {% endfor %}
   </tbody>
 </table>
+{% endif %}
 
+{% if l.hive["local_dccs"] %}
 <h6>Domain Cached Credentials</h6>
     <ul>
     {% for c in l.hive["dccs"] %}
