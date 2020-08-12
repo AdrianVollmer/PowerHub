@@ -54,8 +54,9 @@ class PowerHubApp(object):
         empty, sys.argv will be used (i.e. the command line arguments).
 
         """
-        if not env.powerhub_app:
-            env.powerhub_app = self
+        assert env.powerhub_app is None, \
+            "Instance of PowerHubApp already exists"
+        env.powerhub_app = self
 
         self.args = parse_args(argv)
         # log depends on args, so it must be imported after args have been
