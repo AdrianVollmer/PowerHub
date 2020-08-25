@@ -116,7 +116,6 @@ def compile_source(args, source_file, compile_cmd, formatter):
 
 
 def create_exe(args):
-    print(args)
     if args['32bit'] == 'true':
         mingw = 'i686-w64-mingw32-gcc'
     else:
