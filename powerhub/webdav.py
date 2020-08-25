@@ -4,7 +4,7 @@ from cheroot import wsgi
 from wsgidav.wsgidav_app import WsgiDAVApp
 from powerhub.directories import WEBDAV_RO, WEBDAV_BLACKHOLE, \
         UPLOAD_DIR, WEBDAV_DIR
-from powerhub.args import args
+from powerhub.env import powerhub_app as ph_app
 import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -16,7 +16,7 @@ logger.setLevel(logging.DEBUG)
 
 config = {
     "host": '127.0.0.1',
-    "port": args.WEBDAV_PORT,
+    "port": ph_app.args.WEBDAV_PORT,
     "dir_browser": {"enable": True},
     "http_authenticator": {
         # None: dc.simple_dc.SimpleDomainController(user_mapping)
