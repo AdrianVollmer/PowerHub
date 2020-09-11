@@ -6,6 +6,35 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
+    '-v', '--version', action='version', version='PowerHub ' + __version__
+)
+
+parser.add_argument(
+    '-d', '--debug', dest="DEBUG", default=False, action="store_true",
+    help=("show debug messages"),
+)
+
+parser.add_argument(
+    '-w', '--workspace-directory', dest="WORKSPACE_DIR", default=None,
+    help="use this directory to store project-related files"
+         " (default: XDG_DATA_HOME)"
+)
+
+auth_group = parser.add_mutually_exclusive_group()
+
+auth_group.add_argument(
+    '--auth', dest="AUTH", type=str,
+    default="",
+    help="define credentials for basic authentication in the form of"
+         " 'user:pass' (default: powerhub:<random>)"
+)
+
+auth_group.add_argument(
+    '--no-auth', dest="NOAUTH", default=False, action="store_true",
+    help=("disable basic authentication (not recommended)")
+)
+
+parser.add_argument(
     '-lh', '--lhost', default='0.0.0.0',
     dest="LHOST",
     type=str,
@@ -83,33 +112,6 @@ parser.add_argument(
     '--uri-path', dest="URI_PATH", type=str,
     default='',
     help="the URI path where the target can reach the server (default: '')"
-)
-
-parser.add_argument(
-    '-w', '--workspace-directory', dest="WORKSPACE_DIR", default=None,
-    help="use this directory to store project-related files"
-    " (default: XDG_DATA_HOME)"
-)
-
-parser.add_argument(
-    '-d', '--debug', dest="DEBUG", default=False, action="store_true",
-    help=("show debug messages"))
-
-auth_group = parser.add_mutually_exclusive_group()
-
-auth_group.add_argument(
-    '--auth', dest="AUTH", type=str,
-    default="",
-    help=("define credentials for basic authentication in the form of \
-          'user:pass' (default: powerhub:<random>)"))
-
-
-auth_group.add_argument(
-    '--no-auth', dest="NOAUTH", default=False, action="store_true",
-    help=("disable basic authentication (not recommended)"))
-
-parser.add_argument(
-    '-v', '--version', action='version', version='PowerHub ' + __version__
 )
 
 
