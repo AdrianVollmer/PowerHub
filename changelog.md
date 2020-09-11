@@ -1,6 +1,8 @@
 Version 1.7
 ===========
 
+* New feature: Place everything but the modules and generated certificates
+  in a workspace directory
 
 Version 1.6
 ===========
