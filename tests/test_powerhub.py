@@ -17,17 +17,18 @@ from test_init import TEST_URI, init_tests  # noqa
 init_tests()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def flask_app():
     temp_db = tempfile.mkstemp()[1]
     from powerhub.app import PowerHubApp
-    PowerHubApp([TEST_URI, '--no-auth'])
+    app = PowerHubApp([TEST_URI, '--no-auth'])
     from powerhub.flask import app as blueprint
     flask_app = flask.Flask(__name__, template_folder="../powerhub/templates")
     flask_app.register_blueprint(blueprint)
     flask_app = flask_app.test_client()
     yield flask_app
     os.remove(temp_db)
+    app.stop()
 
 
 def test_initial_redirection(flask_app):

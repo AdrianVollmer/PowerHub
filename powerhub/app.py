@@ -154,4 +154,6 @@ class PowerHubApp(object):
 
     def stop(self):
         from powerhub import reverseproxy
-        reverseproxy.reactor.stop()
+        if not reverseproxy.reactor._stopped:
+            reverseproxy.reactor.stop()
+        env.powerhub_app = None
