@@ -7,7 +7,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.serving import WSGIRequestHandler, _log
 from flask_socketio import SocketIO
 
-from powerhub.directories import DB_FILENAME
 from powerhub.args import parse_args
 import powerhub.env as env
 
@@ -88,6 +87,7 @@ class PowerHubApp(object):
 
     def init_flask(self):
         from powerhub.flask import app as flask_blueprint
+        from powerhub.directories import DB_FILENAME
         self.flask_app = Flask(__name__)
         self.flask_app.register_blueprint(flask_blueprint)
         self.flask_app.wsgi_app = ProxyFix(
@@ -154,4 +154,6 @@ class PowerHubApp(object):
 
     def stop(self):
         from powerhub import reverseproxy
-        reverseproxy.reactor.stop()
+        if not reverseproxy.reactor._stopped:
+            reverseproxy.reactor.stop()
+        env.powerhub_app = None

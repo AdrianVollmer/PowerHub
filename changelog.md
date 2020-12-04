@@ -1,3 +1,10 @@
+Version 1.7
+===========
+
+* New feature: Place everything but the modules and generated certificates
+  in a workspace directory
+* Change: Bypass new malware detection by Windows Defender
+
 Version 1.6
 ===========
 

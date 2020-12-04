@@ -1,3 +1,12 @@
+function {{symbol_name("xor")}} {
+    param(
+        [Byte]$a,
+        [Byte]$b
+  	)
+    return [Byte]((-bnot($a -band $b)) -band (-bnot((-bnot $a) -band (-bnot $b))))
+}
+
+
 function {{symbol_name("Decrypt-Code")}} {
     param(
         [Byte[]]$buffer,
@@ -31,7 +40,7 @@ function {{symbol_name("Decrypt-Code")}} {
         $s[$i] = $s[$j];
         $s[$j] = $temp;
         [int]$t = ($s[$i] + $s[$j]) % 256;
-        $buffer[$x] = $buffer[$x] -bxor $s[$t];
+        $buffer[$x] = {{symbol_name("xor")}} $buffer[$x] $s[$t];
     }
 
     $buffer

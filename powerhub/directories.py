@@ -1,20 +1,25 @@
 import os
 
+from powerhub.env import powerhub_app as ph_app
+
+
 _HOME = os.path.expanduser('~')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 XDG_DATA_HOME = os.path.join(
     os.environ.get('XDG_DATA_HOME') or os.path.join(_HOME, '.local', 'share'),
     'powerhub',
 )
-UPLOAD_DIR = os.path.join(XDG_DATA_HOME, "upload")
-LOOT_DIR = os.path.join(XDG_DATA_HOME, "loot")
-MOD_DIR = os.path.join(XDG_DATA_HOME, 'modules')
-STATIC_DIR = os.path.join(XDG_DATA_HOME, 'static')
-WEBDAV_DIR = os.path.join(XDG_DATA_HOME, 'webdav')
-WEBDAV_RO = os.path.join(XDG_DATA_HOME, 'webdav_ro')
+WORKSPACE_DIR = ph_app.args.WORKSPACE_DIR or XDG_DATA_HOME
+
+UPLOAD_DIR = os.path.join(WORKSPACE_DIR, "upload")
+LOOT_DIR = os.path.join(WORKSPACE_DIR, "loot")
+STATIC_DIR = os.path.join(WORKSPACE_DIR, 'static')
+WEBDAV_DIR = os.path.join(WORKSPACE_DIR, 'webdav')
+WEBDAV_RO = os.path.join(WORKSPACE_DIR, 'webdav_ro')
 WEBDAV_BLACKHOLE = os.path.join(WEBDAV_DIR, 'blackhole')
 WEBDAV_PUBLIC = os.path.join(WEBDAV_DIR, 'public')
-SHELL_LOG_DIR = os.path.join(XDG_DATA_HOME, 'shell_logs')
+
+MOD_DIR = os.path.join(XDG_DATA_HOME, 'modules')
 CERT_DIR = os.path.join(XDG_DATA_HOME, 'ssl')
 
 
@@ -39,11 +44,10 @@ directories = [
     WEBDAV_RO,
     WEBDAV_BLACKHOLE,
     WEBDAV_PUBLIC,
-    SHELL_LOG_DIR,
     CERT_DIR,
 ]
 
 for d in directories:
     ensure_dir_exists(d)
 
-DB_FILENAME = os.path.join(XDG_DATA_HOME, "powerhub_db.sqlite")
+DB_FILENAME = os.path.join(WORKSPACE_DIR, "powerhub_db.sqlite")
