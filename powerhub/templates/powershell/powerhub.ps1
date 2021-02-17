@@ -369,14 +369,18 @@ This might trigger the anti-virus.
 
 A PowerHub module object of type 'exe' (must be a .NET exe).
 
+.PARAMETER Arguments
+
+An array of strings that represent the arguments which will be passed to the executable
+
 .EXAMPLE
 
-Load-HubModule SeatBelt | Run-DotNETExe -Arguments "system"
+Load-HubModule SeatBelt | Run-DotNETExe -Arguments "-group=all", "-full", "-outputfile=seatbelt.txt"
 
 Description
 -----------
 Load and execute the .NET binary whose name matches "SeatBelt" in memory with
-the parameter "system"
+several parameters
 
 .EXAMPLE
 
