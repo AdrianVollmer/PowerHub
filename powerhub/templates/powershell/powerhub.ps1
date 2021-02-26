@@ -686,7 +686,7 @@ Return some basic information about the underlying system
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     $IsAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-    if ($PS_VERSION -eq 2) { $admins = "" } else {
+    if ($PS_VERSION -lt 5) { $admins = "?" } else {
         $admins = (Get-LocalGroupMember -Sid S-1-5-32-544);
     }
     return  New-Object psobject -Property @{
