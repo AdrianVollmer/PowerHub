@@ -1,0 +1,3 @@
+{%- macro obfuscate(data) -%}
+({{symbol_name("Decrypt-String")}} "{{data|rc4encrypt}}")
+{%- endmacro -%}
