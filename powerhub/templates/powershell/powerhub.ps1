@@ -785,7 +785,7 @@ The following functions are available (some with short aliases):
   * Run-Shellcode (rsh)
   * PushTo-Hub (pth)
   * Mount-Webdav (mwd)
-  * Unmount-Webdav (uwd)
+  * Unmount-Webdav (umwd)
 
 Use 'Get-Help' to learn more about those functions.
 "@
