@@ -1,3 +1,9 @@
+Version 1.8-1
+=============
+
+* Fix: Make compatible with PS2
+* Fix: Bypass newest Windows Defender
+
 Version 1.8
 ===========
 
