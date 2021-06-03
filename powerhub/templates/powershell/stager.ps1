@@ -7,12 +7,12 @@ ${{symbol_name("KEY")}} = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 
 function {{symbol_name("Decrypt-String")}} {
     param(
-        [System.String]$string, [Bool]$Code=$False
+        [System.String]${{symbol_name("string")}}, [Bool]${{symbol_name("Code")}}=$False
   	)
-    $result = [System.Convert]::FromBase64String($string)
-    $result = {{symbol_name("Decrypt-Code")}} $result ${{symbol_name("KEY")}}
-    if (-not $Code) { $result = [System.Text.Encoding]::UTF8.GetString($result) }
-    $result
+    ${{symbol_name("result")}} = [System.Convert]::FromBase64String(${{symbol_name("string")}})
+    ${{symbol_name("result")}} = {{symbol_name("Decrypt-Code")}} ${{symbol_name("result")}} ${{symbol_name("KEY")}}
+    if (-not ${{symbol_name("Code")}}) { ${{symbol_name("result")}} = [System.Text.Encoding]::UTF8.GetString(${{symbol_name("result")}}) }
+    ${{symbol_name("result")}}
 }
 
 {% if exec_clipboard_entry %}
