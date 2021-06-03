@@ -2,7 +2,9 @@
 Load second amsi-bypass: rasta mouse. It bypasses the process-specific AMSI.
 https://s3cur3th1ssh1t.github.io/Powershell-and-the-.NET-AMSI-Interface/
 #}
-{% include "powershell/amsi/rasta-mouse.ps1" %}
+if ($PSVersionTable.PSVersion.Major -ge 5) {
+    {% include "powershell/amsi/rasta-mouse.ps1" %}
+}
 
 Write-Output @"
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
