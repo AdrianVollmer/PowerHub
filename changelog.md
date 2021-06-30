@@ -1,3 +1,9 @@
+Version 1.8-2
+=============
+
+* Fix: Defeat Defender
+* Fix: Update socket.io
+
 Version 1.8-1
 =============
 
