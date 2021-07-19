@@ -66,7 +66,7 @@ function Unzip-Code {
 function Update-HubModules {
     $ModuleList = Transport-String "ml"
     Invoke-Expression $ModuleList
-    $Global:Modules = $Modules
+    $Global:PowerHubModules = $PowerHubModules
 }
 
 function Import-HubModule {
@@ -97,7 +97,7 @@ function Convert-IntStringToArray ($s) {
             $indices += [Int]$limits[0]
         } else {
             if (-not $limits[0]) { $limits[0] = 0}
-            if (-not $limits[1]) { $limits[1] = $Modules.length-1}
+            if (-not $limits[1]) { $limits[1] = $PowerHubModules.length-1}
             $indices += [Int]($limits[0]) .. [Int]($limits[1])
         }
     }
@@ -111,8 +111,7 @@ function List-HubModules {
 Lists all modules that are available via the hub.
 
 #>
-    # $Modules | Out-String
-    $Modules | Format-Table -AutoSize -Property N,Type,Name,Loaded
+    $PowerHubModules | Format-Table -AutoSize -Property N,Type,Name,Loaded
 }
 
 function Get-HubModule {
@@ -136,13 +135,13 @@ See help of Load-HubModule.
     if ($Expression -match "^[0-9-,]+$") {
         $indices = Convert-IntStringToArray($Expression)
     } else {
-        $indices = [Int[]]($Modules | Where { $_.Name -match $Expression } | % {$_.N})
+        $indices = [Int[]]($PowerHubModules | Where { $_.Name -match $Expression } | % {$_.N})
     }
 
     $result = @()
     foreach ($i in $indices) {
-        if ($i -lt $Modules.length -and $i -ge 0) {
-            $result += $Modules[$i]
+        if ($i -lt $PowerHubModules.length -and $i -ge 0) {
+            $result += $PowerHubModules[$i]
         }
     }
     return $result
