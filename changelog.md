@@ -1,3 +1,8 @@
+Version 1.9
+===========
+
+* Add: Separate AMSI Bypass
+
 Version 1.8-2
 =============
 

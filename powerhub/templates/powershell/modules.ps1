@@ -1,4 +1,4 @@
-$Modules = @()
+$PowerHubModules = @()
 {% if modules %}
 {% for m in modules %}
     $m = New-Object -TypeName PSObject
@@ -16,6 +16,6 @@ $Modules = @()
     $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet',[string[]]$defaultDisplaySet)
     $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
     $m | Add-Member -MemberType ScriptMethod -Name ToString -Value {$this.Name} -PassThru -Force
-    $Modules += $m
+    $PowerHubModules += $m
 {% endfor %}
 {% endif %}

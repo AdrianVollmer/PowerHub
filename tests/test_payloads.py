@@ -4,19 +4,31 @@
 import os
 import sys
 
-from test_init import execute_cmd
-
 import pytest
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
 from test_init import TEST_URI, TEST_COMMANDS, init_tests, execute_cmd  # noqa
 
+init_tests()
+
 
 @pytest.fixture
 def get_args():
+    from collections import namedtuple
+    import powerhub.env
+    Args = namedtuple(
+        'Args',
+        'URI_HOST URI_PORT URI_PATH DEBUG WORKSPACE_DIR LPORT',
+    )
+    args = Args('testhost', 1234, 'testpath', True, '/tmp', 9999)
+    PHApp = namedtuple('PHApp', 'args')
+    ph_app = PHApp(args)
+    powerhub.env.powerhub_app = ph_app
+
     args = {
         "Launcher": None,
         "Amsi": "reflection",
+        "SeparateAMSI": "true",
         "Transport": "http",
         "ClipExec": "none",
         "Proxy": "false",

