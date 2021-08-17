@@ -12,6 +12,7 @@ setuptools.setup(
     long_description=open('README.md', 'r').read(),
     long_description_content_type='text/markdown',
     packages=setuptools.find_packages(),
+    include_package_data=True,
     entry_points={
         'console_scripts': [
             'powerhub=powerhub.__main__:main'
