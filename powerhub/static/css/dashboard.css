@@ -112,3 +112,8 @@ body {
 .card-id {
   float: right;
 }
+
+.multiline-table {
+    table-layout: fixed;
+    word-wrap: break-word;
+}
