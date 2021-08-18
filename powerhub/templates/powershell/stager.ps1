@@ -18,14 +18,7 @@ function {{symbol_name("Decrypt-String")}} {
     ${{symbol_name("result")}}
 }
 
-{% if exec_clipboard_entry %}
-    ${{symbol_name("clip_entry")}} = "{{exec_clipboard_entry|rc4encrypt}}"
-{% else %}
-    ${{symbol_name("clip_entry")}} = ""
-{% endif %}
-
 if ($PSVersionTable.PSVersion.Major -ge 5) {
-    {% if amsibypass %}
         try {
         {% include amsibypass %}
         } catch {
