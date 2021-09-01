@@ -1,3 +1,8 @@
+Version 1.10
+============
+
+* Fix: When using `SeparateAMSI`, the clipboard entry was ignored
+
 Version 1.9
 ===========
 
