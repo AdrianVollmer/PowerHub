@@ -88,7 +88,7 @@ class PowerHubApp(object):
     def init_flask(self):
         from powerhub.flask import app as flask_blueprint
         from powerhub.directories import DB_FILENAME
-        self.flask_app = Flask(__name__)
+        self.flask_app = Flask(__name__, static_url_path='/invalid')
         self.flask_app.register_blueprint(flask_blueprint)
         self.flask_app.wsgi_app = ProxyFix(
             self.flask_app.wsgi_app,

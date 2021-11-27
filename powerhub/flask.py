@@ -499,7 +499,7 @@ def reload_modules():
     return ('OK', 200)
 
 
-@app.route('/static/<filename>')
+@app.route('/static/<path:filename>')
 def server_static(filename):
     try:
         return send_from_directory(STATIC_DIR,
