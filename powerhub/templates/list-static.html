@@ -1,0 +1,34 @@
+{% extends "index.html" %}
+{% block liststatic_active %}active{% endblock %}
+{% block liststatic_selected %}selected{% endblock %}
+
+{% macro dir_list(dir, prefix) %}
+<ul style="list-style-type: none">
+{% for file in dir.files %}
+    <li><span data-feather="file"></span> <a href="{{ prefix }}/{{ file }}" target="_blank">{{ file }}</a></li>
+{% endfor %}
+{% for subdir in dir.subdirs %}
+    <li><span data-feather="folder"></span> {{ subdir.name }}/
+        {{ dir_list(subdir, prefix+"/"+subdir.name) }}
+    </li>
+{% endfor %}
+</ul>
+{% endmacro %}
+
+{% block content %}
+<p>
+<h2>Static Files
+    <sup>
+        <a href="#"
+           title="What's this?"
+           data-toggle="popover"
+           data-trigger="focus"
+           data-html="true"
+           data-content="{{help.liststatic_main}}">
+           <span data-feather="help-circle"></span>
+        </a>
+    </sup>
+</h2>
+{{ dir_list(rootdir, "static") }}
+</p>
+{% endblock %}

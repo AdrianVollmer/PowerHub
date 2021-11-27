@@ -499,6 +499,27 @@ def reload_modules():
     return ('OK', 200)
 
 
+@app.route('/list-static')
+@requires_auth
+def list_static():
+    def get_dir(dir_name):
+        directory = {'name': os.path.basename(dir_name), 'files': [], 'subdirs': []}
+        with os.scandir(dir_name) as it:
+            for x in it:
+                if x.is_file():
+                    directory['files'].append(x.name)
+                if x.is_dir():
+                    subdir = get_dir(os.path.join(dir_name, x.name))
+                    directory['subdirs'].append(subdir)
+        directory['files'].sort()
+        directory['subdirs'].sort(key=lambda x: x['name'])
+        return directory
+    context = {
+        'rootdir': get_dir(STATIC_DIR)
+    }
+    return render_template('list-static.html', **context)
+
+
 @app.route('/static/<path:filename>')
 def server_static(filename):
     try:
