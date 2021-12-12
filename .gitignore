@@ -8,4 +8,5 @@ tests/helpers/test_config.py
 *.pem
 *.pyc
 __pycache__
+*.egg-info
 .tox
