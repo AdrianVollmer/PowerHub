@@ -404,7 +404,7 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
         [PSTypeName("PowerHub.Module")] $Module,
 
-        [parameter(Mandatory=$false)] [String[]] $Arguments
+        [parameter(Mandatory=$false)] [String[]] $Arguments = @()
     )
 
     foreach ($m in $Module) {
