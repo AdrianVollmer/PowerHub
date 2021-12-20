@@ -412,7 +412,16 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
         $a = [Reflection.Assembly]::Load([byte[]]$code)
         $al = New-Object -TypeName System.Collections.ArrayList
         $al.add($Arguments)
-        $a.EntryPoint.Invoke($Null, $al.ToArray());
+        $OldConsoleOut=[Console]::Out
+        $StringWriter=New-Object IO.StringWriter
+        [Console]::SetOut($StringWriter)
+        try {
+            $a.EntryPoint.Invoke($Null, $al.ToArray())
+        } finally {
+            [Console]::SetOut($OldConsoleOut)
+        }
+        $Results=$StringWriter.ToString()
+        $Results
     }
 }
 
