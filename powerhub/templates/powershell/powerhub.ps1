@@ -704,8 +704,13 @@ Return some basic information about the underlying system
     $IsAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
     try {
+        $Groups = (New-Object System.DirectoryServices.DirectorySearcher("(&(objectCategory=User)(samAccountName=$($env:username)))")).FindOne().GetDirectoryEntry().memberOf
+    } catch { $Groups = @() }
+
+    try {
         $admins = (Get-LocalGroupMember -Sid S-1-5-32-544);
     } catch { $admins = '?' }
+
     return  New-Object psobject -Property @{
         name = $SysInfo.name.split('|')[0];
         arch = $SysInfo.OSArchitecture;
@@ -716,6 +721,7 @@ Return some basic information about the underlying system
         username = $env:username;
         userdomain = $env:userdomain;
         isadmin = $IsAdmin;
+        groups = $Groups;
         admins = $admins;
         releaseid = (Get-Item "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion").GetValue('ReleaseID');
         IPs = $IPs
