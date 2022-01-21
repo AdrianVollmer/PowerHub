@@ -377,6 +377,14 @@ This might trigger the anti-virus.
 
 A PowerHub module object of type 'exe' (must be a .NET exe).
 
+.PARAMETER OutFile
+
+Path to a file where the output is stored; by default output is printed to console
+
+The console is different than stdout for complicated PowerShell reasons.
+Use `-OutFile "-"` to redirect the output to stdout, i.e. the information stream.
+However, the output will be delayed and only printed when the program finished.
+
 .PARAMETER Arguments
 
 An array of strings that represent the arguments which will be passed to the executable
@@ -404,6 +412,8 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
         [PSTypeName("PowerHub.Module")] $Module,
 
+        [parameter(Mandatory=$false)] [String] $OutFile,
+
         [parameter(Mandatory=$false)] [String[]] $Arguments = @()
     )
 
@@ -412,16 +422,25 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
         $a = [Reflection.Assembly]::Load([byte[]]$code)
         $al = New-Object -TypeName System.Collections.ArrayList
         $al.add($Arguments)
-        $OldConsoleOut=[Console]::Out
-        $StringWriter=New-Object IO.StringWriter
-        [Console]::SetOut($StringWriter)
-        try {
+        if ($OutFile) {
+            $OldConsoleOut=[Console]::Out
+            if ($OutFile -eq '-') {
+                $StreamWriter=New-Object IO.StringWriter($OutFile)
+            } else {
+                $StreamWriter=New-Object IO.StreamWriter($OutFile)
+            }
+            [Console]::SetOut($StreamWriter)
+            try {
+                $a.EntryPoint.Invoke($Null, $al.ToArray())
+            } finally {
+                [Console]::SetOut($OldConsoleOut)
+            }
+        } else{
             $a.EntryPoint.Invoke($Null, $al.ToArray())
-        } finally {
-            [Console]::SetOut($OldConsoleOut)
         }
-        $Results=$StringWriter.ToString()
-        $Results
+        if ($OutFile -eq '-') {
+            $StreamWriter.toString()
+        }
     }
 }
 
