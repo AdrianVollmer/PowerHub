@@ -503,7 +503,11 @@ def reload_modules():
 @requires_auth
 def list_static():
     def get_dir(dir_name):
-        directory = {'name': os.path.basename(dir_name), 'files': [], 'subdirs': []}
+        directory = {
+            'name': os.path.basename(dir_name),
+            'files': [],
+            'subdirs': [],
+        }
         with os.scandir(dir_name) as it:
             for x in it:
                 if x.is_file():
