@@ -23,7 +23,7 @@ def flask_app():
     from powerhub.app import PowerHubApp
     app = PowerHubApp([TEST_URI, '--no-auth'])
     from powerhub.flask import app as blueprint
-    flask_app = flask.Flask(__name__, template_folder="../powerhub/templates")
+    flask_app = flask.Flask(__name__, static_url_path='/invalid', template_folder="../powerhub/templates")
     flask_app.register_blueprint(blueprint)
     flask_app = flask_app.test_client()
     yield flask_app

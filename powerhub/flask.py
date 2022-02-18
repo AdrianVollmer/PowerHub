@@ -20,7 +20,7 @@ from powerhub.stager import modules, build_cradle, callback_urls, \
 from powerhub.upload import save_file, get_filelist
 from powerhub.directories import UPLOAD_DIR, XDG_DATA_HOME, STATIC_DIR
 from powerhub.payloads import create_payload
-from powerhub.tools import encrypt, compress
+from powerhub.tools import encrypt_rc4, encrypt_aes, compress
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
@@ -68,7 +68,7 @@ def nodebug(msg):
 @app.add_app_template_filter
 def rc4encrypt(msg):
     """This is a function for encrypting strings in jinja2 templates"""
-    return b64encode(encrypt(msg.encode(), ph_app.key)).decode()
+    return b64encode(encrypt_rc4(msg.encode(), ph_app.key)).decode()
 
 
 @app.add_app_template_filter
@@ -77,7 +77,8 @@ def rc4byteencrypt(data):
 
     data must be hexascii encoded.
     """
-    return b64encode(encrypt(b64encode(unhexlify(data)), ph_app.key)).decode()
+    encrypted = encrypt_rc4(b64encode(unhexlify(data)), ph_app.key)
+    return b64encode(encrypted).decode()
 
 
 @app.route('/')
@@ -251,9 +252,10 @@ def payload_m():
     if n < len(modules):
         modules[n].activate()
         if 'c' in request.args:
-            resp = b64encode(encrypt(compress(modules[n].code), ph_app.key)),
+            encrypted = encrypt_aes(compress(modules[n].code), ph_app.key)
+            resp = b64encode(encrypted),
         else:
-            resp = b64encode(encrypt(modules[n].code, ph_app.key)),
+            resp = b64encode(encrypt_aes(modules[n].code, ph_app.key)),
         return Response(
             resp,
             content_type='text/plain; charset=utf-8'
@@ -316,7 +318,7 @@ def payload_h():
                     "powershell/powerhub.ps1",
                     **context,
     ).encode()
-    result = b64encode(encrypt(result, ph_app.key))
+    result = b64encode(encrypt_rc4(result, ph_app.key))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
@@ -332,7 +334,7 @@ def hub_modules():
                     "powershell/modules.ps1",
                     **context,
     ).encode()
-    result = b64encode(encrypt((result), ph_app.key))
+    result = b64encode(encrypt_aes((result), ph_app.key))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
@@ -499,7 +501,32 @@ def reload_modules():
     return ('OK', 200)
 
 
-@app.route('/static/<filename>')
+@app.route('/list-static')
+@requires_auth
+def list_static():
+    def get_dir(dir_name):
+        directory = {
+            'name': os.path.basename(dir_name),
+            'files': [],
+            'subdirs': [],
+        }
+        with os.scandir(dir_name) as it:
+            for x in it:
+                if x.is_file():
+                    directory['files'].append(x.name)
+                if x.is_dir():
+                    subdir = get_dir(os.path.join(dir_name, x.name))
+                    directory['subdirs'].append(subdir)
+        directory['files'].sort()
+        directory['subdirs'].sort(key=lambda x: x['name'])
+        return directory
+    context = {
+        'rootdir': get_dir(STATIC_DIR)
+    }
+    return render_template('list-static.html', **context)
+
+
+@app.route('/static/<path:filename>')
 def server_static(filename):
     try:
         return send_from_directory(STATIC_DIR,
