@@ -126,14 +126,9 @@ def encrypt_rc4(data, key):
 def encrypt_aes(data, key):
     """Encrypt AES128 with IV"""
 
-    def pad(s):
-        if len(s) % 16 == 0:
-            return s
-        databytes = bytearray(s)
-        padding_required = 16 - (len(databytes) % 16)
-        databytes.extend([padding_required] * padding_required)
-        assert len(databytes) % 16 == 0
-        return bytes(databytes)
+    # Use PKCS7 padding
+    def pad(m):
+        return m+bytes([16-len(m) % 16]*(16-len(m) % 16))
 
     BLOCK_SIZE = 16
     iv = os.urandom(BLOCK_SIZE)
@@ -143,7 +138,8 @@ def encrypt_aes(data, key):
                     modes.CBC(iv),
                     backend=default_backend())
     encryptor = cipher.encryptor()
-    result = encryptor.update(pad(data)) + encryptor.finalize()
+    data = pad(data)
+    result = encryptor.update(data) + encryptor.finalize()
 
     return iv + result
 
@@ -151,6 +147,7 @@ def encrypt_aes(data, key):
 def decrypt_aes(data, key):
     """Decrypt AES128 with IV"""
 
+    # Use PKCS7 padding
     def unpad(s):
         return s[:-ord(s[len(s)-1:])]
 
