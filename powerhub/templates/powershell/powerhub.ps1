@@ -11,7 +11,7 @@ Write-Output @"
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
  |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
  |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
-                            written by Adrian Vollmer, 2018-2021
+                            written by Adrian Vollmer, 2018-2022
 Run 'Help-PowerHub' for help
 "@
 
