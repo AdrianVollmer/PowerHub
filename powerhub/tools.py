@@ -102,7 +102,7 @@ def compress(bytes):
     return out.getvalue()
 
 
-def encrypt(data, key):
+def encrypt_rc4(data, key):
     """RC4"""
 
     S = list(range(256))
@@ -121,6 +121,31 @@ def encrypt(data, key):
         out.append(char ^ S[(S[i] + S[j]) % 256])
 
     return (bytes(out))
+
+
+def encrypt_aes(data, key):
+    """Encrypt AES128 with IV"""
+
+    def pad(s):
+        if len(s) % 16 == 0:
+            return s
+        databytes = bytearray(s)
+        padding_required = 16 - (len(databytes) % 16)
+        databytes.extend([padding_required] * padding_required)
+        assert len(databytes) % 16 == 0
+        return bytes(databytes)
+
+    BLOCK_SIZE = 16
+    iv = os.urandom(BLOCK_SIZE)
+    key = key[:BLOCK_SIZE].encode()
+
+    cipher = Cipher(algorithms.AES(key),
+                    modes.CBC(iv),
+                    backend=default_backend())
+    encryptor = cipher.encryptor()
+    result = encryptor.update(pad(data)) + encryptor.finalize()
+
+    return iv + result
 
 
 def decrypt_aes(data, key):

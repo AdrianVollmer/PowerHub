@@ -4,7 +4,7 @@ import os
 
 import jinja2
 
-from powerhub.tools import encrypt, generate_random_key
+from powerhub.tools import encrypt_aes, generate_random_key
 from powerhub.stager import build_cradle
 from powerhub.logging import log
 from powerhub.obfuscation import symbol_name
@@ -63,7 +63,7 @@ def create_vbs(args):
     cmd = ('CreateObject("WScript.Shell").' +
            'exec("%s")') % cmd
     key = generate_random_key(16)
-    cmd = encrypt(cmd.encode(), key)
+    cmd = encrypt_aes(cmd.encode(), key)
     vbs_code = load_template(
         'powerhub.vbs',
         HEX_CODE=' '.join('%02X' % c for c in cmd),
@@ -85,7 +85,7 @@ def compile_source(args, source_file, compile_cmd, formatter):
     cmd = build_cradle(args)
     size = len(cmd)
     key = generate_random_key(16)
-    cmd = encrypt(cmd.encode(), key)
+    cmd = encrypt_aes(cmd.encode(), key)
     c_code = load_template(
         source_file,
         CMD=formatter(cmd),
