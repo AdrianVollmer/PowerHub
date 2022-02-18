@@ -2,6 +2,10 @@ Version 1.10
 ============
 
 * Fix: When using `SeparateAMSI`, the clipboard entry was ignored
+* Change: Use AES instead of slow RC4 after the AMSI bypass has been applied
+* Add: Parameter `-OutFile` to `Run-DotNETExe`
+* Fix: Set default argument to `Run-DotNETExe`
+* Add: static files view (@exploide)
 
 Version 1.9
 ===========
