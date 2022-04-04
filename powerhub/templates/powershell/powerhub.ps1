@@ -679,7 +679,11 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 {{'Write-Debug "Pushing $File..."'|debug}}
                 $abspath = (Resolve-Path $file).path
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
-                if ($Name) { $filename = $name } else { $filename = $file }
+                if ($Name) {
+                    $filename = $name
+                } else {
+                    $filename = Split-Path $file -leaf
+                }
 
                 Send-Bytes -LootId $LootId $fileBin $filename
 
