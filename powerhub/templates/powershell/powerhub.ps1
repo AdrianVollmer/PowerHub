@@ -850,6 +850,7 @@ The following functions are available (some with short aliases):
   * Load-HubModule (lhm)
   * Get-HubModule (ghm)
   * Update-HubModules (uhm)
+  * Get-SysInfo
   * Get-Loot (glo)
   * Run-Exe (re)
   * Run-DotNETExe (rdne)
