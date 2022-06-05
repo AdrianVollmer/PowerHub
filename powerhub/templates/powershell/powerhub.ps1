@@ -101,8 +101,9 @@ function Unzip-Code {
 
 function Update-HubModules {
     $ModuleList = Transport-String "ml"
-    Invoke-Expression "$ModuleList"
+    Invoke-Expression "$ModuleList"  | Out-Null
     $Global:PowerHubModules = $PowerHubModules
+    $PowerHubModules | Format-Table -AutoSize -Property N,Type,Name,Loaded
 }
 
 function Import-HubModule {
