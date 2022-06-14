@@ -300,6 +300,7 @@ def payload_0():
         "amsibypass": amsi_template,
         "symbol_name": symbol_name,
         "exec_clipboard_entry": exec_clipboard_entry,
+        "VERSION": __version__,
     }
     result = render_template(
                     "powershell/stager.ps1",

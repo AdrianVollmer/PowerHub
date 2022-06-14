@@ -7,11 +7,14 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
     {% include "powershell/disable-logging.ps1" %}
 }
 
+$FooterLeft = "{{VERSION}}"
+$FooterRight = "written by Adrian Vollmer, 2018-2022"
+$SpaceBuffer = " "*(64-2-$FooterLeft.Length-$FooterRight.Length)
 Write-Output @"
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
  |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
  |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
-                            written by Adrian Vollmer, 2018-2022
+$($FooterLeft, $SpaceBuffer, $FooterRight)
 Run 'Help-PowerHub' for help
 "@
 
