@@ -35,7 +35,7 @@ setuptools.setup(
     ],
     python_requires='>=3',
     extras_require={
-        'tests': ['pytest', 'beautifulsoup4', 'lxml']
+        'tests': ['pytest', 'beautifulsoup4', 'lxml', 'requests']
     },
     classifiers=[
         'Programming Language :: Python :: 3',
