@@ -10,3 +10,4 @@ tests/helpers/test_config.py
 __pycache__
 *.egg-info
 .tox
+build/
