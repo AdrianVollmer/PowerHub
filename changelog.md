@@ -1,7 +1,8 @@
 Version 1.11
 ============
 
-* Merge `Load-HubModule` into `Get-HubModule`
+* Change: Merge `Load-HubModule` into `Get-HubModule`
+* Change: Determine module type by magic bytes instead of directories
 * Add: aliases for PE and .NET executables
 
 Version 1.10
