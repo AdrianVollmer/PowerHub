@@ -5,11 +5,12 @@ from urllib.parse import urlparse
 from powerhub.directories import MOD_DIR
 
 repositories = {
-    "AdrianVollmer/PowerSploit":
-        "https://github.com/AdrianVollmer/PowerSploit.git",
-    "BloodHound": "https://github.com/BloodHoundAD/BloodHound.git",
+    "ZeroDayLab/PowerSploit": "https://github.com/ZeroDayLab/PowerSploit.git",
+    "SharpHound": "https://github.com/BloodHoundAD/BloodHound/raw/master/Collectors/SharpHound.exe",  # noqa
     "ASREPRoast": "https://github.com/HarmJ0y/ASREPRoast.git",
     "Nishang": "https://github.com/samratashok/nishang.git",
+    "PowerSharpPack": "https://github.com/S3cur3Th1sSh1t/PowerSharpPack",
+    "Ghostpack Binaries": "https://github.com/r3motecontrol/Ghostpack-CompiledBinaries",  # noqa
 }
 
 
