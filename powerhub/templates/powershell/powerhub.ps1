@@ -103,6 +103,7 @@ function Unzip-Code {
 }
 
 function Update-HubModules {
+    Write-Verbose "Updating module list..."
     $ModuleList = Transport-String "ml"
     Invoke-Expression "$ModuleList"  | Out-Null
     $Global:PowerHubModules = $PowerHubModules
@@ -121,9 +122,9 @@ function Import-HubModule {
     New-Module -ScriptBlock $sb | Out-Null
 
     if ($?){
-        Write-Verbose ("[*] {0} imported." -f $Module.Name)
+        Write-Verbose ("{0} imported." -f $Module.Name)
     } else {
-        Write-Error ("[*] Failed to import {0}" -f $Module.Name)
+        Write-Error ("Failed to import {0}" -f $Module.Name)
     }
 }
 
