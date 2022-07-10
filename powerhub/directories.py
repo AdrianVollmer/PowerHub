@@ -48,3 +48,4 @@ for d in directories:
     ensure_dir_exists(d)
 
 DB_FILENAME = os.path.join(WORKSPACE_DIR, "powerhub_db.sqlite")
+DB_FILENAME = os.path.abspath(DB_FILENAME)
