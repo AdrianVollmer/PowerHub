@@ -82,6 +82,7 @@ class Module(object):
             "N": self.n,
             "Type": self.type,
             "Loaded": "$True" if self.code else "$False",
+            "Alias": "$Null",
         }
 
 

@@ -1,3 +1,9 @@
+Version 1.11
+============
+
+* Merge `Load-HubModule` into `Get-HubModule`
+* Add: aliases for PE and .NET executables
+
 Version 1.10
 ============
 

