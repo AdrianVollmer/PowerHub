@@ -37,7 +37,7 @@ def git_clone(url):
     """Installs a git repository"""
     parsed_url = urlparse(url)
     basename = os.path.basename(parsed_url.path)
-    dest_dir = os.path.join(MOD_DIR, 'ps1', basename[:-4])
+    dest_dir = os.path.join(MOD_DIR, basename[:-4])
     if os.path.isdir(dest_dir):
         raise Exception("Directory already exists: %s" % dest_dir)
     subprocess.check_output(['git', 'clone', '--depth', '1', url, dest_dir],
@@ -48,10 +48,9 @@ def download(url):
     """Downloads a module that is not a git repository"""
     parsed_url = urlparse(url)
     basename = os.path.basename(parsed_url.path)
-    extension = basename[-3:]
     response = urllib.request.urlopen(url)
     data = response.read()
-    filename = os.path.join(MOD_DIR, extension, basename)
+    filename = os.path.join(MOD_DIR, basename)
     if os.path.isfile(filename):
         raise Exception("File already exists: %s" % filename)
     with open(filename, 'wb') as f:

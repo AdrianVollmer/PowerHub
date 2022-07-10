@@ -26,6 +26,7 @@ setuptools.setup(
         'flask-sqlalchemy>=2.1',
         'pyOpenSSL',
         'pypykatz>=0.2.2',
+        'python-magic',
         'service_identity',
         'twisted>=18.9.0',
         'watchdog',

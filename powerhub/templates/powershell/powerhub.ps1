@@ -275,15 +275,15 @@ Executes a loaded exe module in memory using Invoke-ReflectivePEInjection, which
 
 .PARAMETER Module
 
-A PowerHub module object of type 'exe'.
+A PowerHub module object of type 'pe'.
 
 .PARAMETER ExeArgs
 
-A string containing arguments which are passed to the exe module.
+A string containing arguments which are passed to the PE module.
 
 .PARAMETER OnDisk
 
-If this switch is enabled, the exe module will be copied to disk and executed conventionally.
+If this switch is enabled, the PE module will be copied to disk and executed conventionally.
 
 WARNING: Endpoint protection WILL catch malware this way.
 
@@ -294,7 +294,7 @@ Run-Exe $hubModule
 Description
 -----------
 
-Execute some Hub Module of type 'exe' in memory.
+Execute some Hub Module of type 'pe' in memory.
 
 .EXAMPLE
 
@@ -303,7 +303,7 @@ Load-HubModule meterpreter.exe | Run-Exe
 Description
 -----------
 
-Load the exe module with the name 'meterpreter.exe' in memory and run it.
+Load the PE module with the name 'meterpreter.exe' in memory and run it.
 
 .EXAMPLE
 
@@ -375,7 +375,7 @@ Load-HubModule meterpreter.exe | Save-HubModule
 Description
 -----------
 
-Load the exe module with the name 'meterpreter.exe' in memory and save it to disk
+Load the PE module with the name 'meterpreter.exe' in memory and save it to disk
 #>
     Param(
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
@@ -410,7 +410,7 @@ This might trigger the anti-virus.
 
 .PARAMETER Module
 
-A PowerHub module object of type 'exe' (must be a .NET exe).
+A PowerHub module object of type 'dotnet'.
 
 .PARAMETER OutFile
 
