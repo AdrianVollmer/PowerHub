@@ -54,12 +54,12 @@ def import_modules():
                 file_type = magic.from_buffer(buffer)
                 mime = magic.from_buffer(buffer, mime=True)
                 mod_type = get_module_type(fname, file_type, mime)
+                if not mod_type:
+                    continue
                 try:
                     buffer += f.read()
                 except Exception:
                     pass
-            if not mod_type:
-                continue
             if mod_type == 'ps1':
                 buffer = sanitize_ps1(buffer, file_type)
             log.debug("Imported module (%s): %s" % (filename, mod_type))
