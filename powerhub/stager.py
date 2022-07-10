@@ -83,7 +83,6 @@ class Module(object):
 
     def __init__(self, name, type, code):
         self.name = name
-        self.short_name = name[len(MOD_DIR)+1:]
         self.type = type
         self._code = code
         self.code = ""
@@ -100,7 +99,7 @@ class Module(object):
 
     def __dict__(self):
         return {
-            "Name": self.short_name,
+            "Name": self.name,
             "BaseName": os.path.basename(self.name),
             "Code": self.code,
             "N": self.n,
