@@ -48,25 +48,23 @@ def import_modules():
                 # This is done because PowerSploit contains tests that we
                 # don't want
                 continue
-            filename = os.path.join(dirName, fname)
-            with open(filename, "br") as f:
+            _, ext = os.path.splitext(fname)
+            if ext.lower() not in ['.exe', '.ps1']:
+                continue
+            path = os.path.join(dirName, fname)
+            with open(path, "br") as f:
                 buffer = f.read(2048)
                 file_type = magic.from_buffer(buffer)
                 mime = magic.from_buffer(buffer, mime=True)
                 mod_type = get_module_type(fname, file_type, mime)
                 if not mod_type:
                     continue
-                try:
-                    buffer += f.read()
-                except Exception:
-                    pass
-            if mod_type == 'ps1':
-                buffer = sanitize_ps1(buffer, file_type)
-            log.debug("Imported module (%s): %s" % (filename, mod_type))
+            log.debug("Imported module (%s): %s" % (path, mod_type))
             module = Module(
-                filename.replace(os.path.join(BASE_DIR, 'modules'), ''),
+                path.replace(os.path.join(BASE_DIR, 'modules'), ''),
+                path,
                 mod_type,
-                buffer,
+                file_type,
             )
             result.append(module)
 
@@ -81,17 +79,20 @@ class Module(object):
 
     """
 
-    def __init__(self, name, type, code):
+    def __init__(self, name, path, type, file_type):
         self.name = name
+        self.path = path
         self.type = type
-        self._code = code
+        self.file_type = file_type
         self.code = ""
         self.active = False
         self.n = -1
 
     def activate(self):
         self.active = True
-        self.code = self._code
+        self.code = open(self.path, 'rb').read()
+        if self.type == 'ps1':
+            self.code = sanitize_ps1(self.code, self.file_type)
 
     def deactivate(self):
         self.active = False
