@@ -70,7 +70,7 @@ venv
 python3-venv`.
 
 Run `python3 -m venv env` to create a virtual environment, then use `source
-env/bin/activate` to activate it. Now run `pip3 install --user .`
+env/bin/activate` to activate it. Now run `pip3 install .`
 to install the depencendies inside the virtual environment.
 
 pipenv
