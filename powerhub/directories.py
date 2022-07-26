@@ -10,6 +10,7 @@ XDG_DATA_HOME = os.path.join(
     'powerhub',
 )
 WORKSPACE_DIR = ph_app.args.WORKSPACE_DIR or XDG_DATA_HOME
+WORKSPACE_DIR = os.path.abspath(WORKSPACE_DIR)
 
 UPLOAD_DIR = os.path.join(WORKSPACE_DIR, "upload")
 LOOT_DIR = os.path.join(WORKSPACE_DIR, "loot")
@@ -48,4 +49,3 @@ for d in directories:
     ensure_dir_exists(d)
 
 DB_FILENAME = os.path.join(WORKSPACE_DIR, "powerhub_db.sqlite")
-DB_FILENAME = os.path.abspath(DB_FILENAME)
