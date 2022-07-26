@@ -453,6 +453,9 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
         [parameter(Mandatory=$false)] [String[]] $Arguments = @()
     )
 
+    {# Set CWD of the process to that of the powershell session #}
+    [Environment]::CurrentDirectory = Get-Location
+
     foreach ($m in $Module) {
         $code = $m.Code
         $a = [Reflection.Assembly]::Load([byte[]]$code)
