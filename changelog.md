@@ -1,3 +1,11 @@
+Version 1.11
+============
+
+* Change: Merge `Load-HubModule` into `Get-HubModule`
+* Change: Determine module type by magic bytes instead of directories
+* Fix: Load certificate chains (#51)
+* Add: aliases for PE and .NET executables
+
 Version 1.10
 ============
 

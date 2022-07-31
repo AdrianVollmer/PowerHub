@@ -87,7 +87,7 @@ def create_modules():
     from powerhub.directories import MOD_DIR
     for i in range(MAX_TEST_MODULE_PS1):
         with open(
-            os.path.join(MOD_DIR, "ps1", "psmod%d.ps1" % i),
+            os.path.join(MOD_DIR, "psmod%d.ps1" % i),
             "w"
         ) as f:
             f.write(func % {"n": i})
@@ -162,7 +162,7 @@ def test_load_hubmodule(backend):
     out = execute_cmd(backend("lhm psmod53|fl;Invoke-Testfunc53"))
     assert "Test53" in out
     assert "psmod53" in out
-    assert re.search("Name *: ps1/psmod53.ps1\r\n", out)
+    assert re.search("Name *: .*psmod53.ps1\r\n", out)
     assert re.search("Type *: ps1\r\n", out)
     assert re.search("N *: 72\r\n", out)
     assert re.search("Loaded *: True\r\n", out)

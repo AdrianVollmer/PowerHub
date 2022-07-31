@@ -10,6 +10,7 @@ XDG_DATA_HOME = os.path.join(
     'powerhub',
 )
 WORKSPACE_DIR = ph_app.args.WORKSPACE_DIR or XDG_DATA_HOME
+WORKSPACE_DIR = os.path.abspath(WORKSPACE_DIR)
 
 UPLOAD_DIR = os.path.join(WORKSPACE_DIR, "upload")
 LOOT_DIR = os.path.join(WORKSPACE_DIR, "loot")
@@ -38,9 +39,6 @@ directories = [
     WEBDAV_DIR,
     MOD_DIR,
     STATIC_DIR,
-    os.path.join(MOD_DIR, 'ps1'),
-    os.path.join(MOD_DIR, 'exe'),
-    os.path.join(MOD_DIR, 'shellcode'),
     WEBDAV_RO,
     WEBDAV_BLACKHOLE,
     WEBDAV_PUBLIC,

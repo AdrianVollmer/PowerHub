@@ -26,6 +26,7 @@ setuptools.setup(
         'flask-sqlalchemy>=2.1',
         'pyOpenSSL',
         'pypykatz>=0.2.2',
+        'python-magic',
         'service_identity',
         'twisted>=18.9.0',
         'watchdog',
@@ -34,7 +35,7 @@ setuptools.setup(
     ],
     python_requires='>=3',
     extras_require={
-        'tests': ['pytest', 'beautifulsoup4', 'lxml']
+        'tests': ['pytest', 'beautifulsoup4', 'lxml', 'requests']
     },
     classifiers=[
         'Programming Language :: Python :: 3',
