@@ -18,8 +18,9 @@ endpoint protection. Check out the
 ![PowerHub Webapp](https://github.com/AdrianVollmer/PowerHub/blob/master/img/powerhub-sharphound.png)
 
 During an engagement where you have a test client available, one of the
-first things you want to do is run PowerSploit. So you need to download the
-files, messing with endpoint protection, disable the execution policy, etc.
+first things you want to do is run SharpHound, Seatbelt, PowerUp,
+Invoke-PrivescCheck or PowerSploit. So you need to download the files,
+mess with endpoint protection, disable the execution policy, etc.
 PowerHub provides an (almost) one-click-solution for this. Oh, and you can
 also run arbitrary binaries (PE and shell code) entirely in-memory using
 PowerSploit's modules, which is sometimes useful to bypass application
