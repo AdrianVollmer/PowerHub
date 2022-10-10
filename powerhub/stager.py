@@ -156,6 +156,10 @@ def build_cradle(get_args):
             result += ("$K.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
                        "$K.Proxy.Credentials=[Net.CredentialCache]::"
                        "DefaultCredentials;")
+        if get_args['Useragent'] == 'true':
+            result += ("$K.Headers['User-Agent'] ="
+                       "'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)';")
+        
         if not get_args['ClipExec'] == 'none':
             clip_exec = "&c=%s" % get_args['ClipExec']
         else:
