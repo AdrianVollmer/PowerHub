@@ -108,7 +108,8 @@ class PowerHubApp(object):
             from flask_sqlalchemy import SQLAlchemy
             from powerhub.sql import init_db
             db = SQLAlchemy(self.flask_app)
-            init_db(db)
+            with self.flask_app.app_context():
+                init_db(db)
         except ImportError as e:
             log.error("You have unmet dependencies, "
                       "database will not be available")
@@ -118,14 +119,16 @@ class PowerHubApp(object):
 
     def init_clipboard(self):
         from powerhub.sql import get_clipboard
-        self.clipboard = get_clipboard()
+        with self.flask_app.app_context():
+            self.clipboard = get_clipboard()
 
     def init_loot(self):
         self.loot = None
 
     def init_settings(self):
         from powerhub.tools import get_secret_key
-        self.key = get_secret_key()
+        with self.flask_app.app_context():
+            self.key = get_secret_key()
 
     def run_flask_app(self):
         self.socketio.run(
