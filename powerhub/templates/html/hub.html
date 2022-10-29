@@ -1,4 +1,4 @@
-{% extends "index.html" %}
+{% extends "html/index.html" %}
 {% block hub_active %}active{% endblock %}
 {% block hub_selected %}selected{% endblock %}
 {% block content %}
@@ -13,7 +13,7 @@
 </h2>
 <div id='download-cradle'>
 </div>
-<div id="cradle-options">{% include "hub/cradle-options.html" %}</div>
+<div id="cradle-options">{% include "html/hub/cradle-options.html" %}</div>
 
 <hr>
 <p>
@@ -37,7 +37,7 @@ There {% if modules|length == 1 %}is <strong>1</strong> module{% else %}are
         </div>
         <div class="modal-body">
             {% if modules %}
-                {% include "hub/modulelist.html" %}
+                {% include "html/hub/modulelist.html" %}
             {% else %}
                 {{ help.hub_no_modules|safe }}
             {% endif %}

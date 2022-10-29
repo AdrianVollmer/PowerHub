@@ -80,7 +80,7 @@
   </ul>
 </nav>
 
-{% include "toasts.html" %}
+{% include "html/toasts.html" %}
 
 <div class="container pt-5">
     {% block content %}{% endblock %}
@@ -88,7 +88,7 @@
 
 {# this is an invisible toast that will be used for push notifications #}
 {% with show='', hidden='hidden', message={'title': '', 'body': '', 'category': 'primary'} %}
-     {% include 'single-toast.html' %}
+     {% include 'html/single-toast.html' %}
 {% endwith %}
 
 <script src="/js/jquery-3.3.1.min.js"></script>

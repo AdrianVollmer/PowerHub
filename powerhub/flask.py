@@ -99,7 +99,7 @@ def hub():
         "AUTH": ph_app.args.AUTH,
         "VERSION": __version__,
     }
-    return render_template("hub.html", **context)
+    return render_template("html/hub.html", **context)
 
 
 @app.route('/loot')
@@ -121,7 +121,7 @@ def loot_tab():
         "AUTH": ph_app.args.AUTH,
         "VERSION": __version__,
     }
-    return render_template("loot.html", **context)
+    return render_template("html/loot.html", **context)
 
 
 @app.route('/clipboard')
@@ -133,7 +133,7 @@ def clipboard():
         "AUTH": ph_app.args.AUTH,
         "VERSION": __version__,
     }
-    return render_template("clipboard.html", **context)
+    return render_template("html/clipboard.html", **context)
 
 
 @app.route('/fileexchange')
@@ -144,7 +144,7 @@ def fileexchange():
         "AUTH": ph_app.args.AUTH,
         "VERSION": __version__,
     }
-    return render_template("fileexchange.html", **context)
+    return render_template("html/fileexchange.html", **context)
 
 
 @app.route('/css/<path:path>')
@@ -351,14 +351,14 @@ def dlcradle():
         ]:
             cmd = build_cradle(request.args)
             return render_template(
-                "hub/download-cradle.html",
+                "html/hub/download-cradle.html",
                 dl_str=cmd,
             )
         else:
             import urllib
             href = urllib.parse.urlencode(request.args)
             return render_template(
-                "hub/download-cradle.html",
+                "html/hub/download-cradle.html",
                 dl_str=None,
                 href='/dl?' + href,
             )
@@ -525,7 +525,7 @@ def list_static():
     context = {
         'rootdir': get_dir(STATIC_DIR)
     }
-    return render_template('list-static.html', **context)
+    return render_template('html/list-static.html', **context)
 
 
 @app.route('/static/<path:filename>')

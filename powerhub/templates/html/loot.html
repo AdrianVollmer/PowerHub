@@ -1,4 +1,4 @@
-{% extends "index.html" %}
+{% extends "html/index.html" %}
 {% block loot_active %}active{% endblock %}
 {% block loot_selected %}selected{% endblock %}
 {% block content %}
@@ -34,7 +34,7 @@
               </div>
           </div>
           <div id="accordion">
-              {% for l in loot %} {% include "loot/entry.html" %} {% endfor %}
+              {% for l in loot %} {% include "html/loot/entry.html" %} {% endfor %}
           </div>
           {% endif %}
       </div>
