@@ -3,5 +3,8 @@
 
 
 def main(background=False):
+    from powerhub.args import parse_args
+    args = parse_args()
+
     from powerhub.app import PowerHubApp
-    PowerHubApp().run(background=background)
+    PowerHubApp(args).run(background=background)

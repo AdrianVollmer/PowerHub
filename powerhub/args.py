@@ -115,7 +115,7 @@ parser.add_argument(
 )
 
 
-def parse_args(argv):
+def parse_args(argv=None):
     args = parser.parse_args(argv)
 
     if ((args.SSL_KEY and not args.SSL_CERT)

@@ -7,7 +7,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.serving import WSGIRequestHandler, _log
 from flask_socketio import SocketIO
 
-from powerhub.args import parse_args
 import powerhub.env as env
 
 
@@ -47,7 +46,7 @@ class PowerHubApp(object):
     the reverse proxy, the database, etc.
 
     """
-    def __init__(self, argv: list = None):
+    def __init__(self, args):
         """
         You can pass arguments to PowerHub by putting them in argv. If
         empty, sys.argv will be used (i.e. the command line arguments).
@@ -57,7 +56,7 @@ class PowerHubApp(object):
             "Instance of PowerHubApp already exists"
         env.powerhub_app = self
 
-        self.args = parse_args(argv)
+        self.args = args
         # log depends on args, so it must be imported after args have been
         # parsed
         from powerhub.logging import log
