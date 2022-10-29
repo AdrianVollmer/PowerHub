@@ -1,1 +1,1 @@
-from ._version import __version__
+__version__ = "2.0"

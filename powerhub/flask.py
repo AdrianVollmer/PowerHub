@@ -27,7 +27,7 @@ from powerhub.obfuscation import symbol_name
 from powerhub.loot import save_loot, get_lsass_goodies, get_hive_goodies, \
         parse_sysinfo
 from powerhub.logging import log
-from powerhub._version import __version__
+from powerhub import __version__
 
 
 app = Blueprint('app', __name__)

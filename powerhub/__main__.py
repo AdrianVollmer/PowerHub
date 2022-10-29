@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from powerhub.app import PowerHubApp
-
 
 def main(background=False):
+    from powerhub.app import PowerHubApp
     PowerHubApp().run(background=background)

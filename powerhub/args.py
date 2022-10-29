@@ -1,5 +1,5 @@
 import argparse
-from powerhub._version import __version__
+from powerhub import __version__
 
 parser = argparse.ArgumentParser(
     description="Leverage PowerShell to load sketchy code over HTTP"
