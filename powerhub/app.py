@@ -1,3 +1,4 @@
+import logging
 import os
 import signal
 import threading
@@ -8,6 +9,8 @@ from werkzeug.serving import WSGIRequestHandler, _log
 from flask_socketio import SocketIO
 
 import powerhub.env as env
+
+log = logging.getLogger(__name__)
 
 
 def signal_handler(sig, frame):
@@ -57,10 +60,6 @@ class PowerHubApp(object):
         env.powerhub_app = self
 
         self.args = args
-        # log depends on args, so it must be imported after args have been
-        # parsed
-        from powerhub.logging import log
-        global log
         self.init_flask()
         self.init_db()
         self.init_clipboard()

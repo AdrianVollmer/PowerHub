@@ -23,11 +23,11 @@ from powerhub.tools import encrypt_rc4, encrypt_aes, compress
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
-from powerhub.logging import log
 from powerhub import __version__
 
 
 app = Blueprint('app', __name__)
+log = logging.getLogger(__name__)
 
 if not ph_app.args.DEBUG:
     logging.getLogger("socketio").setLevel(logging.WARN)

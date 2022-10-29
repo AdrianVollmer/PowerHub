@@ -6,5 +6,8 @@ def main(background=False):
     from powerhub.args import parse_args
     args = parse_args()
 
+    from powerhub.logging import init_logging
+    init_logging(args.DEBUG)
+
     from powerhub.app import PowerHubApp
     PowerHubApp(args).run(background=background)

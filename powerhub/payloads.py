@@ -1,3 +1,4 @@
+import logging
 import subprocess
 import tempfile
 import os
@@ -6,8 +7,9 @@ import jinja2
 
 from powerhub.tools import encrypt_aes, generate_random_key
 from powerhub.stager import build_cradle
-from powerhub.logging import log
 from powerhub.obfuscation import symbol_name
+
+log = logging.getLogger(__name__)
 
 
 def load_template(filename, **kwargs):

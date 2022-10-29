@@ -1,10 +1,12 @@
+import logging
 from functools import wraps
 
 from flask import request, Response
 
 from powerhub.tools import generate_random_key
-from powerhub.logging import log
 from powerhub.env import powerhub_app as ph_app
+
+log = logging.getLogger(__name__)
 
 
 if not (ph_app.args.AUTH or ph_app.args.NOAUTH):

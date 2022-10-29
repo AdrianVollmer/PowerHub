@@ -7,6 +7,7 @@ bound to a local interface.
 
 This way, it's much easier to handle TLS encryption.
 """
+import logging
 
 from twisted.internet import reactor, ssl
 from twisted.web.proxy import ReverseProxyResource
@@ -19,7 +20,8 @@ from cryptography.hazmat.primitives import hashes
 
 from powerhub.env import powerhub_app as ph_app
 from powerhub.tools import get_self_signed_cert
-from powerhub.logging import log
+
+log = logging.getLogger(__name__)
 
 
 # Override DefaultOpenSSLContextFactory to call ctx.use_certificate_chain_file

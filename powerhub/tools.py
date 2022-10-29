@@ -1,3 +1,4 @@
+import logging
 import io
 import gzip
 import os
@@ -14,7 +15,8 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 from powerhub.directories import CERT_DIR
 from powerhub.sql import get_setting, set_setting
-from powerhub.logging import log
+
+log = logging.getLogger(__name__)
 
 
 def create_self_signed_cert(hostname,

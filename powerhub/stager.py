@@ -1,3 +1,4 @@
+import logging
 import os
 import binascii
 
@@ -5,7 +6,8 @@ import magic
 
 from powerhub.env import powerhub_app as ph_app
 from powerhub.directories import BASE_DIR, MOD_DIR
-from powerhub.logging import log
+
+log = logging.getLogger(__name__)
 
 
 def get_module_type(filename, file_type, mime):
