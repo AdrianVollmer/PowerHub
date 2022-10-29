@@ -64,7 +64,6 @@ class PowerHubApp(object):
         self.init_flask()
         self.init_db()
         self.init_clipboard()
-        self.init_loot()
         self.init_socketio()
         self.init_settings()
 
@@ -120,9 +119,6 @@ class PowerHubApp(object):
         from powerhub.sql import get_clipboard
         with self.flask_app.app_context():
             self.clipboard = get_clipboard()
-
-    def init_loot(self):
-        self.loot = None
 
     def init_settings(self):
         from powerhub.tools import get_secret_key

@@ -7,14 +7,13 @@ import shutil
 from tempfile import TemporaryDirectory
 
 from flask import Blueprint, render_template, request, Response, redirect, \
-         send_from_directory, flash, abort, jsonify, make_response
+         send_from_directory, flash, abort, make_response
 
 from werkzeug.exceptions import BadRequestKeyError
 
 from powerhub.env import powerhub_app as ph_app
 
-from powerhub.sql import decrypt_hive, get_loot, \
-        delete_loot, get_clip_entry_list
+from powerhub.sql import get_clip_entry_list
 from powerhub.stager import modules, build_cradle, callback_urls, \
         import_modules, webdav_url
 from powerhub.upload import save_file, get_filelist
@@ -24,8 +23,6 @@ from powerhub.tools import encrypt_rc4, encrypt_aes, compress
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.obfuscation import symbol_name
-from powerhub.loot import save_loot, get_lsass_goodies, get_hive_goodies, \
-        parse_sysinfo
 from powerhub.logging import log
 from powerhub import __version__
 
@@ -100,28 +97,6 @@ def hub():
         "VERSION": __version__,
     }
     return render_template("html/hub.html", **context)
-
-
-@app.route('/loot')
-@requires_auth
-def loot_tab():
-    # turn sqlalchemy object 'lootbox' into dict/array
-    lootbox = get_loot()
-    loot = [{
-        "nonpersistent": ph_app.db is None,
-        "id": lb.id,
-        "lsass": get_lsass_goodies(lb.lsass),
-        "lsass_full": lb.lsass,
-        "hive": get_hive_goodies(lb.hive),
-        "hive_full": lb.hive,
-        "sysinfo": parse_sysinfo(lb.sysinfo,)
-    } for lb in lootbox]
-    context = {
-        "loot": loot,
-        "AUTH": ph_app.args.AUTH,
-        "VERSION": __version__,
-    }
-    return render_template("html/loot.html", **context)
 
 
 @app.route('/clipboard')
@@ -218,29 +193,6 @@ def export_clipboard():
         result,
         content_type='text/plain; charset=utf-8'
     )
-
-
-@app.route('/loot/export', methods=["GET"])
-@requires_auth
-def export_loot():
-    """Export all loot entries"""
-    lootbox = get_loot()
-    loot = [{
-        "id": lb.id,
-        "lsass": get_lsass_goodies(lb.lsass),
-        "hive": get_hive_goodies(lb.hive),
-        "sysinfo": parse_sysinfo(lb.sysinfo,)
-    } for lb in lootbox]
-    return jsonify(loot)
-
-
-@app.route('/loot/del-all', methods=["POST"])
-@requires_auth
-def del_all_loog():
-    """Delete all loot entries"""
-    # TODO get confirmation by user
-    delete_loot()
-    return redirect("/loot")
 
 
 @app.route('/m')
@@ -369,32 +321,11 @@ def dlcradle():
         return (str(e), 500)
 
 
-def process_file(file, loot_id, is_from_script, remote_addr):
-    """Save the file or the loot and return a message for push notification"""
-    if loot_id:
-        log.info("Loot received - %s" % loot_id)
-        try:
-            save_loot(file, loot_id, encrypted=is_from_script)
-            decrypt_hive(loot_id)
-            msg = {
-                'title': "Loot received!",
-                'body': "%s from %s has been stored." % (
-                    file.filename,
-                    remote_addr,
-                ),
-                'category': "success",
-            }
-        except Exception as e:
-            msg = {
-                'title': "Error while processing loot",
-                'body': str(e),
-                'category': "danger",
-            }
-            log.exception(e)
-    else:
-        log.info("File received - %s" % file.filename)
-        save_file(file, encrypted=is_from_script)
-        msg = {}
+def process_file(file, is_from_script, remote_addr):
+    """Save the file and return a message for push notification"""
+    log.info("File received - %s" % file.filename)
+    save_file(file, encrypted=is_from_script)
+    msg = {}
     return msg
 
 
@@ -403,21 +334,14 @@ def upload():
     """Upload one or more files"""
     file_list = request.files.getlist("file[]")
     is_from_script = "script" in request.args
-    if "loot" in request.args:
-        loot_id = request.args["loot"]
-    else:
-        loot_id = None
     remote_addr = request.remote_addr
     msg = {}
     for file in file_list:
         if file.filename == '':
             return redirect(request.url)
         if file:
-            msg = process_file(file, loot_id, is_from_script, remote_addr)
-    if loot_id:
-        push_notification({'action': 'reload', 'location': 'loot'})
-    else:
-        push_notification({'action': 'reload', 'location': 'fileexchange'})
+            msg = process_file(file, is_from_script, remote_addr)
+    push_notification({'action': 'reload', 'location': 'fileexchange'})
     if is_from_script:
         if msg:
             push_notification(msg)
