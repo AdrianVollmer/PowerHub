@@ -14,8 +14,8 @@ endpoint protection. Check out the
 * Transparent aliases for in-memory execution of C# programs
 
 
-![PowerHub Webapp](https://github.com/AdrianVollmer/PowerHub/blob/master/img/powerhub-webapp.png)
-![PowerHub Webapp](https://github.com/AdrianVollmer/PowerHub/blob/master/img/powerhub-sharphound.png)
+![PowerHub Webapp](docs/img/powerhub-webapp.png)
+![PowerHub Webapp](docs/img/powerhub-sharphound.png)
 
 During an engagement where you have a test client available, one of the
 first things you want to do is run SharpHound, Seatbelt, PowerUp,
