@@ -9,7 +9,11 @@ XDG_DATA_HOME = os.path.join(
     os.environ.get('XDG_DATA_HOME') or os.path.join(_HOME, '.local', 'share'),
     'powerhub',
 )
-WORKSPACE_DIR = ph_app.args.WORKSPACE_DIR or XDG_DATA_HOME
+
+if ph_app:
+    WORKSPACE_DIR = ph_app.args.WORKSPACE_DIR or XDG_DATA_HOME
+else:
+    WORKSPACE_DIR = XDG_DATA_HOME
 WORKSPACE_DIR = os.path.abspath(WORKSPACE_DIR)
 
 UPLOAD_DIR = os.path.join(WORKSPACE_DIR, "upload")

