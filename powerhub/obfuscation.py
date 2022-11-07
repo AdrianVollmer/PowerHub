@@ -27,6 +27,9 @@ def choose_obfuscated_name():
     return result
 
 
+# TODO add jinja include_randomize_whitespace
+# TODO add jinja powershell decoys
+
 def get_stager(key, amsibypass='reflection', stage3_templates=[],
                stage3_files=[], stage3_strings=[]):
     from jinja2 import Environment, FileSystemLoader
