@@ -62,8 +62,8 @@ class Win32
 
 $Winpatch = {{symbol_name("Decrypt-String")}} @"
 {{winpatch|rc4encrypt}}
-"@
+"@;
 
-Add-Type -TypeDefinition $Winpatch -Language CSharp
-[patch]::it()
+Add-Type -TypeDefinition $Winpatch -Language CSharp;
+[patch]::it();
 

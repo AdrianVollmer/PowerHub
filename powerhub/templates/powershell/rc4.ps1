@@ -13,7 +13,7 @@ function {{symbol_name("Decrypt-RC4")}} {
     {
         $s[$i] = [Byte]$i;
         $k[$i] = $args[1][$i % $args[1].Length];
-    }
+    };
 
     $j = 0;
     for ($i = 0; $i -lt 256; $i++)
@@ -22,7 +22,7 @@ function {{symbol_name("Decrypt-RC4")}} {
         $m = $s[$i];
         $s[$i] = $s[$j];
         $s[$j] = $m;
-    }
+    };
 
     $i = $j = 0;
     for ($x = 0; $x -lt $args[0].Length; $x++)
@@ -34,7 +34,7 @@ function {{symbol_name("Decrypt-RC4")}} {
         $s[$j] = $m;
         [int]$t = ($s[$i] + $s[$j]) % 256;
         $args[0][$x] = {{symbol_name("xor")}} $args[0][$x] $s[$t];
-    }
+    };
 
     $args[0]
 };

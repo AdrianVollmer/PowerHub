@@ -1,5 +1,6 @@
 import base64
 import os
+import re
 import string
 import random
 
@@ -82,10 +83,27 @@ def get_stager(key, amsibypass='reflection', stage3_templates=[],
 
     result = stage1_template.render(**context)
 
+    result = remove_leading_whitespace(result)
+    result = remove_blank_lines(result)
+
+    return result
+
+
+def remove_leading_whitespace(text):
+    text = re.sub(r'\s+', ' ', text)
+    return text
+
+
+def remove_blank_lines(text):
+    result = [
+        line for line in text.splitlines() if line
+    ]
+    result = '\n'.join(result)
     return result
 
 
 if __name__ == "__main__":
-    print(get_stager('foo'*12, stage3_files=[
-        '/home/avollmer/.local/share/powerhub/modules/ps1/nishang/Gather/Invoke-Mimikatz.ps1'
+    print(get_stager('e97f6QqB6LIsjjbdum', stage3_files=[
+        '/home/avollmer/git/PowerSploit/Recon/PowerView.ps1',
+        '/home/avollmer/git/Get-KerberoastHash.ps1',
     ]))
