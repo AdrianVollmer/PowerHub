@@ -2,9 +2,10 @@ cheroot
 cryptography
 Flask>=1.0.2
 Flask-SocketIO>=3.1.2
-flask-sqlalchemy>=2.1
+flask-sqlalchemy>=2.1,<3.0
 pyOpenSSL
 pypykatz>=0.2.2
+python-magic
 service_identity
 twisted>=18.9.0
 watchdog
