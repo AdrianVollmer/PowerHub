@@ -21,9 +21,10 @@ def choose_obfuscated_name():
     # detectable. they should also not be too common or we will risk
     # collisions. they should just blend in perfectly.
     result = None
+    length = random.choice(range(4,8))
     while not result and result in list(symbol_list.values()):
         result = ''.join([random.choice(string.ascii_lowercase)
-                          for i in range(4)])
+                          for i in range(length)])
         result = random.choice(string.ascii_uppercase) + result
     return result
 
