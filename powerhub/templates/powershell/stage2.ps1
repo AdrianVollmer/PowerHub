@@ -11,6 +11,7 @@ $settings["HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\PowerShell\Scr
 {#- Disable Readline Histfile #-}
 try { Set-PSReadlineOption -HistorySaveStyle SaveNothing } catch {}
 
+{# TODO support several forms of key exchanges #}
 $KEY = ${{symbol_name("KEY")}}
 
 function Encrypt-AES {
