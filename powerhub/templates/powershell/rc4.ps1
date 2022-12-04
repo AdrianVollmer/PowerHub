@@ -35,7 +35,7 @@ function {{symbol_name("Decrypt-RC4")}} {
         ${{symbol_name('s')}}[${{symbol_name('i')}}] = ${{symbol_name('s')}}[${{symbol_name('j')}}];
         ${{symbol_name('s')}}[${{symbol_name('j')}}] = ${{symbol_name('m')}};
         [int]${{symbol_name('t')}} = (${{symbol_name('s')}}[${{symbol_name('i')}}] + ${{symbol_name('s')}}[${{symbol_name('j')}}]) % 256;
-        ${{symbol_name('data')}}[${{symbol_name('x')}}] = ${{symbol_name("xor")}} ${{symbol_name('data')}}[${{symbol_name('x')}}] ${{symbol_name('s')}}[${{symbol_name('t')}}];
+        ${{symbol_name('data')}}[${{symbol_name('x')}}] = {{symbol_name("xor")}} ${{symbol_name('data')}}[${{symbol_name('x')}}] ${{symbol_name('s')}}[${{symbol_name('t')}}];
     };
 
     ${{symbol_name('data')}}

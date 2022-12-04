@@ -5,7 +5,7 @@ import binascii
 import magic
 
 from powerhub.env import powerhub_app as ph_app
-from powerhub.directories import BASE_DIR, MOD_DIR
+from powerhub.directories import MOD_DIR
 
 log = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ def import_modules():
                     continue
             log.debug("Imported module (%s): %s" % (path, mod_type))
             module = Module(
-                path.replace(os.path.join(BASE_DIR, 'modules'), ''),
+                path.replace(MOD_DIR, ''),
                 path,
                 mod_type,
                 file_type,

