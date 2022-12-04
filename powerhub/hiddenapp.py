@@ -93,7 +93,9 @@ def stager():
 @hidden_app.route('/list')
 def hub_modules():
     """Return list of hub modules"""
-    phst.modules = import_modules()
+    reload = request.args.get('reload', '')
+    if reload.lower() != 'false':
+        phst.modules = import_modules()
 
     context = {
         "modules": phst.modules,

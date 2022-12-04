@@ -115,8 +115,9 @@ function Unzip-Code {
 }
 
 function Update-HubModules {
+    param ( [Switch]$NoReload = $False )
     Write-Verbose "Updating module list..."
-    $ModuleList = Transport-String "list"
+    $ModuleList = Transport-String "list" @{reload=(-not $NoReload)}
     Invoke-Expression "$ModuleList"  | Out-Null
     $Global:PowerHubModules = $PowerHubModules
     $PowerHubModules | Format-Table -AutoSize -Property N,Type,Name,Loaded
@@ -883,4 +884,4 @@ try { New-Alias -Name rsh -Value Run-Shellcode } catch { }
 try { New-Alias -Name mwd -Value Mount-Webdav } catch { }
 try { New-Alias -Name umwd -Value Unmount-Webdav } catch { }
 
-Update-HubModules | Out-Null
+Update-HubModules -NoReload | Out-Null
