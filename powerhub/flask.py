@@ -132,11 +132,6 @@ def send_js(path):
     return send_from_directory('static/js', path)
 
 
-@app.route('/img/<path:path>')
-def send_img(path):
-    return send_from_directory('static/img', path)
-
-
 @app.route('/clipboard/add', methods=["POST"])
 @requires_auth
 def add_clipboard():
