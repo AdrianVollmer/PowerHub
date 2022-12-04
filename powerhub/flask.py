@@ -23,6 +23,7 @@ from powerhub.tools import decrypt_aes
 from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.hiddenapp import hidden_app
+from powerhub.dhkex import DH_ENDPOINT, dh_kex
 from powerhub import __version__
 
 
@@ -55,6 +56,14 @@ def catch_all(path):
             return redirect("/hub")
         else:
             return hidden_app.test_client().get('/')
+
+    if path.startswith(DH_ENDPOINT):
+        try:
+            public_key = int(path.split('/')[1])
+        except (IndexError, ValueError):
+            abort(404)
+        response = ' '.join(dh_kex(public_key, ph_app.key))
+        return Response(response, content_type='text/plain; charset=utf-8')
 
     # Return hidden endpoint
     try:
@@ -166,10 +175,7 @@ def export_clipboard():
         result += headline
         result += "="*(len(headline)-2) + "\r\n"
         result += e.content + "\r\n"*2
-    return Response(
-        result,
-        content_type='text/plain; charset=utf-8'
-    )
+    return Response(result, content_type='text/plain; charset=utf-8')
 
 
 @app.route('/dlcradle')

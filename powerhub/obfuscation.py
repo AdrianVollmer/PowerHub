@@ -4,6 +4,7 @@ import re
 import string
 import random
 
+from powerhub.dhkex import DH_N, DH_G, DH_ENDPOINT
 
 symbol_list = {None: None}
 
@@ -32,7 +33,7 @@ def choose_obfuscated_name():
 # TODO add jinja include_randomize_whitespace
 # TODO add jinja powershell decoys
 
-def get_stage(key, amsi_bypass='reflection', stage3_files=[], stage3_strings=[]):
+def get_stage(key, callback='', amsi_bypass='reflection', stage3_files=[], stage3_strings=[]):
     from jinja2 import Environment, FileSystemLoader
 
     from powerhub.tools import encrypt_rc4, encrypt_aes
@@ -47,6 +48,10 @@ def get_stage(key, amsi_bypass='reflection', stage3_files=[], stage3_strings=[])
         'amsibypass': amsi_bypass,
         'symbol_name': symbol_name,
         'full': True,
+        "DH_G": DH_G,
+        "DH_N": DH_N,
+        "endpoint": DH_ENDPOINT,
+        "callback_url": callback,
     }
 
     env = Environment(loader=FileSystemLoader(

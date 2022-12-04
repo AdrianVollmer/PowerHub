@@ -107,12 +107,17 @@ def compress(bytes):
 def encrypt_rc4(data, key):
     """RC4"""
 
+    if isinstance(key, str):
+        key = key.encode()
+    if isinstance(data, str):
+        data = data.encode()
+
     S = list(range(256))
     j = 0
     out = []
 
     for i in range(256):
-        j = (j + S[i] + key.encode()[i % len(key)]) % 256
+        j = (j + S[i] + key[i % len(key)]) % 256
         S[i], S[j] = S[j], S[i]
 
     i = j = 0

