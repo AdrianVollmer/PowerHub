@@ -46,6 +46,26 @@ def push_notification(msg):
                          namespace="/push-notifications")
 
 
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>', methods=['POST', 'GET'])
+def catch_all(path):
+    # Check if requests comes from a browser
+    if not path:
+        if 'text/html' in request.headers.get('Accept', ''):
+            return redirect("/hub")
+        else:
+            return hidden_app.test_client().get('/')
+
+    # Return hidden endpoint
+    try:
+        path = b64decode(path)
+        path = decrypt_aes(path, ph_app.key).decode()
+        log.info("Forwarding hidden endpoint: %s" % path)
+        return hidden_app.test_client().get(path)
+    except (binascii.Error, ValueError):
+        abort(404)
+
+
 @app.route('/hub')
 @requires_auth
 def hub():
@@ -152,32 +172,6 @@ def export_clipboard():
     )
 
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>', methods=['POST', 'GET'])
-def catch_all(path):
-    # Check if requests comes from a browser
-    if not path:
-        if 'text/html' in request.headers.get('Accept', ''):
-            return redirect("/hub")
-        else:
-            return hidden_app.test_client().get('/')
-
-    # Return hidden endpoint
-    try:
-        path = b64decode(path)
-        path = decrypt_aes(path, ph_app.key).decode()
-        return hidden_app.test_client().get(path)
-    except (binascii.Error, ValueError):
-        abort(404)
-
-
-@hidden_app.route('/')
-@hidden_app.route('/<path:path>', methods=['POST', 'GET'])
-def foo(path):
-    print(path)
-    return path
-
-
 @app.route('/dlcradle')
 def dlcradle():
     try:
@@ -215,7 +209,7 @@ def process_file(file, is_from_script, remote_addr):
     return msg
 
 
-@app.route('/u', methods=["POST"])
+@app.route('/upload', methods=["POST"])
 def upload():
     """Upload one or more files"""
     file_list = request.files.getlist("file[]")

