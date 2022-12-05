@@ -33,7 +33,6 @@ def dh_kex(client_public, key):
     encrypted_key = encrypt_rc4(key, shared_secret)
     encrypted_key = base64.b64encode(encrypted_key).decode()
 
-    print((shared_secret), encrypted_key)
     return str(server_public), encrypted_key
 
 

