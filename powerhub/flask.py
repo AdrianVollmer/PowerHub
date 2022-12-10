@@ -1,4 +1,4 @@
-from base64 import b64decode
+from base64 import urlsafe_b64decode
 import binascii
 from datetime import datetime
 import logging
@@ -41,10 +41,21 @@ def push_notification(msg):
     :msg: A dict either with keys [title, subtitle, body, category] or
     [action, location]
     """
-    # TODO make msg an object
-    ph_app.socketio.emit('push',
-                         msg,
-                         namespace="/push-notifications")
+    ph_app.socketio.emit(
+        'push',
+        msg,
+        namespace="/push-notifications",
+    )
+
+
+@app.route('/css/<path:path>')
+def send_css(path):
+    return send_from_directory(os.path.join('static', 'css'), path)
+
+
+@app.route('/js/<path:path>')
+def send_js(path):
+    return send_from_directory(os.path.join('static', 'js'), path)
 
 
 @app.route('/', defaults={'path': ''})
@@ -53,8 +64,10 @@ def catch_all(path):
     # Check if requests comes from a browser
     if not path:
         if 'text/html' in request.headers.get('Accept', ''):
+            # Probably from Browser
             return redirect("/hub")
         else:
+            # Probably from PowerShell
             return hidden_app.test_client().get('/')
 
     if path.startswith(DH_ENDPOINT):
@@ -67,12 +80,15 @@ def catch_all(path):
 
     # Return hidden endpoint
     try:
-        path = b64decode(path)
+        path = urlsafe_b64decode(path)
         path = decrypt_aes(path, ph_app.key).decode()
         log.info("Forwarding hidden endpoint: %s" % path)
         return hidden_app.test_client().get(path)
     except (binascii.Error, ValueError):
         abort(404)
+
+
+# === Tab: Hub ==============================================
 
 
 @app.route('/hub')
@@ -90,6 +106,65 @@ def hub():
     return render_template("html/hub.html", **context)
 
 
+@app.route('/dlcradle')
+@requires_auth
+def dlcradle():
+    try:
+        if request.args['Launcher'] in [
+            'powershell',
+            'cmd',
+            'cmd_enc',
+            'bash',
+        ]:
+            cmd = build_cradle(request.args, ph_app.key)
+            return render_template(
+                "html/hub/download-cradle.html",
+                dl_str=cmd,
+            )
+        else:
+            import urllib
+            href = urllib.parse.urlencode(request.args)
+            return render_template(
+                "html/hub/download-cradle.html",
+                dl_str=None,
+                href='/dl?' + href,
+            )
+
+    except BadRequestKeyError as e:
+        log.error("Unknown key, must be one of %s" %
+                  str(list(request.args.keys())))
+        return (str(e), 500)
+
+
+@app.route('/dl')
+@requires_auth
+def download_cradle():
+    """Download payload as a file cradle"""
+    try:
+        filename, binary = create_payload(request.args)
+        response = make_response(binary)
+
+        response.headers.set('Content-Type', 'application/octet-stream')
+        response.headers.set(
+            'Content-Disposition',
+            'attachment',
+            filename=filename,
+        )
+        return response
+    except Exception as e:
+        msg = {
+            'title': 'An error occurred',
+            'body': str(e),
+            'category': 'danger',
+        }
+        flash(msg)
+        log.exception(e)
+        return redirect('/hub')
+
+
+# === Tab: Clipboard ==============================================
+
+
 @app.route('/clipboard')
 @requires_auth
 def clipboard():
@@ -100,27 +175,6 @@ def clipboard():
         "VERSION": __version__,
     }
     return render_template("html/clipboard.html", **context)
-
-
-@app.route('/fileexchange')
-@requires_auth
-def fileexchange():
-    context = {
-        "files": get_filelist(),
-        "AUTH": ph_app.args.AUTH,
-        "VERSION": __version__,
-    }
-    return render_template("html/fileexchange.html", **context)
-
-
-@app.route('/css/<path:path>')
-def send_css(path):
-    return send_from_directory('static/css', path)
-
-
-@app.route('/js/<path:path>')
-def send_js(path):
-    return send_from_directory('static/js', path)
 
 
 @app.route('/clipboard/add', methods=["POST"])
@@ -178,33 +232,18 @@ def export_clipboard():
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
-@app.route('/dlcradle')
-def dlcradle():
-    try:
-        if request.args['Launcher'] in [
-            'powershell',
-            'cmd',
-            'cmd_enc',
-            'bash',
-        ]:
-            cmd = build_cradle(request.args)
-            return render_template(
-                "html/hub/download-cradle.html",
-                dl_str=cmd,
-            )
-        else:
-            import urllib
-            href = urllib.parse.urlencode(request.args)
-            return render_template(
-                "html/hub/download-cradle.html",
-                dl_str=None,
-                href='/dl?' + href,
-            )
+# === Tab: File Exchange ==============================================
 
-    except BadRequestKeyError as e:
-        log.error("Unknown key, must be one of %s" %
-                  str(list(request.args.keys())))
-        return (str(e), 500)
+
+@app.route('/fileexchange')
+@requires_auth
+def fileexchange():
+    context = {
+        "files": get_filelist(),
+        "AUTH": ph_app.args.AUTH,
+        "VERSION": __version__,
+    }
+    return render_template("html/fileexchange.html", **context)
 
 
 def process_file(file, is_from_script, remote_addr):
@@ -265,6 +304,9 @@ def download_all():
                                as_attachment=True)
 
 
+# === Tab: Modules =================================================
+
+
 @app.route('/getrepo', methods=["POST"])
 @requires_auth
 def get_repo():
@@ -312,6 +354,9 @@ def reload_modules():
     return ('OK', 200)
 
 
+# === Tab: Static =================================================
+
+
 @app.route('/list-static')
 @requires_auth
 def list_static():
@@ -345,29 +390,3 @@ def server_static(filename):
                                    as_attachment=False)
     except PermissionError:
         abort(403)
-
-
-@app.route('/dl')
-@requires_auth
-def download_cradle():
-    """Download payload as a file cradle"""
-    try:
-        filename, binary = create_payload(request.args)
-        response = make_response(binary)
-
-        response.headers.set('Content-Type', 'application/octet-stream')
-        response.headers.set(
-            'Content-Disposition',
-            'attachment',
-            filename=filename,
-        )
-        return response
-    except Exception as e:
-        msg = {
-            'title': 'An error occurred',
-            'body': str(e),
-            'category': 'danger',
-        }
-        flash(msg)
-        log.exception(e)
-        return redirect('/hub')

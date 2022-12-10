@@ -1,11 +1,12 @@
-import logging
-import io
+import base64
+import datetime
 import gzip
+import io
+import itertools
+import logging
 import os
 import random
 import string
-import itertools
-import datetime
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -19,11 +20,7 @@ from powerhub.sql import get_setting, set_setting
 log = logging.getLogger(__name__)
 
 
-def create_self_signed_cert(hostname,
-                            cert_file,
-                            key_file,
-                            ):
-
+def create_self_signed_cert(hostname, cert_file, key_file):
     key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,
@@ -82,7 +79,10 @@ def get_self_signed_cert(hostname):
 
 
 def generate_random_key(n):
-    key = ''.join(random.choice(string.ascii_letters) for _ in range(n))
+    key = ''.join(
+        random.choice(string.ascii_letters+string.digits)
+        for _ in range(n)
+    )
     log.debug("Generated a secret key: %s", key)
     return key
 
@@ -90,7 +90,7 @@ def generate_random_key(n):
 def get_secret_key():
     key = get_setting("secret_key")
     if not key:
-        key = generate_random_key(128)
+        key = generate_random_key(32)
         set_setting("secret_key", key)
     else:
         log.debug("Loaded secret key: %s", key)
@@ -133,6 +133,12 @@ def encrypt_rc4(data, key):
 def encrypt_aes(data, key):
     """Encrypt AES128 with IV"""
 
+    if isinstance(data, str):
+        data = data.encode()
+        string = True
+    else:
+        string = False
+
     # Use PKCS7 padding
     def pad(m):
         return m+bytes([16-len(m) % 16]*(16-len(m) % 16))
@@ -148,7 +154,12 @@ def encrypt_aes(data, key):
     data = pad(data)
     result = encryptor.update(data) + encryptor.finalize()
 
-    return iv + result
+    result = iv + result
+
+    if string:
+        result = base64.b64encode(result).decode()
+
+    return result
 
 
 def decrypt_aes(data, key):

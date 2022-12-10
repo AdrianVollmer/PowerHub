@@ -18,6 +18,17 @@
 
 <div class="input-group input-group-sm mb-3">
   <div class="input-group-prepend">
+      <label class="input-group-text" for="KEX" style="width: 150px;">Key Exchange</label>
+  </div>
+  <select class="custom-select" id="KEX">
+      <option selected value="dh">Diffie-Hellman (secure; requires extra request)</option>
+      <option value="oob">Out of Band (less secure; less compact)</option>
+      <option value="embedded">Embedded (least secure; most compact)</option>
+  </select>
+</div>
+
+<div class="input-group input-group-sm mb-3">
+  <div class="input-group-prepend">
       <label class="input-group-text" for="Amsi" style="width: 150px;">AMSI Bypass</label>
   </div>
   <select class="custom-select" id="Amsi">
@@ -53,11 +64,6 @@
       <option value="{{entry['n']}}"><code>[{{entry['n']}}]</code> {{entry['text']}}</option>
       {% endfor %}
   </select>
-</div>
-
-<div class="form-check form-check-inline relevant-to-http relevant-to-https">
-  <input class="form-check-input" type="checkbox" id="SeparateAMSI" value="SeparateAMSI" checked>
-  <label class="form-check-label" for="SeparateAMSI">Separate AMSI Bypass</label>
 </div>
 
 <div class="form-check form-check-inline relevant-to-http relevant-to-https">

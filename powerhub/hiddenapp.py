@@ -10,6 +10,7 @@ from powerhub.stager import import_modules, webdav_url, callback_urls
 import powerhub.stager as phst
 from powerhub.directories import XDG_DATA_HOME, BASE_DIR
 from powerhub.obfuscation import get_stage
+from powerhub.dhkex import DH_G, DH_MODULUS, DH_ENDPOINT
 from powerhub.env import powerhub_app as ph_app
 from powerhub import __version__
 
@@ -58,6 +59,7 @@ def stager():
         exec_clipboard_entry = ""
 
     amsi_bypass = request.args.get('a', 'reflection')
+    kex = request.args.get('k', 'dh')
 
     transport = request.args.get('t', 'http')
     context = {
@@ -81,11 +83,18 @@ def stager():
         **context,
     )
 
+    jinja_context = dict(
+        callback=callback_urls[transport],
+        kex=kex,
+        DH_G=DH_G,
+        DH_MODULUS=DH_MODULUS,
+        dh_endpoint=DH_ENDPOINT,
+    )
     result = get_stage(
         ph_app.key,
-        callback=callback_urls[transport],
         amsi_bypass=amsi_bypass,
         stage3_strings=[stage3, profile, exec_clipboard_entry],
+        jinja_context=jinja_context,
     )
 
     return Response(result, content_type='text/plain; charset=utf-8')
