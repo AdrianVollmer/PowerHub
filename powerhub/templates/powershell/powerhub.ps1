@@ -24,7 +24,7 @@ function prompt {
     Write-Host ("PowerHub") -nonewline
     Write-Host ("@") -nonewline -foregroundcolor DarkGreen
     Write-Host ($CALLBACK_HOST) -nonewline -foregroundcolor DarkYellow
-    Write-Host (">") -nonewline
+    Write-Host (" $PWD>") -nonewline
     return ' '
 }
 
