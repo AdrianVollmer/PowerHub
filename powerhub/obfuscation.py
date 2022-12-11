@@ -18,10 +18,12 @@ symbol_list = {None: None}
 
 
 def symbol_name(name):
-    global symbol_list
     if name not in symbol_list:
-        symbol_list[name] = choose_obfuscated_name()
-        log.debug("New obfuscated symbol: %s -> %s" % (name, symbol_list[name]))
+        if ph_app.args.DEBUG:
+            # In debug mode, don't obfuscate
+            symbol_list[name] = name
+        else:
+            symbol_list[name] = choose_obfuscated_name()
     return symbol_list[name]
 
 
@@ -94,8 +96,9 @@ def get_stage(key, amsi_bypass='reflection', jinja_context={}, stage3_files=[], 
 
     result = stage1_template.render(**context)
 
-    result = remove_leading_whitespace(result)
-    result = remove_blank_lines(result)
+    if not ph_app.args.DEBUG:
+        result = remove_leading_whitespace(result)
+        result = remove_blank_lines(result)
 
     return result
 
