@@ -44,7 +44,7 @@ def create_self_signed_cert(hostname, cert_file, key_file):
     ).not_valid_before(
         datetime.datetime.utcnow()
     ).not_valid_after(
-        datetime.datetime.utcnow() + datetime.timedelta(days=365)
+        datetime.datetime.utcnow() + datetime.timedelta(days=30)
     ).sign(key, hash_algo, default_backend())
 
     log.info("Generated a self-signed certifiate for '%s' with SHA-1 "
@@ -64,14 +64,23 @@ def get_self_signed_cert(hostname):
     file_basename = os.path.join(CERT_DIR, "cert_%s." % hostname)
     cert_file = file_basename + 'cert'
     key_file = file_basename + 'key'
+
     # check if one already exists
     if not (os.path.isfile(cert_file) and
             os.path.isfile(key_file)):
 
         log.info("No SSL certificate found, generating a self-signed one...")
         create_self_signed_cert(hostname, cert_file, key_file)
+
     pem_data = open(cert_file, "br").read()
     cert = x509.load_pem_x509_certificate(pem_data, default_backend())
+
+    if cert.not_valid_after < datetime.datetime.now():
+        log.info("Certificate expired, generating a new one...")
+        create_self_signed_cert(hostname, cert_file, key_file)
+        pem_data = open(cert_file, "br").read()
+        cert = x509.load_pem_x509_certificate(pem_data, default_backend())
+
     hash_algo = hashes.SHA256()
     log.info("Loaded SSL certificate for '%s' with SHA1 fingerprint: %s"
              % (hostname, cert.fingerprint(hash_algo).hex()))
