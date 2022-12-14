@@ -39,10 +39,12 @@ def sanitize_ps1(buffer, file_type):
     return buffer
 
 
-def import_modules():
-    """Import all modules and returns them as a list"""
+def update_modules():
+    """Import all modules as a list and assign global var `modules` to it"""
+
     result = []
     log.info("Importing modules...")
+
     for dirName, subdirList, fileList in os.walk(MOD_DIR, followlinks=True):
         for fname in fileList:
             if fname.endswith('.tests.ps1'):
@@ -72,7 +74,8 @@ def import_modules():
     for i, m in enumerate(result):
         m.n = i
 
-    return result
+    global modules
+    modules = result
 
 
 class Module(object):
@@ -111,4 +114,4 @@ class Module(object):
         }
 
 
-modules = import_modules()
+update_modules()

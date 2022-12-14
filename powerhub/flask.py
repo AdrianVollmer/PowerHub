@@ -337,7 +337,7 @@ def get_repo():
 def reload_modules():
     """Reload all modules from disk"""
     try:
-        phmod.modules = phmod.import_modules()
+        phmod.update_modules()
         msg = {
             'title': "Success",
             'body': "Modules reloaded (press F5 to see them)",

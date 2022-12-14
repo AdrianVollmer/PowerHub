@@ -6,9 +6,9 @@ import os
 from flask import render_template, request, Response, Flask
 
 from powerhub.tools import encrypt_rc4, encrypt_aes, compress
-from powerhub.modules import import_modules
+from powerhub.modules import update_modules
+import powerhub.modules as phmod
 from powerhub.stager import webdav_url, callback_urls, get_stage
-import powerhub.stager as phst
 from powerhub.directories import XDG_DATA_HOME, BASE_DIR
 from powerhub.dhkex import DH_G, DH_MODULUS, DH_ENDPOINT
 from powerhub.env import powerhub_app as ph_app
@@ -64,7 +64,7 @@ def stager():
 
     transport = request.args.get('t', 'http')
     context = dict(
-        modules=phst.modules,
+        modules=phmod.modules,
         callback_url=callback_urls[transport],
         transport=transport,
         webdav_url=webdav_url,
@@ -107,10 +107,10 @@ def hub_modules():
     """Return list of hub modules"""
     reload = request.args.get('reload', '')
     if reload.lower() != 'false':
-        phst.modules = import_modules()
+        update_modules()
 
     context = {
-        "modules": phst.modules,
+        "modules": phmod.modules,
     }
 
     result = render_template(
@@ -131,9 +131,9 @@ def load_module():
 
     n = int(request.args.get('m'))
 
-    if n < len(phst.modules):
-        phst.modules[n].activate()
-        code = phst.modules[n].code
+    if n < len(phmod.modules):
+        phmod.modules[n].activate()
+        code = phmod.modules[n].code
 
         if 'c' in request.args:
             encrypted = encrypt_aes(compress(code), ph_app.key)
