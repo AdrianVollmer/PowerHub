@@ -6,8 +6,7 @@ import os
 import jinja2
 
 from powerhub.tools import encrypt_aes, generate_random_key
-from powerhub.stager import build_cradle
-from powerhub.obfuscation import symbol_name
+from powerhub.stager import build_cradle, symbol_name
 
 log = logging.getLogger(__name__)
 

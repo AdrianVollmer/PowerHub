@@ -14,8 +14,8 @@ from werkzeug.exceptions import BadRequestKeyError
 from powerhub.env import powerhub_app as ph_app
 
 from powerhub.sql import get_clip_entry_list
-from powerhub.stager import build_cradle, import_modules
-import powerhub.stager as phst
+from powerhub.stager import build_cradle
+import powerhub.modules as phmod
 from powerhub.upload import save_file, get_filelist
 from powerhub.directories import UPLOAD_DIR, STATIC_DIR
 from powerhub.payloads import create_payload
@@ -96,7 +96,7 @@ def catch_all(path):
 def hub():
     clip_entries = get_clip_entry_list(ph_app.clipboard)
     context = {
-        "modules": phst.modules,
+        "modules": phmod.modules,
         "clip_entries": clip_entries,
         "repositories": list(repositories.keys()),
         "SSL": ph_app.args.SSL_KEY is not None,
@@ -337,7 +337,7 @@ def get_repo():
 def reload_modules():
     """Reload all modules from disk"""
     try:
-        phst.modules = import_modules()
+        phmod.modules = phmod.import_modules()
         msg = {
             'title': "Success",
             'body': "Modules reloaded (press F5 to see them)",

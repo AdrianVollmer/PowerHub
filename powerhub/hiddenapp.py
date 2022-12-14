@@ -6,10 +6,10 @@ import os
 from flask import render_template, request, Response, Flask
 
 from powerhub.tools import encrypt_rc4, encrypt_aes, compress
-from powerhub.stager import import_modules, webdav_url, callback_urls
+from powerhub.modules import import_modules
+from powerhub.stager import webdav_url, callback_urls, get_stage
 import powerhub.stager as phst
 from powerhub.directories import XDG_DATA_HOME, BASE_DIR
-from powerhub.obfuscation import get_stage
 from powerhub.dhkex import DH_G, DH_MODULUS, DH_ENDPOINT
 from powerhub.env import powerhub_app as ph_app
 from powerhub import __version__
