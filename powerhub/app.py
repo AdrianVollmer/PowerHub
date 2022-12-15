@@ -14,9 +14,8 @@ log = logging.getLogger(__name__)
 
 
 def signal_handler(sig, frame):
-    import powerhub.reverseproxy
     log.info("CTRL-C caught, exiting...")
-    powerhub.reverseproxy.reactor.stop()
+    env.powerhub_app.stop()
 
 
 def start_thread(f, *args):
@@ -134,7 +133,7 @@ class PowerHubApp(object):
         )
 
     def run(self, background=False):
-        import powerhub.reverseproxy
+        from powerhub.reverseproxy import run_proxy
         signal.signal(signal.SIGINT, signal_handler)
         try:
             from powerhub.webdav import run_webdav
@@ -145,9 +144,9 @@ class PowerHubApp(object):
                   "Consult the README.")
         start_thread(self.run_flask_app)
         if background:
-            start_thread(powerhub.reverseproxy.run_proxy)
+            start_thread(run_proxy)
         else:
-            powerhub.reverseproxy.run_proxy()
+            run_proxy()
 
     def stop(self):
         from powerhub import reverseproxy

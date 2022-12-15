@@ -13,6 +13,7 @@ from twisted.internet import reactor, ssl
 from twisted.web.proxy import ReverseProxyResource
 from twisted.web.server import Site
 from twisted.web.resource import Resource
+from twisted.python.log import PythonLoggingObserver
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -88,6 +89,11 @@ class DynamicProxy(Resource):
 
 
 def run_proxy():
+    # Shut up twisted
+    observer = PythonLoggingObserver()
+    observer.start()
+    logging.getLogger('twisted').setLevel(logging.CRITICAL+1)
+
     proxy = DynamicProxy()
     site = Site(proxy)
     reactor.listenTCP(ph_app.args.LPORT, site, interface=ph_app.args.LHOST)
@@ -95,10 +101,13 @@ def run_proxy():
     if not ph_app.args.SSL_KEY or not ph_app.args.SSL_CERT:
         ph_app.args.SSL_CERT, ph_app.args.SSL_KEY = \
                 get_self_signed_cert(ph_app.args.URI_HOST)
+
     pem_data = open(ph_app.args.SSL_CERT, "br").read()
     cert = x509.load_pem_x509_certificate(pem_data, default_backend())
+
     global FINGERPRINT
     FINGERPRINT = cert.fingerprint(hashes.SHA1()).hex()
+
     reactor.listenSSL(
         ph_app.args.SSL_PORT,
         site,
@@ -108,10 +117,12 @@ def run_proxy():
         ),
         interface=ph_app.args.LHOST,
     )
+
     log.info("Web interface accessible on http://%s:%d and https://%s:%d" % (
         ph_app.args.URI_HOST,
         ph_app.args.LPORT,
         ph_app.args.URI_HOST,
         ph_app.args.SSL_PORT,
     ))
+
     reactor.run()
