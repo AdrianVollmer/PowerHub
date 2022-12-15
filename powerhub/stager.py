@@ -38,7 +38,7 @@ webdav_url = 'http://%s:%d/webdav' % (
 )
 
 
-def build_crade_https(get_args):
+def build_cradle_https(get_args):
     result = ''
 
     if get_args['Transport'] == 'https':
@@ -100,14 +100,14 @@ def build_cradle_webclient(get_args, key):
 
 
 def build_cradle(get_args, key):
-    """Build the download crade given a dict of GET arguments"""
+    """Build the download cradle given a dict of GET arguments"""
     log.debug("GET arguments: %s" % get_args)
 
     result = ""
     natural = (get_args['Natural'] == 'true')
     key_var = symbol_name('global_key', natural=natural)
 
-    result += build_crade_https(get_args)
+    result += build_cradle_https(get_args)
 
     if get_args['KEX'] == 'oob' and key:
         result += "$%(key_var)s='%(key)s';"
