@@ -8,7 +8,7 @@ from flask import render_template, request, Response, Flask
 from powerhub.tools import encrypt_rc4, encrypt_aes, compress
 from powerhub.modules import update_modules
 import powerhub.modules as phmod
-from powerhub.stager import webdav_url, callback_urls, get_stage
+from powerhub.stager import webdav_url, callback_urls, get_stage, symbol_name
 from powerhub.directories import XDG_DATA_HOME, BASE_DIR
 from powerhub.dhkex import DH_G, DH_MODULUS, DH_ENDPOINT
 from powerhub.env import powerhub_app as ph_app
@@ -47,23 +47,11 @@ def rc4byteencrypt(data):
     return b64encode(encrypted).decode()
 
 
-@hidden_app.route('/')
-def stager():
-    """Load the stager"""
+def get_stage3(args):
+    minimal = (args.get('m') is not None)
+    transport = args.get('t', 'http')
 
-    try:
-        clipboard_id = int(request.args.get('c'))
-        exec_clipboard_entry = ph_app.clipboard. \
-            entries[clipboard_id].content
-    except TypeError:
-        exec_clipboard_entry = ""
-
-    amsi_bypass = request.args.get('a', 'reflection')
-    kex = request.args.get('k', 'dh')
-    minimal = (request.args.get('m', '') != '')
-
-    transport = request.args.get('t', 'http')
-    context = dict(
+    powerhub_context = dict(
         modules=phmod.modules,
         callback_url=callback_urls[transport],
         transport=transport,
@@ -73,6 +61,15 @@ def stager():
         minimal=minimal,
     )
 
+    stage3 = render_template(
+        "powershell/powerhub.ps1",
+        **powerhub_context,
+    )
+
+    return stage3
+
+
+def get_profile():
     try:
         with open(os.path.join(XDG_DATA_HOME, "profile.ps1"), "r") as f:
             profile = f.read()
@@ -80,23 +77,50 @@ def stager():
         log.error("Error while reading profile.ps1: %s" % str(e))
         profile = ""
 
-    stage3 = render_template(
-        "powershell/powerhub.ps1",
-        **context,
-    )
+    return profile
 
-    jinja_context = dict(
+
+def get_clipboard_entry(args):
+    try:
+        clipboard_id = int(args.get('c'))
+        clipboard_entry = ph_app.clipboard.entries[clipboard_id].content
+    except TypeError:
+        clipboard_entry = ""
+
+    return clipboard_entry
+
+
+@hidden_app.route('/')
+def stager():
+    """Load the stager"""
+    stage3 = get_stage3(request.args)
+    profile = get_profile()
+    clipboard_entry = get_clipboard_entry(request.args)
+
+    amsi_bypass = request.args.get('a', 'reflection')
+    amsi_bypass = os.path.join('powershell', 'amsi', amsi_bypass + '.ps1')
+
+    kex = request.args.get('k', 'dh')
+    natural = (request.args.get('n') is not None)
+    transport = request.args.get('t', 'http')
+
+    key = ph_app.key
+
+    stager_context = dict(
+        symbol_name=lambda name: symbol_name(name, natural=natural),
+        key=key,
+        amsibypass=amsi_bypass,
         callback=callback_urls[transport],
         kex=kex,
         DH_G=DH_G,
         DH_MODULUS=DH_MODULUS,
         dh_endpoint=DH_ENDPOINT,
     )
+
     result = get_stage(
-        ph_app.key,
-        amsi_bypass=amsi_bypass,
-        stage3_strings=[stage3, profile, exec_clipboard_entry],
-        jinja_context=jinja_context,
+        key,
+        stage3_strings=[stage3, profile, clipboard_entry],
+        context=stager_context,
     )
 
     return Response(result, content_type='text/plain; charset=utf-8')

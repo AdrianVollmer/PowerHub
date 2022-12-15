@@ -97,12 +97,15 @@ def generate_random_key(n):
 
 
 def get_secret_key():
+    KEY_LENGTH = 32
     key = get_setting("secret_key")
+
     if not key:
-        key = generate_random_key(32)
+        key = generate_random_key(KEY_LENGTH)
         set_setting("secret_key", key)
     else:
         log.debug("Loaded secret key: %s", key)
+
     return key
 
 
