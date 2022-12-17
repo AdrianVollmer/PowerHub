@@ -6,11 +6,12 @@ from powerhub.directories import MOD_DIR
 
 repositories = {
     "ZeroDayLab/PowerSploit": "https://github.com/ZeroDayLab/PowerSploit.git",
-    "SharpHound": "https://github.com/BloodHoundAD/BloodHound/raw/master/Collectors/SharpHound.exe",  # noqa
-    "ASREPRoast": "https://github.com/HarmJ0y/ASREPRoast.git",
-    "Nishang": "https://github.com/samratashok/nishang.git",
-    "PowerSharpPack": "https://github.com/S3cur3Th1sSh1t/PowerSharpPack",
-    "Ghostpack Binaries": "https://github.com/r3motecontrol/Ghostpack-CompiledBinaries",  # noqa
+    "SharpHound.exe": "https://github.com/BloodHoundAD/BloodHound/raw/master/Collectors/SharpHound.exe",  # noqa
+    "SharpHound.ps1": "https://github.com/BloodHoundAD/BloodHound/raw/master/Collectors/SharpHound.ps1",  # noqa
+    "ASREPRoast.ps1": "https://raw.githubusercontent.com/HarmJ0y/ASREPRoast/master/ASREPRoast.ps1",
+    "samratashok/Nishang": "https://github.com/samratashok/nishang.git",
+    "S3cur3Th1sSh1t/PowerSharpPack": "https://github.com/S3cur3Th1sSh1t/PowerSharpPack",
+    "r3motecontrol/Ghostpack Binaries": "https://github.com/r3motecontrol/Ghostpack-CompiledBinaries",  # noqa
 }
 
 
@@ -36,9 +37,7 @@ def install_repo_from_url(url):
 
 def git_clone(url):
     """Installs a git repository"""
-    parsed_url = urlparse(url)
-    basename = os.path.basename(parsed_url.path)
-    dest_dir = os.path.join(MOD_DIR, basename[:-4])
+    dest_dir = MOD_DIR
     if os.path.isdir(dest_dir):
         raise Exception("Directory already exists: %s" % dest_dir)
     subprocess.check_output(['git', 'clone', '--depth', '1', url, dest_dir],
