@@ -9,6 +9,7 @@ from werkzeug.serving import WSGIRequestHandler, _log
 from flask_socketio import SocketIO
 
 import powerhub.env as env
+from powerhub import __version__
 
 log = logging.getLogger(__name__)
 
@@ -98,6 +99,9 @@ class PowerHubApp(object):
             SQLALCHEMY_DATABASE_URI='sqlite:///' + DB_FILENAME,
             SQLALCHEMY_TRACK_MODIFICATIONS=False,
         )
+
+        self.flask_app.jinja_env.globals['AUTH'] = self.args.AUTH
+        self.flask_app.jinja_env.globals['VERSION'] = __version__
 
     def init_db(self):
         try:

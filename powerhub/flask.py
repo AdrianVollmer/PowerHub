@@ -24,7 +24,6 @@ from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.hiddenapp import hidden_app
 from powerhub.dhkex import DH_ENDPOINT, dh_kex
-from powerhub import __version__
 
 
 app = Blueprint('app', __name__)
@@ -99,9 +98,6 @@ def hub():
         "modules": phmod.modules,
         "clip_entries": clip_entries,
         "repositories": list(repositories.keys()),
-        "SSL": ph_app.args.SSL_KEY is not None,
-        "AUTH": ph_app.args.AUTH,
-        "VERSION": __version__,
     }
     return render_template("html/hub.html", **context)
 
@@ -171,8 +167,6 @@ def clipboard():
     context = {
         "nonpersistent": ph_app.db is None,
         "clipboard": list(ph_app.clipboard.entries.values()),
-        "AUTH": ph_app.args.AUTH,
-        "VERSION": __version__,
     }
     return render_template("html/clipboard.html", **context)
 
@@ -240,8 +234,6 @@ def export_clipboard():
 def fileexchange():
     context = {
         "files": get_filelist(),
-        "AUTH": ph_app.args.AUTH,
-        "VERSION": __version__,
     }
     return render_template("html/fileexchange.html", **context)
 
