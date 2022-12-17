@@ -3,13 +3,7 @@
 {% block hub_selected %}selected{% endblock %}
 {% block content %}
 <p id='mainp'>
-<h2>Hub<sup>
-    <a href="#"
-       title="What's this?"
-       data-toggle="popover"
-       data-trigger="focus"
-       data-html='true'
-       data-content="{{help.hub_main}}"><span data-feather="help-circle"></span></a></sup>
+<h2>Hub {{macros.inline_help(help.hub_main)}}
 </h2>
 <div id='download-cradle'>
 </div>
@@ -55,11 +49,7 @@ There {% if modules|length == 1 %}is <strong>1</strong> module{% else %}are
     <div class="modal-content">
         <div class="modal-header">
             <h5 class="modal-title" id="exampleModalLongTitle">
-                Get Modules
-                <sup>
-                    <a href="#" title="What's this?" data-toggle="popover" data-trigger="focus"
-                        data-content="{{help.modules}}"><span
-                            data-feather="help-circle"></span></a></sup>
+                Get Modules {{macros.inline_help(help.modules)}}
             </h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>

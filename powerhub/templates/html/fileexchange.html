@@ -3,17 +3,7 @@
 {% block fileexchange_selected %}selected{% endblock %}
 {% block content %}
 <p>
-<h2>File Exchange
-    <sup>
-        <a href="#"
-           title="What's this?"
-           data-toggle="popover"
-           data-trigger="focus"
-           data-html="true"
-           data-content="{{help.fileexchange_main}}">
-           <span data-feather="help-circle"></span>
-        </a>
-    </sup>
+<h2>File Exchange {{macros.inline_help(help.fileexchange_main)}}
 </h2>
 <div class="row mb-4">
   <form action="u" method="POST" enctype="multipart/form-data"

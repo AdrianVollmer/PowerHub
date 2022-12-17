@@ -1,14 +1,8 @@
 {% extends "html/index.html" %}
 {% block clipboard_active %}active{% endblock %}
-{% block clipboard_selected %}selected{% endblock %}
 {% block content %}
 <p>
-<h2>Clipboard
-    <sup>
-        <a href="#" title="What's this?" data-toggle="popover"
-        data-trigger="focus" data-content="{{help.clipboard_main}}">
-        <span data-feather="help-circle"></span></a>
-    </sup>
+<h2>Clipboard {{macros.inline_help(help.clipboard_main)}}
 </h2>
     <div class="col">
     <form action="clipboard/add" method="post" id="clipform" class='row'>

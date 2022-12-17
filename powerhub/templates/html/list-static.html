@@ -17,18 +17,7 @@
 
 {% block content %}
 <p>
-<h2>Static Files
-    <sup>
-        <a href="#"
-           title="What's this?"
-           data-toggle="popover"
-           data-trigger="focus"
-           data-html="true"
-           data-content="{{help.liststatic_main}}">
-           <span data-feather="help-circle"></span>
-        </a>
-    </sup>
-</h2>
+<h2>Static Files {{macros.inline_help(help.liststatic_main)}}</h2>
 {{ dir_list(rootdir, "static") }}
 </p>
 {% endblock %}

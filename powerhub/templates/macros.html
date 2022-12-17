@@ -1,0 +1,11 @@
+{%- macro inline_help(msg) -%}
+<sup>
+    <a href="#"
+       title="What's this?"
+       data-toggle="popover"
+       data-html="true"
+       data-trigger="focus"
+       data-content="{{msg}}">
+    <span data-feather="help-circle"></span></a>
+</sup>
+{%- endmacro -%}

@@ -1,3 +1,4 @@
+{% import 'macros.html' as macros %}
 {% import 'helpstrings.jinja2' as help %}
 <!doctype html>
 <html lang="en" style="font-size: 20px">
@@ -7,7 +8,7 @@
     <title>PowerHub</title>
 
     <!-- Bootstrap core CSS -->
-<link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
     <style>
       .bd-placeholder-img {
         font-size: 1.125rem;
@@ -27,7 +28,7 @@
     <!-- Custom styles for this template -->
     <link href="/css/dashboard.css" rel="stylesheet">
   </head>
-  <body>
+<body>
 
 <nav class="navbar navbar-expand navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
   <a class="navbar navbar-brand mr-0"
@@ -55,12 +56,6 @@
       <a class="nav-link {% block hub_active %}{% endblock %}"
          href="/hub">Hub</a>
     </li>
-    {#
-    <li class="nav-item">
-      <a class="nav-link {% block receiver_active %}{% endblock %}"
-         href="/receiver">Receiver</a>
-    </li>
-    #}
     <li class="nav-item">
       <a class="nav-link {% block clipboard_active %}{% endblock %}"
          href="/clipboard">Clipboard</a>
