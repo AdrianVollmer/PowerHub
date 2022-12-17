@@ -8,6 +8,7 @@ bound to a local interface.
 This way, it's much easier to handle TLS encryption.
 """
 import logging
+import ipaddress
 
 from twisted.internet import reactor, ssl
 from twisted.web.proxy import ReverseProxyResource
@@ -39,6 +40,28 @@ class OpenSSLContextFactoryChaining(ssl.DefaultOpenSSLContextFactory):
         ctx.use_certificate_chain_file(self.certificateFileName)
         ctx.use_privatekey_file(self.privateKeyFileName)
         self._context = ctx
+
+
+class FilteredSite(Site):
+    def buildProtocol(self, addr):
+        allowlist = ph_app.args.ALLOWLIST
+        allow = True
+
+        if allowlist and not addr.host == '127.0.0.1':
+            allow = False
+
+            for a in allowlist:
+                if (
+                    addr.host == a
+                    or ipaddress.ip_address(addr.host) in ipaddress.ip_network(a)
+                ):
+                    allow = True
+                    break
+
+            log.warning("Block request from %s" % addr.host)
+
+        if allow:
+            return Site.buildProtocol(self, addr)
 
 
 class DynamicProxy(Resource):
@@ -95,7 +118,7 @@ def run_proxy():
     logging.getLogger('twisted').setLevel(logging.CRITICAL+1)
 
     proxy = DynamicProxy()
-    site = Site(proxy)
+    site = FilteredSite(proxy)
     reactor.listenTCP(ph_app.args.LPORT, site, interface=ph_app.args.LHOST)
 
     if not ph_app.args.SSL_KEY or not ph_app.args.SSL_CERT:

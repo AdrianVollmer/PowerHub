@@ -97,6 +97,14 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    '-a', '--allow',
+    dest='ALLOWLIST',
+    default=None,
+    help="comma separated value of allowed source IP addresses or address ranges"
+         " (leave empty to allow all)"
+)
+
+parser.add_argument(
     dest="URI_HOST", type=str,
     help="the hostname or IP address where the target can reach the server"
 )
@@ -123,6 +131,9 @@ def parse_args(argv=None):
         print("If you supply one of SSL_CERT or SSL_KEY you must also supply "
               "the other")
         exit(1)
+
+    if args.ALLOWLIST:
+        args.ALLOWLIST = args.ALLOWLIST.split(',')
 
     if args.SSL_KEY:
         args.PROTOCOL = 'https'
