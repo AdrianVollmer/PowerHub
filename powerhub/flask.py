@@ -95,9 +95,7 @@ def catch_all(path):
 def hub():
     clip_entries = get_clip_entry_list(ph_app.clipboard)
     context = {
-        "modules": phmod.modules,
         "clip_entries": clip_entries,
-        "repositories": list(repositories.keys()),
     }
     return render_template("html/hub.html", **context)
 
@@ -156,6 +154,19 @@ def download_cradle():
         flash(msg)
         log.exception(e)
         return redirect('/hub')
+
+
+# === Tab: Modules ==============================================
+
+
+@app.route('/modules')
+@requires_auth
+def modules():
+    context = {
+        "modules": phmod.modules,
+        "repositories": list(repositories.keys()),
+    }
+    return render_template("html/modules.html", **context)
 
 
 # === Tab: Clipboard ==============================================
@@ -321,29 +332,7 @@ def get_repo():
             'category': 'danger',
         }
     flash(msg, '')
-    return redirect('/hub')
-
-
-@app.route('/reload', methods=["POST"])
-@requires_auth
-def reload_modules():
-    """Reload all modules from disk"""
-    try:
-        phmod.update_modules()
-        msg = {
-            'title': "Success",
-            'body': "Modules reloaded (press F5 to see them)",
-            'category': 'success',
-        }
-    except Exception as e:
-        msg = {
-            'title': "An error occured",
-            'body': str(e),
-            'category': 'danger',
-        }
-        log.exception(e)
-    flash(msg)
-    return ('OK', 200)
+    return redirect('/modules')
 
 
 # === Tab: Static =================================================
