@@ -1,9 +1,12 @@
+import logging
+
 try:
     from sqlalchemy.exc import OperationalError
 except ImportError:
     pass
 
 _db = None
+log = logging.getLogger(__name__)
 
 
 def init_db(db):
@@ -12,6 +15,25 @@ def init_db(db):
     init_settings()
     _db.create_all()
     _db.session.commit()
+    try:
+        upgrade_from_111_to_200(db)
+    except OperationalError as e:
+        msg = str(e)
+        if not (
+            'duplicate column name' in msg
+            or 'no such table' in msg
+        ):
+            raise
+
+
+def upgrade_from_111_to_200(db):
+    """Add the `executable` column to the `Entry` table"""
+    with db.engine.connect() as connection:
+        connection.execute(
+            'alter table Entry add column executable Boolean'
+            ' not null default false'
+        )
+        log.info("Schema upgrade successful (2.0)")
 
 
 def get_setting(key):
@@ -50,11 +72,16 @@ def get_clipboard():
 
 def get_clipboard_without_db():
     class Entry(object):
-        def __init__(self, id=id, content=None, time=None, IP=None):
+        def __init__(self, id=id, content=None, time=None, IP=None, executable=None):
             self.id = id
             self.content = content
             self.time = time
             self.IP = IP
+            self.executable
+
+        @property
+        def timedelta(self):
+            return get_timedelta(self.time)
 
     class Clipboard(object):
         def __init__(self):
@@ -65,7 +92,7 @@ def get_clipboard_without_db():
             return iter(self.entries)
 
         def add(self, content, time, IP):
-            e = Entry(id=self.next_id, content=content, time=time, IP=IP)
+            e = Entry(id=self.next_id, content=content, time=time, IP=IP, executable=False)
             self.entries[self.next_id] = e
             self.next_id += 1
             return e
@@ -75,7 +102,6 @@ def get_clipboard_without_db():
 
         def delete(self, id):
             del self.entries[id]
-            return
 
         def __len__(self):
             return len(self.entries.keys())
@@ -90,9 +116,14 @@ def get_clipboard_with_db(db):
         time = db.Column(db.String(120), unique=False, nullable=False)
         IP = db.Column(db.String(39), unique=False, nullable=False)
         # 39 because could be ipv6
+        executable = db.Column(db.Boolean(), nullable=False, default=False)
 
         def __repr__(self):
             return '<Entry %r>' % self.time
+
+        @property
+        def timedelta(self):
+            return get_timedelta(self.time)
 
     class Clipboard(object):
         def __init__(self):
@@ -101,20 +132,26 @@ def get_clipboard_with_db(db):
                 self.entries = {e.id: e for e in Entry.query.all()}
             except OperationalError:
                 self.entries = {}
+            # The entries dict needs to be kept in sync after all operations
 
         def __iter__(self):
             return iter(self.entries)
 
         def add(self, content, time, IP):
-            e = Entry(content=content, time=time, IP=IP)
+            e = Entry(content=content, time=time, IP=IP, executable=False)
             db.session.add(e)
             db.session.commit()
             self.entries[e.id] = e
-            return None
 
         def edit(self, id, content):
             e = Entry.query.filter_by(id=id).first()
             e.content = content
+            db.session.commit()
+            self.entries[e.id] = e
+
+        def set_executable(self, id, value):
+            e = Entry.query.filter_by(id=id).first()
+            e.executable = value
             db.session.commit()
             self.entries[e.id] = e
 
@@ -124,7 +161,6 @@ def get_clipboard_with_db(db):
             db.session.delete(e_)
             db.session.commit()
             del self.entries[e.id]
-            return None
 
         def __len__(self):
             return len(self.entries.keys())
@@ -135,4 +171,20 @@ def get_clipboard_with_db(db):
 def get_clip_entry_list(clipboard):
     return [{"n": c.id,
              "text": c.content[:50] + ("..." if len(c.content) > 50 else ""),
-             } for c in clipboard.entries.values()]
+             } for c in clipboard.entries.values() if c.executable]
+
+
+def get_timedelta(time):
+    from datetime import datetime as dt
+    result = dt.utcnow() - dt.fromisoformat(time)
+
+    if result.total_seconds() < 60:
+        result = "%ss" % result.seconds
+    elif result.total_seconds() < 3600:
+        result = "%sm" % (result.seconds // 60)
+    elif result.total_seconds() < 86400:
+        result = "%sh" % (result.seconds // 3600)
+    else:
+        result = "%sd" % result.days
+
+    return result

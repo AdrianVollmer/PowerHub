@@ -41,8 +41,11 @@
     {% for c in clipboard %}
         <div class="card row" id="card-{{c.id}}">
           <div class="card-body">
-            <h5 class="card-title">{{c.time}}
-            <div class="card-id">{{c.id}}</div>
+            <h5 class="card-title">
+                From {{c.IP}}, <span title="{{c.time}}">{{c.timedelta}} ago</span>
+                <div class="card-id">{{c.id}}</div>
+            </h5>
+            <h6 class="card-subtitle mb-2 text-muted">
               <sup>
                 <a href="#" class="card-link edit-clipboard" data-id="{{c.id}}">
                     <span data-feather="edit">edit</span>
@@ -53,8 +56,18 @@
                     <span data-feather="trash-2">delete</span>
                 </a>
               </sup>
-            </h5>
-            <h6 class="card-subtitle mb-2 text-muted">{{c.IP}}</h6>
+              <sup>
+                  <label for="executable-{{c.id}}">
+                  <input type="checkbox"
+                         class='executable'
+                         data-id="{{c.id}}"
+                         id="executable-{{c.id}}"
+                         name="executable-{{c.id}}"
+                         {% if c.executable %}checked{% endif %}>
+                     Executable
+                 </label>
+              </sup>
+            </h6>
             <pre style="white-space: pre-wrap; word-break: break-all;">{{ c.content }}</pre>
             <div id="buttons-{{c.id}}" class="pt-2 col-sm text-right collapse">
                 <a href="#" class="btn btn-primary btn-sm flush-right

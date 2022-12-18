@@ -83,8 +83,16 @@ def get_profile():
 def get_clipboard_entry(args):
     try:
         clipboard_id = int(args.get('c'))
-        clipboard_entry = ph_app.clipboard.entries[clipboard_id].content
-    except TypeError:
+        clipboard_entry = ph_app.clipboard.entries[clipboard_id]
+        if clipboard_entry.executable:
+            clipboard_entry = clipboard_entry.content
+        else:
+            log.error(
+                "Cannot include clipboard entry %d, "
+                "because the executable flag is not set"
+            )
+            clipboard_entry = ""
+    except (TypeError, IndexError):
         clipboard_entry = ""
 
     return clipboard_entry

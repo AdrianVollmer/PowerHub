@@ -175,9 +175,10 @@ def modules():
 @app.route('/clipboard')
 @requires_auth
 def clipboard():
+    entries = list(ph_app.clipboard.entries.values())
     context = {
         "nonpersistent": ph_app.db is None,
-        "clipboard": list(ph_app.clipboard.entries.values()),
+        "clipboard": entries,
     }
     return render_template("html/clipboard.html", **context)
 
@@ -202,6 +203,16 @@ def del_clipboard():
     """Delete a clipboard entry"""
     id = int(request.form.get("id"))
     ph_app.clipboard.delete(id)
+    return ""
+
+
+@app.route('/clipboard/executable', methods=["POST"])
+@requires_auth
+def executable_clipboard():
+    """Set executable flag of a clipboard entry"""
+    id = int(request.form.get("id"))
+    value = (request.form.get("value") == 'true')
+    ph_app.clipboard.set_executable(id, value)
     return ""
 
 

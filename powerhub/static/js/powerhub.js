@@ -36,6 +36,17 @@ function toggleDiv(id) {
     div.style.display = div.style.display == "none" ? "block" : "none";
 }
 
+$('input.executable').change(function(e){
+    e.preventDefault();
+    var id = $(this).attr('data-id');
+    var checkbox = e.currentTarget;
+    console.log(e);
+    $.post({
+        url: "clipboard/executable",
+        data: {"id": id, "value": checkbox.checked},
+    });
+});
+
 $('.edit-clipboard').click(function(e){
     e.preventDefault();
     var id = $(this).attr('data-id');
