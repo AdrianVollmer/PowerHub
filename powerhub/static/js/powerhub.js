@@ -69,6 +69,9 @@ $('.edit-cancel').click(function(e){
 
 $('.delete-clipboard').click(function(e){
     e.preventDefault();
+    if (!confirm("Are you sure you want to delete this entry? This cannot be undone.")) {
+        return;
+    }
     var id = $(this).attr('data-id');
     $.post("clipboard/delete", {id: id});
     $("#card-" + id).remove();
