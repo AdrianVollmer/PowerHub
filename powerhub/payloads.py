@@ -8,13 +8,15 @@ from powerhub.tools import encrypt_aes, generate_random_key
 from powerhub.stager import build_cradle
 from powerhub.logging import log
 from powerhub.obfuscation import symbol_name
+from powerhub.directories import BASE_DIR
 
 
 def load_template(filename, **kwargs):
     """Wrapper for loading a jinja2 template from file"""
-    templateLoader = jinja2.FileSystemLoader(
-        searchpath="./powerhub/templates/payloads/"
+    path = os.path.join(
+        BASE_DIR, 'powerhub', 'templates', 'payloads'
     )
+    templateLoader = jinja2.FileSystemLoader(searchpath=path)
     templateEnv = jinja2.Environment(loader=templateLoader)
     TEMPLATE_FILE = filename
     template = templateEnv.get_template(TEMPLATE_FILE)
