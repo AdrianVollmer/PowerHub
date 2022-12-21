@@ -36,7 +36,7 @@ def dh_kex(client_public, key):
     """
 
     # Only server knows this
-    server_secret = random.randint(2**32, 2**34)
+    server_secret = random.randint(2**126, 2**128)
 
     # y_secret will be chosen from the powerhub client
 

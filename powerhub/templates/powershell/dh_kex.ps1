@@ -2,7 +2,7 @@ $dh_endpoint = "{{dh_endpoint}}";
 $DH_MODULUS = [bigint]'{{DH_MODULUS}}';
 $DH_G = [bigint]'{{DH_G}}';
 
-$Client_Secret = ([bigint](Get-Random -Min ([Math]::Pow(2, 32)) -Max ([Math]::Pow(2, 34))));
+$Client_Secret = ([bigint](Get-Random -Max ([bigint]::Pow(2, 128))));
 $Client_Public = [bigint]::ModPow($DH_G, $Client_Secret, $DH_MODULUS);
 
 {{'Write-Debug "DH Endpoint: $dh_endpoint"'|debug}}
