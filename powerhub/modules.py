@@ -1,12 +1,18 @@
 import logging
 import os
+import threading
 
 import magic
+from watchdog.observers import Observer
+from watchdog.events import PatternMatchingEventHandler
 
 from powerhub.directories import MOD_DIR
 
 
 log = logging.getLogger(__name__)
+
+modules = []
+EXTENSIONS = [".ps1", ".ps1m", ".exe", ".bin"]
 
 
 def get_module_type(filename, file_type, mime):
@@ -52,35 +58,45 @@ def update_modules():
                 # don't want
                 continue
             _, ext = os.path.splitext(fname)
-            if ext.lower() not in ['.exe', '.ps1']:
+            if ext.lower() not in EXTENSIONS:
                 continue
             path = os.path.join(dirName, fname)
-            with open(path, "br") as f:
-                buffer = f.read(2048)
-                file_type = magic.from_buffer(buffer)
-                mime = magic.from_buffer(buffer, mime=True)
-                mod_type = get_module_type(fname, file_type, mime)
-                if not mod_type:
-                    continue
-            log.debug("Imported module (%s): %s" % (path, mod_type))
-            module = Module(
-                path.replace(MOD_DIR, ''),
-                path,
-                mod_type,
-                file_type,
-            )
-            result.append(module)
+            module = import_file(path)
+            if module:
+                result.append(module)
 
-    for i, m in enumerate(result):
-        m.n = i
+    enumerate_modules(_modules=result)
 
     global modules
     modules = result
 
 
+def import_file(path):
+    with open(path, "br") as f:
+        buffer = f.read(2048)
+        file_type = magic.from_buffer(buffer)
+        mime = magic.from_buffer(buffer, mime=True)
+        fname = os.path.basename(path)
+        mod_type = get_module_type(fname, file_type, mime)
+        if not mod_type:
+            return
+    module = Module(
+        path.replace(MOD_DIR, ''),
+        path,
+        mod_type,
+        file_type,
+    )
+    log.debug("Imported module (%s): %s" % (path, mod_type))
+    return module
+
+
+def enumerate_modules(_modules=modules):
+    for i, m in enumerate(_modules):
+        m.n = i
+
+
 class Module(object):
     """Represents a module
-
     """
 
     def __init__(self, name, path, type, file_type):
@@ -114,4 +130,64 @@ class Module(object):
         }
 
 
+def find_module_by_path(path):
+    for m in modules:
+        if m.path == path:
+            return m
+
+
+def on_created(event):
+    module = import_file(event.src_path)
+    module.n = len(modules) - 1
+    modules.append(module)
+    log.info("Module added: %s" % module.name)
+
+
+def on_deleted(event):
+    m = find_module_by_path(event.src_path)
+    log.info("Module deleted: %s" % m.name)
+    modules.pop(m.n)
+    enumerate_modules()
+
+
+def on_modified(event):
+    module = import_file(event.src_path)
+    log.info("Module modified: %s" % module.name)
+    m = find_module_by_path(event.src_path)
+    modules[m.i] = module
+
+
+def on_moved(event):
+    m = find_module_by_path(event.src_path)
+    log.info("Module renamed: %s" % m.name)
+    m.path = event.dest_path
+    m.name = m.path.replace(MOD_DIR, '')
+
+
+def set_up_watchdog():
+    """Watch for changed files and updated the modules"""
+
+    patterns = ['*' + e for e in EXTENSIONS]
+    ignore_patterns = None
+    ignore_directories = False
+    case_sensitive = False
+    my_event_handler = PatternMatchingEventHandler(
+        patterns, ignore_patterns, ignore_directories, case_sensitive
+    )
+
+    my_event_handler.on_created = on_created
+    my_event_handler.on_deleted = on_deleted
+    my_event_handler.on_modified = on_modified
+    my_event_handler.on_moved = on_moved
+
+    path = MOD_DIR
+    go_recursively = True
+    my_observer = Observer()
+    my_observer.schedule(my_event_handler, path, recursive=go_recursively)
+
+    watchdog = threading.Thread(target=my_observer.start, daemon=True)
+    watchdog.start()
+
+
 update_modules()
+set_up_watchdog()

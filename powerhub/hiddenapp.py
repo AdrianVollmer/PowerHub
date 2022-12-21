@@ -6,7 +6,6 @@ import os
 from flask import render_template, request, Response, Flask
 
 from powerhub.tools import encrypt_rc4, encrypt_aes, compress
-from powerhub.modules import update_modules
 import powerhub.modules as phmod
 from powerhub.stager import webdav_url, callback_urls, get_stage, symbol_name
 from powerhub.directories import XDG_DATA_HOME, BASE_DIR
@@ -137,9 +136,6 @@ def stager():
 @hidden_app.route('/list')
 def hub_modules():
     """Return list of hub modules"""
-    reload = request.args.get('reload', '')
-    if reload.lower() != 'false':
-        update_modules()
 
     context = {
         "modules": phmod.modules,
