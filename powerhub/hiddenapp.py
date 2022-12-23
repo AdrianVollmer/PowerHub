@@ -7,7 +7,7 @@ from flask import render_template, request, Response, Flask
 
 from powerhub.tools import encrypt_rc4, encrypt_aes, compress
 import powerhub.modules as phmod
-from powerhub.stager import webdav_url, callback_urls, get_stage, symbol_name
+from powerhub.stager import webdav_url, callback_urls, get_stage
 from powerhub.directories import XDG_DATA_HOME, BASE_DIR
 from powerhub.dhkex import DH_G, DH_MODULUS, DH_ENDPOINT
 from powerhub.env import powerhub_app as ph_app
@@ -52,9 +52,9 @@ def get_stage3(args):
 
     powerhub_context = dict(
         modules=phmod.modules,
-        callback_url=callback_urls[transport],
+        callback_url=callback_urls()[transport],
         transport=transport,
-        webdav_url=webdav_url,
+        webdav_url=webdav_url(),
         key=ph_app.key,
         VERSION=__version__,
         minimal=minimal,
@@ -114,10 +114,9 @@ def stager():
     key = ph_app.key
 
     stager_context = dict(
-        symbol_name=lambda name: symbol_name(name, natural=natural),
         key=key,
         amsibypass=amsi_bypass,
-        callback=callback_urls[transport],
+        callback=callback_urls()[transport],
         kex=kex,
         DH_G=DH_G,
         DH_MODULUS=DH_MODULUS,
@@ -128,6 +127,8 @@ def stager():
         key,
         stage3_strings=[stage3, profile, clipboard_entry],
         context=stager_context,
+        debug=ph_app.args.DEBUG,
+        natural=natural,
     )
 
     return Response(result, content_type='text/plain; charset=utf-8')

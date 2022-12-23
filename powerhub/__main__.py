@@ -11,3 +11,11 @@ def main(background=False):
 
     from powerhub.app import PowerHubApp
     PowerHubApp(args).run(background=background)
+
+
+def power_obfuscate():
+    from powerhub.po_args import parse_args
+    args = parse_args()
+
+    from powerhub.stager import obfuscate_file
+    obfuscate_file(args.input, args.output)
