@@ -6,7 +6,7 @@ import magic
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
-from powerhub.directories import MOD_DIR
+from powerhub.directories import directories
 
 
 log = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ def update_modules():
     result = []
     log.info("Importing modules...")
 
-    for dirName, subdirList, fileList in os.walk(MOD_DIR, followlinks=True):
+    for dirName, subdirList, fileList in os.walk(directories.MOD_DIR, followlinks=True):
         for fname in fileList:
             if fname.endswith('.tests.ps1'):
                 # This is done because PowerSploit contains tests that we
@@ -81,7 +81,7 @@ def import_file(path):
         if not mod_type:
             return
     module = Module(
-        path.replace(MOD_DIR, ''),
+        path.replace(directories.MOD_DIR, ''),
         path,
         mod_type,
         file_type,
@@ -161,7 +161,7 @@ def on_moved(event):
     m = find_module_by_path(event.src_path)
     log.info("Module renamed: %s" % m.name)
     m.path = event.dest_path
-    m.name = m.path.replace(MOD_DIR, '')
+    m.name = m.path.replace(directories.MOD_DIR, '')
 
 
 def set_up_watchdog():
@@ -180,7 +180,7 @@ def set_up_watchdog():
     my_event_handler.on_modified = on_modified
     my_event_handler.on_moved = on_moved
 
-    path = MOD_DIR
+    path = directories.MOD_DIR
     go_recursively = True
     my_observer = Observer()
     my_observer.schedule(my_event_handler, path, recursive=go_recursively)

@@ -17,7 +17,7 @@ from powerhub.sql import get_clip_entry_list
 from powerhub.stager import build_cradle
 import powerhub.modules as phmod
 from powerhub.upload import save_file, get_filelist
-from powerhub.directories import UPLOAD_DIR, STATIC_DIR
+from powerhub.directories import directories
 from powerhub.payloads import create_payload
 from powerhub.tools import decrypt_aes
 from powerhub.auth import requires_auth
@@ -295,7 +295,7 @@ def download_file(filename):
     """Download a file"""
     try:
         return send_from_directory(
-            UPLOAD_DIR,
+            directories.UPLOAD_DIR,
             filename,
             as_attachment='dl' in request.args,
         )
@@ -312,7 +312,7 @@ def download_all():
                 datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     shutil.make_archive(os.path.join(tmp_dir.name, file_name),
                         "zip",
-                        UPLOAD_DIR)
+                        directories.UPLOAD_DIR)
     return send_from_directory(tmp_dir.name,
                                file_name + ".zip",
                                as_attachment=True)
@@ -369,7 +369,7 @@ def list_static():
         directory['subdirs'].sort(key=lambda x: x['name'])
         return directory
     context = {
-        'rootdir': get_dir(STATIC_DIR)
+        'rootdir': get_dir(directories.STATIC_DIR)
     }
     return render_template('html/list-static.html', **context)
 
@@ -377,7 +377,7 @@ def list_static():
 @app.route('/static/<path:filename>')
 def server_static(filename):
     try:
-        return send_from_directory(STATIC_DIR,
+        return send_from_directory(directories.STATIC_DIR,
                                    filename,
                                    as_attachment=False)
     except PermissionError:

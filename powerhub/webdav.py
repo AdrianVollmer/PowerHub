@@ -2,8 +2,7 @@ import os
 import threading
 from cheroot import wsgi
 from wsgidav.wsgidav_app import WsgiDAVApp
-from powerhub.directories import WEBDAV_RO, WEBDAV_BLACKHOLE, \
-        UPLOAD_DIR, WEBDAV_DIR
+from powerhub.directories import directories
 from powerhub.env import powerhub_app as ph_app
 import time
 from watchdog.observers import Observer
@@ -31,12 +30,12 @@ config = {
     "simple_dc": {"user_mapping": {"*": True}},
     "provider_mapping": {
         "/webdav_ro": {
-            "root": WEBDAV_RO,
+            "root": directories.WEBDAV_RO,
             "readonly": True,
             "auth": "anonymous",
         },
         "/webdav/": {
-            "root": WEBDAV_DIR,
+            "root": directories.WEBDAV_DIR,
             "readonly": False,
             "auth": "anonymous",
         },
@@ -59,13 +58,13 @@ class MyHandler(FileSystemEventHandler):
     def on_created(self, event):
         os.rename(
             os.path.join(event.src_path),
-            os.path.join(UPLOAD_DIR, os.path.basename(event.src_path)),
+            os.path.join(directories.UPLOAD_DIR, os.path.basename(event.src_path)),
         )
 
 
 def watch_blackhole_folder():
     observer = Observer()
-    observer.schedule(MyHandler(), path=WEBDAV_BLACKHOLE, recursive=False)
+    observer.schedule(MyHandler(), path=directories.WEBDAV_BLACKHOLE, recursive=False)
     observer.start()
 
     try:

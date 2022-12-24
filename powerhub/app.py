@@ -8,6 +8,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.serving import WSGIRequestHandler, _log
 from flask_socketio import SocketIO
 
+from powerhub.directories as ph_dir
 import powerhub.env as env
 from powerhub import __version__
 
@@ -60,6 +61,7 @@ class PowerHubApp(object):
         env.powerhub_app = self
 
         self.args = args
+        ph_dir.init_directories(workspace_dir=args.WORKSPACE_DIR)
         self.init_flask()
         self.init_db()
         self.init_clipboard()
@@ -84,7 +86,6 @@ class PowerHubApp(object):
 
     def init_flask(self):
         from powerhub.flask import app as flask_blueprint
-        from powerhub.directories import DB_FILENAME
         self.flask_app = Flask(__name__, static_url_path='/invalid')
         self.flask_app.register_blueprint(flask_blueprint)
         self.flask_app.wsgi_app = ProxyFix(
@@ -96,7 +97,7 @@ class PowerHubApp(object):
         self.flask_app.config.update(
             DEBUG=self.args.DEBUG,
             SECRET_KEY=os.urandom(16),
-            SQLALCHEMY_DATABASE_URI='sqlite:///' + DB_FILENAME,
+            SQLALCHEMY_DATABASE_URI='sqlite:///' + ph_dir.directories.DB_FILENAME,
             SQLALCHEMY_TRACK_MODIFICATIONS=False,
         )
 

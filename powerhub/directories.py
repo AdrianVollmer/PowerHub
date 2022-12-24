@@ -1,30 +1,24 @@
+import collections
 import os
 
-from powerhub.env import powerhub_app as ph_app
 
-
-_HOME = os.path.expanduser('~')
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-XDG_DATA_HOME = os.path.join(
-    os.environ.get('XDG_DATA_HOME') or os.path.join(_HOME, '.local', 'share'),
-    'powerhub',
+DirList = collections.namedtuple(
+    'DirList',
+    [
+        'BASE_DIR',
+        'CERT_DIR',
+        'MOD_DIR',
+        'STATIC_DIR',
+        'UPLOAD_DIR',
+        'WEBDAV_BLACKHOLE',
+        'WEBDAV_DIR',
+        'WEBDAV_PUBLIC',
+        'WEBDAV_RO',
+        'XDG_DATA_HOME',
+        'DB_FILENAME',
+    ],
 )
-
-if ph_app:
-    WORKSPACE_DIR = ph_app.args.WORKSPACE_DIR or XDG_DATA_HOME
-else:
-    WORKSPACE_DIR = XDG_DATA_HOME
-WORKSPACE_DIR = os.path.abspath(WORKSPACE_DIR)
-
-UPLOAD_DIR = os.path.join(WORKSPACE_DIR, "upload")
-STATIC_DIR = os.path.join(WORKSPACE_DIR, 'static')
-WEBDAV_DIR = os.path.join(WORKSPACE_DIR, 'webdav')
-WEBDAV_RO = os.path.join(WORKSPACE_DIR, 'webdav_ro')
-WEBDAV_BLACKHOLE = os.path.join(WEBDAV_DIR, 'blackhole')
-WEBDAV_PUBLIC = os.path.join(WEBDAV_DIR, 'public')
-
-MOD_DIR = os.path.join(XDG_DATA_HOME, 'modules')
-CERT_DIR = os.path.join(XDG_DATA_HOME, 'ssl')
+directories = None
 
 
 def ensure_dir_exists(dirname):
@@ -35,19 +29,47 @@ def ensure_dir_exists(dirname):
         os.makedirs(dirname)
 
 
-directories = [
-    UPLOAD_DIR,
-    XDG_DATA_HOME,
-    WEBDAV_DIR,
-    MOD_DIR,
-    STATIC_DIR,
-    WEBDAV_RO,
-    WEBDAV_BLACKHOLE,
-    WEBDAV_PUBLIC,
-    CERT_DIR,
-]
+def init_directories(workspace_dir, create_missing=False):
 
-for d in directories:
-    ensure_dir_exists(d)
+    _HOME = os.path.expanduser('~')
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    XDG_DATA_HOME = os.path.join(
+        os.environ.get('XDG_DATA_HOME') or os.path.join(_HOME, '.local', 'share'),
+        'powerhub',
+    )
 
-DB_FILENAME = os.path.join(WORKSPACE_DIR, "powerhub_db.sqlite")
+    WORKSPACE_DIR = workspace_dir or XDG_DATA_HOME
+
+    UPLOAD_DIR = os.path.join(WORKSPACE_DIR, "upload")
+    STATIC_DIR = os.path.join(WORKSPACE_DIR, 'static')
+    WEBDAV_DIR = os.path.join(WORKSPACE_DIR, 'webdav')
+    WEBDAV_RO = os.path.join(WORKSPACE_DIR, 'webdav_ro')
+    WEBDAV_BLACKHOLE = os.path.join(WEBDAV_DIR, 'blackhole')
+    WEBDAV_PUBLIC = os.path.join(WEBDAV_DIR, 'public')
+
+    MOD_DIR = os.path.join(XDG_DATA_HOME, 'modules')
+    CERT_DIR = os.path.join(XDG_DATA_HOME, 'ssl')
+
+    _directories = [
+        BASE_DIR,
+        CERT_DIR,
+        MOD_DIR,
+        STATIC_DIR,
+        UPLOAD_DIR,
+        WEBDAV_BLACKHOLE,
+        WEBDAV_DIR,
+        WEBDAV_PUBLIC,
+        WEBDAV_RO,
+        XDG_DATA_HOME,
+        # order is important here, must be same as above
+    ]
+
+    if create_missing:
+        for d in _directories:
+            ensure_dir_exists(d)
+
+    DB_FILENAME = os.path.join(WORKSPACE_DIR, "powerhub_db.sqlite")
+    _directories.append(DB_FILENAME)
+
+    global directories
+    directories = DirList(*_directories)

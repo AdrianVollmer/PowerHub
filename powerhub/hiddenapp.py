@@ -8,14 +8,14 @@ from flask import render_template, request, Response, Flask
 from powerhub.tools import encrypt_rc4, encrypt_aes, compress
 import powerhub.modules as phmod
 from powerhub.stager import webdav_url, callback_urls, get_stage
-from powerhub.directories import XDG_DATA_HOME, BASE_DIR
+from powerhub.directories import directories
 from powerhub.dhkex import DH_G, DH_MODULUS, DH_ENDPOINT
 from powerhub.env import powerhub_app as ph_app
 from powerhub import __version__
 
 hidden_app = Flask(
     'hidden_app',
-    template_folder=os.path.join(BASE_DIR, 'templates'),
+    template_folder=os.path.join(directories.BASE_DIR, 'templates'),
 )
 hidden_app.templates_auto_reload = True
 
@@ -70,7 +70,7 @@ def get_stage3(args):
 
 def get_profile():
     try:
-        with open(os.path.join(XDG_DATA_HOME, "profile.ps1"), "r") as f:
+        with open(os.path.join(directories.XDG_DATA_HOME, "profile.ps1"), "r") as f:
             profile = f.read()
     except Exception as e:
         log.error("Error while reading profile.ps1: %s" % str(e))

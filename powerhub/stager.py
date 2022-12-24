@@ -8,8 +8,7 @@ import string
 
 from powerhub.tools import encrypt_rc4, encrypt_aes, generate_random_key
 from powerhub.modules import sanitize_ps1
-from powerhub.directories import BASE_DIR
-from powerhub.env import powerhub_app as ph_app
+from powerhub.directories import directories
 
 
 log = logging.getLogger(__name__)
@@ -19,6 +18,7 @@ VARLIST = []
 
 
 def callback_urls():
+    from powerhub.env import powerhub_app as ph_app
     return {
         'http': 'http://%s:%d/%s' % (
             ph_app.args.URI_HOST,
@@ -35,6 +35,7 @@ def callback_urls():
 
 # TODO consider https
 def webdav_url():
+    from powerhub.env import powerhub_app as ph_app
     return 'http://%s:%d/webdav' % (
         ph_app.args.URI_HOST,
         ph_app.args.LPORT,
@@ -161,7 +162,7 @@ def symbol_name(name, natural=False, refresh=False, debug=False):
 
 def choose_natural_name():
     if not VARLIST:
-        with open(os.path.join(BASE_DIR, 'variables.txt'), 'r') as fp:
+        with open(os.path.join(directories.BASE_DIR, 'variables.txt'), 'r') as fp:
             for line in fp:
                 if not line.startswith('#'):
                     VARLIST.append(line.strip())
@@ -198,7 +199,7 @@ def get_stage(key, context={}, stage3_files=[], stage3_strings=[],
     from jinja2 import Environment, FileSystemLoader
 
     env = Environment(loader=FileSystemLoader(
-        os.path.join(BASE_DIR, 'templates')
+        os.path.join(directories.BASE_DIR, 'templates')
     ))
 
     def rc4encrypt(msg):
