@@ -250,7 +250,19 @@ def remove_blank_lines(text):
     return result
 
 
-def obfuscate_file(fp_in, fp_out):
+def wrap_in_ps1(code, name):
+    from jinja2 import Environment, FileSystemLoader
+
+    env = Environment(loader=FileSystemLoader(
+        os.path.join(directories.BASE_DIR, 'templates')
+    ))
+    template = env.get_template(os.path.join('powershell', 'exec_dotnet.ps1'))
+
+    result = template.render(code=code, name=name)
+    return result
+
+
+def obfuscate_file(fp_in, fp_out, epilogue=''):
     import magic
 
     code = fp_in.read()
@@ -260,9 +272,16 @@ def obfuscate_file(fp_in, fp_out):
         file_type = magic.from_buffer(code)
         code = sanitize_ps1(code, file_type)
     except UnicodeError:
-        raise
-        # TODO wrap in ps1
+        name = os.path.basename(fp_in.filename)
+        if name == '-' or not name:
+            name = 'stdin.exe'
+        code = base64.b64encode().decode()
+        code = wrap_in_ps1(code, name)
+
+    stage3 = [code]
+    if epilogue:
+        stage3.append(epilogue)
 
     key = generate_random_key(16)
-    output = get_stage(key, stage3_strings=[code])
+    output = get_stage(key, stage3_strings=stage3)
     fp_out.write(output)

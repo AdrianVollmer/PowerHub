@@ -21,4 +21,4 @@ def power_obfuscate():
     init_directories(None, create_missing=False)
 
     from powerhub.stager import obfuscate_file
-    obfuscate_file(args.input, args.output)
+    obfuscate_file(args.input, args.output, epilogue=args.epilogue)

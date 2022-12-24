@@ -24,6 +24,12 @@ parser.add_argument(
     help="Path to output file (default: stdin)",
 )
 
+parser.add_argument(
+    '-e', '--epilogue',
+    default=None,
+    help="PowerShell code to execute after all scripts have been loaded",
+)
+
 
 def parse_args():
     return parser.parse_args()
