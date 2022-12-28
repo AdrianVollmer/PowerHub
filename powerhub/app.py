@@ -8,7 +8,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.serving import WSGIRequestHandler, _log
 from flask_socketio import SocketIO
 
-from powerhub.directories as ph_dir
+import powerhub.directories as ph_dir
 import powerhub.env as env
 from powerhub import __version__
 
@@ -67,6 +67,10 @@ class PowerHubApp(object):
         self.init_clipboard()
         self.init_socketio()
         self.init_settings()
+
+        from powerhub.hiddenapp import hidden_app
+        setattr(hidden_app, 'key', self.key)
+        setattr(hidden_app, 'clipboard', self.clipboard)
 
     def init_socketio(self):
         self.socketio = SocketIO(

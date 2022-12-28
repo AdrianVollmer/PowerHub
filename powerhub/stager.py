@@ -258,6 +258,7 @@ def wrap_in_ps1(code, name):
     ))
     template = env.get_template(os.path.join('powershell', 'exec_dotnet.ps1'))
 
+    code = base64.b64encode(code).decode()
     result = template.render(code=code, name=name)
     return result
 
@@ -272,10 +273,11 @@ def obfuscate_file(fp_in, fp_out, epilogue=''):
         file_type = magic.from_buffer(code)
         code = sanitize_ps1(code, file_type)
     except UnicodeError:
-        name = os.path.basename(fp_in.filename)
-        if name == '-' or not name:
+        try:
+            name = os.path.basename(fp_in.filename)
+        except AttributeError:
+            # it is a stream, not a file
             name = 'stdin.exe'
-        code = base64.b64encode().decode()
         code = wrap_in_ps1(code, name)
 
     stage3 = [code]
@@ -283,5 +285,6 @@ def obfuscate_file(fp_in, fp_out, epilogue=''):
         stage3.append(epilogue)
 
     key = generate_random_key(16)
+    # TODO pass arguments
     output = get_stage(key, stage3_strings=stage3)
     fp_out.write(output)

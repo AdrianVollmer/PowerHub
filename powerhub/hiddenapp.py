@@ -10,7 +10,6 @@ import powerhub.modules as phmod
 from powerhub.stager import webdav_url, callback_urls, get_stage
 from powerhub.directories import directories
 from powerhub.dhkex import DH_G, DH_MODULUS, DH_ENDPOINT
-from powerhub.env import powerhub_app as ph_app
 from powerhub import __version__
 
 hidden_app = Flask(
@@ -25,7 +24,7 @@ log = logging.getLogger(__name__)
 @hidden_app.add_template_filter
 def debug(msg):
     """This is a function for debugging statements in jinja2 templates"""
-    if ph_app.args.DEBUG:
+    if log.getEffectiveLevel() == logging.DEBUG:
         return msg
     return ""
 
@@ -33,7 +32,7 @@ def debug(msg):
 @hidden_app.add_template_filter
 def rc4encrypt(msg):
     """This is a function for encrypting strings in jinja2 templates"""
-    return b64encode(encrypt_rc4(msg.encode(), ph_app.key)).decode()
+    return b64encode(encrypt_rc4(msg.encode(), hidden_app.key)).decode()
 
 
 @hidden_app.add_template_filter
@@ -42,7 +41,7 @@ def rc4byteencrypt(data):
 
     data must be hexascii encoded.
     """
-    encrypted = encrypt_rc4(b64encode(binascii.unhexlify(data)), ph_app.key)
+    encrypted = encrypt_rc4(b64encode(binascii.unhexlify(data)), hidden_app.key)
     return b64encode(encrypted).decode()
 
 
@@ -55,7 +54,7 @@ def get_stage3(args):
         callback_url=callback_urls()[transport],
         transport=transport,
         webdav_url=webdav_url(),
-        key=ph_app.key,
+        key=hidden_app.key,
         VERSION=__version__,
         minimal=minimal,
     )
@@ -82,7 +81,7 @@ def get_profile():
 def get_clipboard_entry(args):
     try:
         clipboard_id = int(args.get('c'))
-        clipboard_entry = ph_app.clipboard.entries[clipboard_id]
+        clipboard_entry = hidden_app.clipboard.entries[clipboard_id]
         if clipboard_entry.executable:
             clipboard_entry = clipboard_entry.content
         else:
@@ -111,7 +110,7 @@ def stager():
     natural = (request.args.get('n') is not None)
     transport = request.args.get('t', 'http')
 
-    key = ph_app.key
+    key = hidden_app.key
 
     stager_context = dict(
         key=key,
@@ -127,7 +126,7 @@ def stager():
         key,
         stage3_strings=[stage3, profile, clipboard_entry],
         context=stager_context,
-        debug=ph_app.args.DEBUG,
+        debug=(log.getEffectiveLevel() == logging.DEBUG),
         natural=natural,
     )
 
@@ -147,7 +146,7 @@ def hub_modules():
         **context,
     ).encode()
 
-    result = b64encode(encrypt_aes((result), ph_app.key))
+    result = b64encode(encrypt_aes((result), hidden_app.key))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
@@ -165,10 +164,10 @@ def load_module():
         code = phmod.modules[n].code
 
         if 'c' in request.args:
-            encrypted = encrypt_aes(compress(code), ph_app.key)
+            encrypted = encrypt_aes(compress(code), hidden_app.key)
             resp = b64encode(encrypted),
         else:
-            resp = b64encode(encrypt_aes(code, ph_app.key)),
+            resp = b64encode(encrypt_aes(code, hidden_app.key)),
 
         return Response(
             resp,
