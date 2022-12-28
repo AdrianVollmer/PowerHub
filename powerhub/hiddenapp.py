@@ -10,6 +10,7 @@ import powerhub.modules as phmod
 from powerhub.stager import webdav_url, callback_urls, get_stage
 from powerhub.directories import directories
 from powerhub.dhkex import DH_G, DH_MODULUS, DH_ENDPOINT
+from powerhub.parameters import param_collection
 from powerhub import __version__
 
 hidden_app = Flask(
@@ -45,9 +46,9 @@ def rc4byteencrypt(data):
     return b64encode(encrypted).decode()
 
 
-def get_stage3(args):
-    minimal = (args.get('m') is not None)
-    transport = args.get('t', 'http')
+def get_stage3():
+    minimal = get_param_value('minimal')
+    transport = get_param_value('transport')
 
     powerhub_context = dict(
         modules=phmod.modules,
@@ -78,9 +79,12 @@ def get_profile():
     return profile
 
 
-def get_clipboard_entry(args):
+def get_clipboard_entry():
     try:
-        clipboard_id = int(args.get('c'))
+        clipboard_id = int(get_param_value('clip-exec'))
+        if clipboard_id < 0:
+            return ""
+
         clipboard_entry = hidden_app.clipboard.entries[clipboard_id]
         if clipboard_entry.executable:
             clipboard_entry = clipboard_entry.content
@@ -96,19 +100,24 @@ def get_clipboard_entry(args):
     return clipboard_entry
 
 
+def get_param_value(label):
+    p = param_collection.get_by_label(label)
+    return request.args.get(p.get_arg, p.default_value)
+
+
 @hidden_app.route('/')
 def stager():
     """Load the stager"""
-    stage3 = get_stage3(request.args)
+    stage3 = get_stage3()
     profile = get_profile()
-    clipboard_entry = get_clipboard_entry(request.args)
+    clipboard_entry = get_clipboard_entry()
 
-    amsi_bypass = request.args.get('a', 'reflection')
+    amsi_bypass = get_param_value('amsi')
     amsi_bypass = os.path.join('powershell', 'amsi', amsi_bypass + '.ps1')
 
-    kex = request.args.get('k', 'dh')
-    natural = (request.args.get('n') is not None)
-    transport = request.args.get('t', 'http')
+    kex = get_param_value('kex')
+    natural = get_param_value('natural')
+    transport = get_param_value('transport')
 
     key = hidden_app.key
 

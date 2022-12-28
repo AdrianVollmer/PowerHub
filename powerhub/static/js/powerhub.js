@@ -6,18 +6,26 @@ function update_cradle() {
         return
     };
     var parameters = {};
-    $('#cradle-options select').each(function(){
-        parameters[this.id] = this.value;
-    });
+
     $('#cradle-options input').each(function(){
-        parameters[this.id] = $(this).is(':checked');
+        if ($(this).attr('type') == 'radio') {
+            if ($(this).is(':checked')) {
+                parameters[$(this).attr('name')] = this.id;
+            }
+        }
+        else {
+            parameters[this.id] = $(this).is(':checked');
+        }
         $(this).parent().hide();
     });
+
     $('#cradle-options select').each(function(){
+        parameters[this.id] = this.value;
         $('#cradle-options .relevant-to-'+this.value).each(function(){
             $(this).show();
         });
     });
+
     $.get(
         "dlcradle",
         parameters

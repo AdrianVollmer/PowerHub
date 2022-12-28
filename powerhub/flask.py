@@ -9,8 +9,6 @@ from tempfile import TemporaryDirectory
 from flask import Blueprint, render_template, request, Response, redirect, \
          send_from_directory, flash, abort, make_response
 
-from werkzeug.exceptions import BadRequestKeyError
-
 from powerhub.env import powerhub_app as ph_app
 
 from powerhub.sql import get_clip_entry_list
@@ -24,6 +22,7 @@ from powerhub.auth import requires_auth
 from powerhub.repos import repositories, install_repo
 from powerhub.hiddenapp import hidden_app
 from powerhub.dhkex import DH_ENDPOINT, dh_kex
+from powerhub.parameters import param_collection
 
 
 app = Blueprint('app', __name__)
@@ -93,41 +92,38 @@ def catch_all(path):
 @app.route('/hub')
 @requires_auth
 def hub():
-    clip_entries = get_clip_entry_list(ph_app.clipboard)
-    context = {
-        "clip_entries": clip_entries,
-    }
-    return render_template("html/hub.html", **context)
+    clip_entries = [('-1', 'None')] + get_clip_entry_list(ph_app.clipboard)
+    param_collection.update_options('clip-exec', clip_entries)
+    return render_template("html/hub.html", parameters=param_collection.parameters)
 
 
 @app.route('/dlcradle')
 @requires_auth
 def dlcradle():
-    try:
-        if request.args['Launcher'] in [
-            'powershell',
-            'cmd',
-            'cmd_enc',
-            'bash',
-        ]:
-            cmd = build_cradle(request.args, ph_app.key)
-            return render_template(
-                "html/hub/download-cradle.html",
-                dl_str=cmd,
-            )
-        else:
-            import urllib
-            href = urllib.parse.urlencode(request.args)
-            return render_template(
-                "html/hub/download-cradle.html",
-                dl_str=None,
-                href='/dl?' + href,
-            )
+    """Return the download cradle as HTML fragment"""
+    param_collection.parse_get_args(request.args)
+    params = param_collection
 
-    except BadRequestKeyError as e:
-        log.error("Unknown key, must be one of %s" %
-                  str(list(request.args.keys())))
-        return (str(e), 500)
+    if params['launcher'] in [
+        'powershell',
+        'cmd',
+        'cmd_enc',
+        'bash',
+    ]:
+        cmd = build_cradle(params, ph_app.key)
+        href = None
+    else:
+        # Return a download button for payload
+        import urllib
+        href = urllib.parse.urlencode(request.args)
+        href = '/dl?' + href
+        cmd = None
+
+    return render_template(
+        "html/hub/download-cradle.html",
+        dl_str=cmd,
+        href=href,
+    )
 
 
 @app.route('/dl')

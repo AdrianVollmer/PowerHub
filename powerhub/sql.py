@@ -169,9 +169,14 @@ def get_clipboard_with_db(db):
 
 
 def get_clip_entry_list(clipboard):
-    return [{"n": c.id,
-             "text": c.content[:50] + ("..." if len(c.content) > 50 else ""),
-             } for c in clipboard.entries.values() if c.executable]
+    return [
+        (
+            c.id,
+            '[%d] %s' % (
+                c.id, c.content[:50] + ("..." if len(c.content) > 50 else "")
+            ),
+        ) for c in clipboard.entries.values() if c.executable
+    ]
 
 
 def get_timedelta(time):
