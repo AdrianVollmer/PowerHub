@@ -11,23 +11,33 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    '-d', '--debug', default=False, action="store_true",
+    help=("enable debug mode (disables a lot of obfuscation)"),
+)
+
+parser.add_argument(
     '-i', '--input',
     default='-',
     type=argparse.FileType(mode='rb'),
-    help="Path to input file (default: stdin)",
+    help="path to input file (default: stdin)",
 )
 
 parser.add_argument(
     '-o', '--output',
     default='-',
     type=argparse.FileType(mode='w'),
-    help="Path to output file (default: stdin)",
+    help="path to output file (default: stdin)",
 )
 
 parser.add_argument(
     '-e', '--epilogue',
     default=None,
     help="PowerShell code to execute after all scripts have been loaded",
+)
+
+parser.add_argument(
+    '-n', '--natural', default=False, action="store_true",
+    help=("use natural variable names"),
 )
 
 

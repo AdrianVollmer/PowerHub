@@ -272,7 +272,7 @@ def wrap_in_ps1(code, name):
     return result
 
 
-def obfuscate_file(fp_in, fp_out, epilogue=''):
+def obfuscate_file(fp_in, fp_out, natural=False, debug=False, epilogue=''):
     import magic
 
     code = fp_in.read()
@@ -294,6 +294,5 @@ def obfuscate_file(fp_in, fp_out, epilogue=''):
         stage3.append(epilogue)
 
     key = generate_random_key(16)
-    # TODO pass arguments
-    output = get_stage(key, stage3_strings=stage3)
+    output = get_stage(key, stage3_strings=stage3, natural=natural, debug=debug)
     fp_out.write(output)
