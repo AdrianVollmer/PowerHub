@@ -190,4 +190,3 @@ def set_up_watchdog():
 
 
 update_modules()
-set_up_watchdog()

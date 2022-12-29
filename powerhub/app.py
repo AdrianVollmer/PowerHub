@@ -61,12 +61,15 @@ class PowerHubApp(object):
         env.powerhub_app = self
 
         self.args = args
-        ph_dir.init_directories(workspace_dir=args.WORKSPACE_DIR)
+        ph_dir.init_directories(workspace_dir=args.WORKSPACE_DIR,
+                                create_missing=True)
         self.init_flask()
         self.init_db()
         self.init_clipboard()
         self.init_socketio()
         self.init_settings()
+        from powerhub.modules import set_up_watchdog
+        set_up_watchdog()
 
         from powerhub.hiddenapp import hidden_app
         setattr(hidden_app, 'key', self.key)
