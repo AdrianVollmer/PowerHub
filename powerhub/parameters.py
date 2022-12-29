@@ -64,7 +64,10 @@ class Parameter(object):
         if self.options and _value not in [o[0] for o in self.options]:
             raise ValueError("%s not in list: %s" % (_value, self.options))
         if self._type == "checkbox":
-            self._value = (_value.lower().startswith('t'))
+            if isinstance(_value, str):
+                self._value = (_value.lower().startswith('t'))
+            else:
+                self._value = bool(_value)
         else:
             self._value = _value
 
