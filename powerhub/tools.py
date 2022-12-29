@@ -123,6 +123,9 @@ def encrypt_rc4(data, key):
         key = key.encode()
     if isinstance(data, str):
         data = data.encode()
+        string = True
+    else:
+        string = False
 
     S = list(range(256))
     j = 0
@@ -139,7 +142,12 @@ def encrypt_rc4(data, key):
         S[i], S[j] = S[j], S[i]
         out.append(char ^ S[(S[i] + S[j]) % 256])
 
-    return (bytes(out))
+    result = (bytes(out))
+
+    if string:
+        result = base64.b64encode(result).decode()
+
+    return result
 
 
 def encrypt_aes(data, key):
