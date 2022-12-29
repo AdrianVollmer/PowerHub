@@ -76,7 +76,5 @@ function {{symbol_name("Unpack")}} {
     {% endif %}
     if (-not $Result) {return}
     $Result = [System.Text.Encoding]::UTF8.GetString($Result)
-
-    $sb = [Scriptblock]::Create($Result)
-    New-Module -ScriptBlock $sb | Out-Null
+    $Result
 }
