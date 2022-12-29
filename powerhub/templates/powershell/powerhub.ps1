@@ -100,7 +100,7 @@ function Transport-String {
     foreach($k in $2.keys) { $args += "&$k=$($2[$k])" }
     $path = "${1}${args}"
     $path = Encrypt-String $path
-    $path = [uri]::EscapeDataString($path)
+    $path = $path.replace('/', '_').replace('+', '-')
     return Decrypt-String ($WebClient.DownloadString("${CALLBACK_URL}${path}")) $3
 }
 
