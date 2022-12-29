@@ -51,6 +51,7 @@ def rc4byteencrypt(data):
 def get_stage3():
     minimal = param_collection['minimal']
     transport = param_collection['transport']
+    slow_encryption = param_collection['slowenc']
 
     powerhub_context = dict(
         modules=phmod.modules,
@@ -60,6 +61,7 @@ def get_stage3():
         key=hidden_app.key,
         VERSION=__version__,
         minimal=minimal,
+        slow_encryption=slow_encryption,
     )
 
     stage3 = render_template(
@@ -167,7 +169,13 @@ def hub_modules():
         **context,
     ).encode()
 
-    result = b64encode(encrypt_aes((result), hidden_app.key))
+    if 's' in request.args:
+        # Slow encryptiong
+        encrypt = encrypt_rc4
+    else:
+        encrypt = encrypt_aes
+
+    result = b64encode(encrypt(result, hidden_app.key))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
@@ -184,11 +192,17 @@ def load_module():
         phmod.modules[n].activate()
         code = phmod.modules[n].code
 
+        if 's' in request.args:
+            # Slow encryptiong
+            encrypt = encrypt_rc4
+        else:
+            encrypt = encrypt_aes
+
         if 'c' in request.args:
-            encrypted = encrypt_aes(compress(code), hidden_app.key)
+            encrypted = encrypt(compress(code), hidden_app.key)
             resp = b64encode(encrypted),
         else:
-            resp = b64encode(encrypt_aes(code, hidden_app.key)),
+            resp = b64encode(encrypt(code, hidden_app.key)),
 
         return Response(
             resp,

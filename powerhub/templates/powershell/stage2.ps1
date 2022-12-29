@@ -13,6 +13,12 @@ try { Set-PSReadlineOption -HistorySaveStyle SaveNothing } catch {}
 
 $GLOBAL_KEY = ${{symbol_name("global_key")}}
 
+{% if slow_encryption %}
+function Decrypt-RC4_ {
+    {{symbol_name("Decrypt-RC4")}} $args[0] $args[1]
+}
+{% endif %}
+
 function Encrypt-AES {
     param(
         [Byte[]]$buffer,
@@ -69,7 +75,7 @@ function {{symbol_name("Unpack")}} {
     $Result = [System.Convert]::FromBase64String($buffer)
     {% if slow_encryption %}
         {{'Write-Debug "Encryption mode: slow (RC4)"'|debug}}
-        $Result = Decrypt-RC4 $Result $GLOBAL_KEY
+        $Result = Decrypt-RC4_ $Result $GLOBAL_KEY
     {% else %}
         {{'Write-Debug "Encryption mode: fast (AES)"'|debug}}
         $Result = Decrypt-AES $Result $GLOBAL_KEY

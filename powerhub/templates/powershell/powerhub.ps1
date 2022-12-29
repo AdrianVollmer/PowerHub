@@ -89,7 +89,11 @@ function Decrypt-String {
         [System.String]$string, [Bool]$AsBytes=$False
   	)
     $result = [System.Convert]::FromBase64String($string)
-    $result = Decrypt-AES $result $KEY
+    {% if slow_encryption %}
+        $result = Decrypt-RC4_ $result $KEY
+    {% else %}
+        $result = Decrypt-AES $result $KEY
+    {% endif %}
     if (-not $AsBytes) { $result = [System.Text.Encoding]::UTF8.GetString($result) }
     $result
 }
@@ -98,6 +102,9 @@ function Transport-String {
     param([String]$1, [hashtable]$2=@{}, [Bool]$3=$False)
     $args = "?t=$TransportScheme"
     foreach($k in $2.keys) { $args += "&$k=$($2[$k])" }
+    {% if slow_encryption %}
+        $args += '&s=t'
+    {% endif %}
     $path = "${1}${args}"
     $path = Encrypt-String $path
     $path = $path.replace('/', '_').replace('+', '-')
