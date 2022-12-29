@@ -28,7 +28,7 @@ from powerhub.parameters import param_collection
 app = Blueprint('app', __name__)
 log = logging.getLogger(__name__)
 
-if not ph_app.args.DEBUG:
+if log.getEffectiveLevel() <= logging.DEBUG:
     logging.getLogger("socketio").setLevel(logging.WARN)
     logging.getLogger("engineio").setLevel(logging.WARN)
 
