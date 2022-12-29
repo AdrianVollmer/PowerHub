@@ -16,7 +16,6 @@ $TransportScheme = "{{transport}}"
 $WEBDAV_URL = "{{webdav_url}}"
 
 $CALLBACK_HOST = [regex]::Match($CALLBACK_URL, '(.+/)([^:/]+)((:|/).*)').captures.groups[2].value
-$ErrorActionPreference = "Stop"
 $PS_VERSION = $PSVersionTable.PSVersion.Major
 {{'$DebugPreference = "Continue"'|debug}}
 {% if minimal %}
