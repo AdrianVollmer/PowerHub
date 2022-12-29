@@ -179,11 +179,15 @@ params = [
         help="Use natural sounding variable names instead of randomly generated ones.",
     ),
     Parameter(
-        'incremental', False, 'Incremental Delivery', 'checkbox', get_arg='i',
+        'incremental', False, 'Incremental Delivery', 'checkbox',
         help="Deliver first stage in several requests.",
     ),
     Parameter(
-        'useragent', False, 'Set User-Agent', 'checkbox', get_arg='u',
+        'slowenc', False, 'Slow Encryption', 'checkbox', get_arg='s',
+        help="Avoid API calls to fast encryption routines for more stealth.",
+    ),
+    Parameter(
+        'useragent', False, 'Set User-Agent', 'checkbox',
         help="By default, PowerShell sets no or a revealing user-agent. "
              "This option sets a more natural user-agent.",
     ),

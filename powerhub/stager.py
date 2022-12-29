@@ -266,7 +266,10 @@ def get_stage(key, context={}, stage3_files=[], stage3_strings=[],
             buffer = open(t, 'r').read()
         else:
             buffer = t
-        buffer = encrypt_aes(buffer, key)
+        if context.get('slow_encryption'):
+            buffer = encrypt_rc4(buffer, key)
+        else:
+            buffer = encrypt_aes(buffer, key)
         stage3.append(buffer)
 
     context['stage2'] = stage2
@@ -307,7 +310,8 @@ def wrap_in_ps1(code, name):
     return result
 
 
-def obfuscate_file(fp_in, fp_out, natural=False, debug=False, epilogue=''):
+def obfuscate_file(fp_in, fp_out, natural=False, debug=False,
+                   slow_encryption=False, epilogue=''):
     import magic
 
     code = fp_in.read()
@@ -329,5 +333,11 @@ def obfuscate_file(fp_in, fp_out, natural=False, debug=False, epilogue=''):
         stage3.append(epilogue)
 
     key = generate_random_key(16)
-    output = get_stage(key, stage3_strings=stage3, natural=natural, debug=debug)
+    output = get_stage(
+        key,
+        stage3_strings=stage3,
+        natural=natural,
+        debug=debug,
+        slow_encryption=slow_encryption,
+    )
     fp_out.write(output)

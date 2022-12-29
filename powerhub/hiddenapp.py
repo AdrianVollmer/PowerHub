@@ -118,6 +118,7 @@ def stager():
     kex = param_collection['kex']
     natural = param_collection['natural']
     transport = param_collection['transport']
+    slow_encryption = param_collection['slowenc']
     increment = request.args.get('increment')
     if increment:
         separator = '<#%s#>' % random.choices(string.ascii_letters, k=32)
@@ -135,7 +136,9 @@ def stager():
         DH_MODULUS=DH_MODULUS,
         dh_endpoint=DH_ENDPOINT,
         separator=separator,
+        slow_encryption=slow_encryption,
     )
+    log.debug("Delivering stage 1; context: %s" % stager_context)
 
     result = get_stage(
         key,

