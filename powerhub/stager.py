@@ -270,7 +270,9 @@ def get_stage(key, context={}, stage3_files=[], stage3_strings=[],
             buffer = encrypt_rc4(buffer, key)
         else:
             buffer = encrypt_aes(buffer, key)
-        stage3.append(buffer)
+
+        if buffer:
+            stage3.append(buffer)
 
     context['stage2'] = stage2
     context['stage3'] = stage3
