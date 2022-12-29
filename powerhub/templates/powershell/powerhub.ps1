@@ -890,16 +890,22 @@ Use 'Get-Help' to learn more about those functions.
 "@
 }
 
-try { New-Alias -Name pth -Value PushTo-Hub } catch { }
-try { New-Alias -Name ghm -Value Get-HubModule } catch { }
-try { New-Alias -Name lshm -Value List-HubModules } catch { }
-try { New-Alias -Name uhm -Value Update-HubModules } catch { }
-try { New-Alias -Name rdne -Value Run-DotNETExe } catch { }
-{% if not minimal -%}
-try { New-Alias -Name re -Value Run-Exe } catch { }
-try { New-Alias -Name rsh -Value Run-Shellcode } catch { }
-{%- endif %}
-try { New-Alias -Name mwd -Value Mount-Webdav } catch { }
-try { New-Alias -Name umwd -Value Unmount-Webdav } catch { }
+$Aliases = @{
+    pth = "PushTo-Hub"
+    ghm = "Get-HubModule"
+    lshm = "List-HubModules"
+    uhm = "Update-HubModules"
+    rdne = "Run-DotNETExe"
+    mwd = "Mount-Webdav"
+    umwd = "Unmount-Webdav"
+    {% if not minimal -%}
+    re = "Run-Exe"
+    rsh = "Run-Shellcode"
+    {%- endif %}
+}
+
+foreach ($a in $Aliases.Keys) {
+    try { New-Alias -Force -Name $a -Value $Aliases.$a } catch { }
+}
 
 Update-HubModules | Out-Null
