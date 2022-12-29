@@ -875,7 +875,7 @@ The following functions are available (some with short aliases):
 {% if not minimal -%}
   * Run-Exe (re)
   * Run-Shellcode (rsh)
-{%- endif %}
+{%- endif -%}
   * PushTo-Hub (pth)
   * Mount-Webdav (mwd)
   * Unmount-Webdav (umwd)
