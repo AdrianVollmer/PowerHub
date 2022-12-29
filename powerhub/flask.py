@@ -78,8 +78,16 @@ def catch_all(path):
 
     # Return hidden endpoint
     try:
+        # If path is of the form `<b64 string>/<n>`, then separate the `n`
+        # That's the increment for incremental delivery
+        if '/' in path:
+            path, increment = path.split('/')[:2]
+        else:
+            increment = None
         path = urlsafe_b64decode(path)
         path = decrypt_aes(path, ph_app.key).decode()
+        if increment:
+            path += '&increment=%s' % increment
         log.info("Forwarding hidden endpoint: %s" % path)
         return hidden_app.test_client().get(path)
     except (binascii.Error, ValueError):
