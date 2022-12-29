@@ -167,6 +167,11 @@ params = [
         'natural', False, 'Natural Variables', 'checkbox', get_arg='n',
         help="Use natural sounding variable names instead of randomly generated ones.",
     ),
+    Parameter(
+        'useragent', False, 'Set User-Agent', 'checkbox', get_arg='u',
+        help="By default, PowerShell sets no or a revealing user-agent. "
+             "This option sets a more natural user-agent.",
+    ),
     Parameter('proxy', False, 'Use Web Proxy', 'checkbox'),
     Parameter('tlsv1.2', False, 'Force TLSv1.2', 'checkbox',
               classes='relevant-to-https'),

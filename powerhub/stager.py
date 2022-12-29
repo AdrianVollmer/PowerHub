@@ -77,6 +77,12 @@ def build_cradle_webclient(params, key):
                        "$%(web_client)s.Proxy.Credentials=[Net.CredentialCache]::"
                        "DefaultCredentials;")
 
+        if params['useragent']:
+            result += (
+                "$%(web_client)s.Headers['User-Agent']="
+                "'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)';"
+            )
+
         url = callback_urls()[params['transport']]
 
         query = '/?'
