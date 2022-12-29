@@ -11,7 +11,7 @@ parser.add_argument(
 
 parser.add_argument(
     '-d', '--debug', dest="DEBUG", default=False, action="store_true",
-    help=("show debug messages"),
+    help=("enable debug mode"),
 )
 
 parser.add_argument(
