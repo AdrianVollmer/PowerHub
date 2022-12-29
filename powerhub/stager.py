@@ -104,8 +104,10 @@ def build_cradle_webclient(params, key, incremental=False):
         url = callback_urls()[params['transport']]
 
         query = '/?'
-        for label in 'transport amsi kex clip-exec minimal natural'.split():
-            query += params.get_by_label(label).as_query_fragment()
+        for p in params.parameters:
+            if p.get_arg:
+                query += p.as_query_fragment() + '&'
+        query = query[:-1]
 
         # encrypt url
         query = encrypt_aes(query, key)
