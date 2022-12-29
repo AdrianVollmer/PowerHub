@@ -140,6 +140,14 @@ def build_cradle(params, key):
 
 
 def symbol_name(name, natural=False, refresh=False, debug=False):
+    """Choose an obfuscated symbol name for a given name. Uniqueness
+    garantueed.
+
+    If natural=True, choose a name that is typically used in scripts.
+    If refresh=True, choose a new symbol name instead of using the one that
+    was already defined.
+    If debug=True, the new symbol name is equal to the old symbol name.
+    """
     if refresh and name in symbol_list:
         del symbol_list[name]
 
