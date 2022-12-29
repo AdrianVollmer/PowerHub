@@ -11,6 +11,14 @@ import urllib
 
 
 class Parameter(object):
+    """A Parameter object that servers as GET argument in either the cradle
+    builder or the stager request, or as a CLI parameter
+
+    `value` can never be `None`, because then `default_value` is returned,
+    which must not be `None`.
+    Type of `value` is always bool (if it's a checkbox) or string.
+    """
+
     def __init__(self, label, default_value, description, _type, options=[],
                  classes="relevant-to-http relevant-to-https", get_arg=None,
                  cli_arg=None, help=""):
@@ -18,6 +26,11 @@ class Parameter(object):
             assert default_value in [o[0] for o in options],\
                     "%s not in list: %s" % (default_value, options)
         assert _type in 'selection checkbox radio'.split()
+        assert default_value is not None
+        if _type == 'checkbox':
+            assert default_value in [True, False]
+        else:
+            assert isinstance(default_value, str)
 
         self.label = label
         self.default_value = default_value
@@ -42,13 +55,18 @@ class Parameter(object):
 
     @property
     def value(self):
-        return self._value or self.default_value
+        if self._value is None:
+            return self.default_value
+        return self._value
 
     @value.setter
-    def set_value(self, _value):
+    def value(self, _value):
         if self.options and _value not in [o[0] for o in self.options]:
             raise ValueError("%s not in list: %s" % (_value, self.options))
-        self._value = _value
+        if self._type == "checkbox":
+            self._value = (_value == "true")
+        else:
+            self._value = _value
 
     def as_query_fragment(self):
         if self.value == self.default_value:
@@ -90,7 +108,7 @@ class ParameterCollection(object):
 
     def parse_get_args(self, get_args):
         for p in self.parameters:
-            p._value = get_args.get(p.label, p.default_value)
+            p.value = get_args.get(p.label, p.default_value)
 
 
 params = [
@@ -139,18 +157,18 @@ params = [
     ),
     Parameter('clip-exec', '-1', 'Clip-Exec', 'selection', get_arg='c'),
     Parameter(
-        'minimal', 'false', 'Minimal Mode', 'checkbox', get_arg='m',
+        'minimal', False, 'Minimal Mode', 'checkbox', get_arg='m',
         help=(
             "In minimal mode, help strings and some obviously "
             "malicious functions are removed. Run-Exe and Run-Shellcode "
             "won't be available."),
     ),
     Parameter(
-        'natural', 'false', 'Natural Variables', 'checkbox', get_arg='n',
+        'natural', False, 'Natural Variables', 'checkbox', get_arg='n',
         help="Use natural sounding variable names instead of randomly generated ones.",
     ),
-    Parameter('proxy', 'false', 'Use Web Proxy', 'checkbox'),
-    Parameter('tlsv1.2', 'false', 'Force TLSv1.2', 'checkbox',
+    Parameter('proxy', False, 'Use Web Proxy', 'checkbox'),
+    Parameter('tlsv1.2', False, 'Force TLSv1.2', 'checkbox',
               classes='relevant-to-https'),
     Parameter(
         'verification', 'noverification', 'Verification', 'radio',

@@ -101,6 +101,9 @@ def get_clipboard_entry():
 
 
 def get_param_value(label):
+    """Return the value of parameter with label `label` basend on
+    `request.args`"""
+
     p = param_collection.get_by_label(label)
     return request.args.get(p.get_arg, p.default_value)
 
@@ -135,7 +138,7 @@ def stager():
         key,
         stage3_strings=[stage3, profile, clipboard_entry],
         context=stager_context,
-        debug=(log.getEffectiveLevel() == logging.DEBUG),
+        debug=(log.getEffectiveLevel() <= logging.DEBUG),
         natural=natural,
     )
 

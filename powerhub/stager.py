@@ -57,7 +57,7 @@ def build_cradle_https(params):
                        FINGERPRINT.replace(':', ''))
         elif params['verification'] == 'certstore':
             pass
-        if params['tlsv1.2'] == 'true':
+        if params['tlsv1.2']:
             result += ("[Net.ServicePointManager]::SecurityProtocol="
                        "[Net.SecurityProtocolType]::Tls12;")
 
@@ -66,13 +66,13 @@ def build_cradle_https(params):
 
 def build_cradle_webclient(params, key):
     result = ''
-    natural = (params['natural'] == 'true')
+    natural = params['natural']
     web_client = symbol_name('web_client', natural=natural, refresh=True)
 
     if params['transport'].startswith('http'):
         result += "$%(web_client)s=New-Object Net.WebClient;"
 
-        if params['proxy'] == 'true':
+        if params['proxy']:
             result += ("$%(web_client)s.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
                        "$%(web_client)s.Proxy.Credentials=[Net.CredentialCache]::"
                        "DefaultCredentials;")
@@ -103,7 +103,7 @@ def build_cradle(params, key):
     log.debug("Building cradle with these paremters: %s" % params)
 
     result = ""
-    natural = (params['natural'] == 'true')
+    natural = params['natural']
     key_var = symbol_name('global_key', natural=natural)
 
     result += build_cradle_https(params)
