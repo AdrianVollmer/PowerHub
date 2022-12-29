@@ -107,8 +107,16 @@ class ParameterCollection(object):
                 return p
 
     def parse_get_args(self, get_args):
+        """Parse dictionary of GET arguments where the keys correspond to
+        each parameter's `label`"""
         for p in self.parameters:
             p.value = get_args.get(p.label, p.default_value)
+
+    def parse_get_args_short(self, get_args):
+        """Parse dictionary of GET arguments where the keys correspond to
+        each parameter's `get_arg`"""
+        for p in self.parameters:
+            p.value = get_args.get(p.get_arg, p.default_value)
 
 
 params = [
