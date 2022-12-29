@@ -49,8 +49,8 @@ def rc4byteencrypt(data):
 
 
 def get_stage3():
-    minimal = get_param_value('minimal')
-    transport = get_param_value('transport')
+    minimal = param_collection['minimal']
+    transport = param_collection['transport']
 
     powerhub_context = dict(
         modules=phmod.modules,
@@ -83,7 +83,7 @@ def get_profile():
 
 def get_clipboard_entry():
     try:
-        clipboard_id = int(get_param_value('clip-exec'))
+        clipboard_id = int(param_collection['clip-exec'])
         if clipboard_id < 0:
             return ""
 
@@ -102,27 +102,22 @@ def get_clipboard_entry():
     return clipboard_entry
 
 
-def get_param_value(label):
-    """Return the value of parameter with label `label` basend on
-    `request.args`"""
-
-    p = param_collection.get_by_label(label)
-    return request.args.get(p.get_arg, p.default_value)
-
-
 @hidden_app.route('/')
 def stager():
     """Load the stager"""
+    log.debug("Building stage 1; arguments: %s" % request.args)
+
     stage3 = get_stage3()
     profile = get_profile()
     clipboard_entry = get_clipboard_entry()
 
-    amsi_bypass = get_param_value('amsi')
+    param_collection.parse_get_args_short(request.args)
+    amsi_bypass = param_collection['amsi']
     amsi_bypass = os.path.join('powershell', 'amsi', amsi_bypass + '.ps1')
 
-    kex = get_param_value('kex')
-    natural = get_param_value('natural')
-    transport = get_param_value('transport')
+    kex = param_collection['kex']
+    natural = param_collection['natural']
+    transport = param_collection['transport']
     increment = request.args.get('increment')
     if increment:
         separator = '<#%s#>' % random.choices(string.ascii_letters, k=32)
