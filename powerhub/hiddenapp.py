@@ -110,7 +110,7 @@ def get_clipboard_entry():
 @hidden_app.route('/')
 def stager():
     """Load the stager"""
-    log.debug("Building stage 1; arguments: %s" % request.args)
+    log.debug("Building stage 1; arguments: %s" % dict(request.args))
 
     stage3 = get_stage3()
     profile = get_profile()

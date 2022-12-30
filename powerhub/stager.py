@@ -145,7 +145,7 @@ def build_cradle_webclient(params, key, incremental=False):
 
 def build_cradle(params, key):
     """Build the download cradle given a dict of GET arguments"""
-    log.debug("Building cradle with these paremters: %s" % params)
+    log.debug("Building cradle with these parameters: %s" % params)
 
     result = ""
     natural = params['natural']
