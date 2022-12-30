@@ -11,7 +11,7 @@ Run 'Help-PowerHub' for help
 
 $KEY = [System.Text.Encoding]::UTF8.GetBytes("{{key}}");
 $CALLBACK_URL = "{{callback_url}}"
-$WebClient = New-Object Net.WebClient
+$WebClient = {{symbol_name("web_client")}}
 $TransportScheme = "{{transport}}"
 $WEBDAV_URL = "{{webdav_url}}"
 {# The actual code (i.e. the content) of the modules is stored in this separate hashtable #}
