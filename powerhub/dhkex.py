@@ -1,4 +1,3 @@
-import base64
 import hashlib
 import logging
 import random
@@ -48,7 +47,6 @@ def dh_kex(client_public, key):
     shared_secret = shared_secret.to_bytes(KEY_SIZE, byteorder='little')[:64]
 
     encrypted_key = encrypt_rc4(key, shared_secret)
-    encrypted_key = base64.b64encode(encrypted_key).decode()
 
     log.debug("Diffie-Hellman shared secret (bytes): %s" % shared_secret)
     log.debug("Diffie-Hellman server secret: %s" % server_secret)
