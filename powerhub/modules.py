@@ -101,31 +101,28 @@ class Module(object):
 
     def __init__(self, name, path, type, file_type):
         self.name = name
-        self.path = path
+        self._path = path
         self.type = type
         self.file_type = file_type
-        self.code = ""
-        self.active = False
         self.n = -1
+        self._code = None
 
-    def activate(self):
-        self.active = True
-        self.code = open(self.path, 'rb').read()
-        if self.type == 'ps1':
-            self.code = sanitize_ps1(self.code, self.file_type)
+    @property
+    def code(self):
+        if self._code is None:
+            self._code = open(self._path, 'rb').read()
+            if self.type == 'ps1':
+                self._code = sanitize_ps1(self._code, self.file_type)
 
-    def deactivate(self):
-        self.active = False
-        self.code = ""
+        return self._code
 
-    def __dict__(self):
+    def as_dict(self):
         return {
             "Name": self.name,
             "BaseName": os.path.basename(self.name),
-            "Code": self.code,
             "N": self.n,
             "Type": self.type,
-            "Loaded": "$True" if self.code else "$False",
+            "Loaded": "$False",
             "Alias": "$Null",
         }
 
@@ -138,8 +135,6 @@ def find_module_by_path(path):
 
 def on_created(event):
     module = import_file(event.src_path)
-    if not module:
-        return
     module.n = len(modules) - 1
     modules.append(module)
     log.info("Module added: %s" % module.name)
@@ -154,8 +149,6 @@ def on_deleted(event):
 
 def on_modified(event):
     module = import_file(event.src_path)
-    if not module:
-        return
     log.info("Module modified: %s" % module.name)
     m = find_module_by_path(event.src_path)
     modules[m.i] = module

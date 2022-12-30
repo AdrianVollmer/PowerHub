@@ -3,7 +3,7 @@ $PowerHubModules = @()
 {% for m in modules %}
     $m = New-Object -TypeName PSObject
     $m.PsObject.TypeNames.Add("PowerHub.Module")
-    {% for key, value in m.__dict__().items() %}
+    {% for key, value in m.as_dict().items() %}
         Add-Member -InputObject $m -memberType NoteProperty -name "{{key}}" -value "{{value}}"
     {% endfor %}
 

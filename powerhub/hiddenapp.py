@@ -167,15 +167,16 @@ def hub_modules():
     result = render_template(
         "powershell/modules.ps1",
         **context,
-    ).encode()
+    )
 
     if 's' in request.args:
-        # Slow encryptiong
+        # Slow encryption
         encrypt = encrypt_rc4
     else:
         encrypt = encrypt_aes
 
-    result = b64encode(encrypt(result, hidden_app.key))
+    result = encrypt(result, hidden_app.key)
+
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
@@ -186,27 +187,25 @@ def load_module():
     if 'm' not in request.args:
         return Response('error')
 
-    n = int(request.args.get('m'))
-
-    if n < len(phmod.modules):
-        phmod.modules[n].activate()
+    try:
+        n = int(request.args.get('m'))
         code = phmod.modules[n].code
-
-        if 's' in request.args:
-            # Slow encryptiong
-            encrypt = encrypt_rc4
-        else:
-            encrypt = encrypt_aes
-
-        if 'c' in request.args:
-            encrypted = encrypt(compress(code), hidden_app.key)
-            resp = b64encode(encrypted),
-        else:
-            resp = b64encode(encrypt(code, hidden_app.key)),
-
-        return Response(
-            resp,
-            content_type='text/plain; charset=utf-8'
-        )
-    else:
+    except (IndexError, ValueError):
         return Response("not found")
+
+    if 's' in request.args:
+        # Slow encryption
+        encrypt = encrypt_rc4
+    else:
+        encrypt = encrypt_aes
+
+    if 'c' in request.args:
+        code = compress(code)
+
+    encrypted = encrypt(code, hidden_app.key)
+    resp = b64encode(encrypted)
+
+    return Response(
+        resp,
+        content_type='text/plain; charset=utf-8'
+    )
