@@ -103,16 +103,20 @@ def build_cradle_webclient(params, key, incremental=False):
 
         url = callback_urls()[params['transport']]
 
-        query = '/?'
+        query = '?'
         for p in params.parameters:
             if p.get_arg:
-                query += p.as_query_fragment() + '&'
-        query = query[:-1]
+                query += p.as_query_fragment()
+        query = query.replace('?&', '?')
 
-        # encrypt url
-        query = encrypt_aes(query, key)
-        # Make b64 encoding urlsafe
-        query = query.replace('/', '_').replace('+', '-')
+        if query.endswith('?'):
+            query = query[:-1]
+
+        if query:
+            # encrypt url
+            query = encrypt_aes(query, key)
+            # Make b64 encoding urlsafe
+            query = query.replace('/', '_').replace('+', '-')
 
         downloader = "IEX $%(web_client)s.DownloadString('%(url)s%(query)s'%(extra)s)"
 

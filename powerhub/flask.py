@@ -89,7 +89,7 @@ def catch_all(path):
         if increment:
             path += '&increment=%s' % increment
         log.info("Forwarding hidden endpoint: %s" % path)
-        return hidden_app.test_client().get(path)
+        return hidden_app.test_client().get('/'+path)
     except (binascii.Error, ValueError):
         abort(404)
 

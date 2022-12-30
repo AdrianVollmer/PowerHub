@@ -75,6 +75,7 @@ class Parameter(object):
         if self.value == self.default_value:
             return ''
         result = urllib.parse.urlencode([(self.get_arg, self.value)])
+        result = '&' + result
         return result
 
     def __repr__(self):
