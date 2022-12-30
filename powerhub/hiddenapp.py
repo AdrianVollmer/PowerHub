@@ -52,9 +52,12 @@ def get_stage3():
     minimal = param_collection['minimal']
     transport = param_collection['transport']
     slow_encryption = param_collection['slowenc']
+    preloaded_modules = param_collection['preloaded']
+    preloaded_modules = get_preloaded_modules(preloaded_modules)
 
     powerhub_context = dict(
         modules=phmod.modules,
+        preloaded_modules=preloaded_modules,
         callback_url=callback_urls()[transport],
         transport=transport,
         webdav_url=webdav_url(),
@@ -209,3 +212,56 @@ def load_module():
         resp,
         content_type='text/plain; charset=utf-8'
     )
+
+
+def get_preloaded_modules(csvlist):
+    """Return a string that will be inserted into a PowerShell hashtable
+
+    The format of each line is this:
+        <module name> = @"<powershell string>"@
+    or for binary modules:
+        <module name> = [System.Convert]::FromBase64String("<b64 string>")
+    """
+
+    if not csvlist:
+        return ""
+
+    try:
+        csvlist = expand_csv(csvlist)
+    except Exception:
+        log.error("Couldn't parse CSV list: %s" % csvlist)
+        return ""
+
+    result = "\n"
+
+    for i in csvlist:
+        m = phmod.modules[i]
+        name = m.name
+        code = m.code
+
+        if isinstance(m.code, bytes):
+            code = b64encode(code).decode()
+            code = '[System.Convert]::FromBase64String("%s")' % code
+        else:
+            code = '@"%s"@)' % code
+
+        result += "'%s' = %s\n" % (name, code)
+
+    return result
+
+
+def expand_csv(csvlist):
+    """Turn compactified CSV list into string of ints
+
+    Example: 1,2,5-8,12,14-16
+    """
+
+    csvlist = csvlist.split(',')
+    result = []
+    for item in csvlist:
+        if '-' in item:
+            a, b = item.split('-')
+            result.extend(range(int(a), int(b)+1))
+        else:
+            result.append(int(item))
+    return result

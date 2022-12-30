@@ -25,7 +25,7 @@ class Parameter(object):
         if options:
             assert default_value in [o[0] for o in options],\
                     "%s not in list: %s" % (default_value, options)
-        assert _type in 'selection checkbox radio'.split()
+        assert _type in 'selection checkbox radio text'.split()
         assert default_value is not None
         if _type == 'checkbox':
             assert default_value in [True, False]
@@ -167,6 +167,12 @@ params = [
         get_arg='k',
     ),
     Parameter('clip-exec', '-1', 'Clip-Exec', 'selection', get_arg='c'),
+    Parameter(
+        'preloaded', '', 'Preload', 'text', get_arg='p',
+        help="Enter a compactified CSV list (e.g. '1,2,4-8,12') of modules "
+             "that should come preloaded and press return. "
+             "Only makes sense with key exchange 'embedded'."
+    ),
     Parameter(
         'minimal', False, 'Minimal Mode', 'checkbox', get_arg='m',
         help=(

@@ -12,11 +12,13 @@ function update_cradle() {
             if ($(this).is(':checked')) {
                 parameters[$(this).attr('name')] = this.id;
             }
-        }
-        else {
+            $(this).parent().hide();
+        } else if ($(this).attr('type') == 'text') {
+            parameters[this.id] = this.value;
+        } else {
             parameters[this.id] = $(this).is(':checked');
+            $(this).parent().hide();
         }
-        $(this).parent().hide();
     });
 
     $('#cradle-options select').each(function(){

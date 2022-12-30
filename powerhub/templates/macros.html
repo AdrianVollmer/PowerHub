@@ -21,7 +21,6 @@
 {% endfor %}
   </select>
 </div>
-
 {% endmacro %}
 
 {% macro render_checkbox(parameter) %}
@@ -40,6 +39,16 @@
 {% endfor %}
 {% endmacro %}
 
+{% macro render_text(parameter) %}
+<div class="input-group input-group-sm mb-3">
+  <div class="input-group-prepend">
+      <label class="input-group-text" for="{{parameter.label}}" style="width: 150px;"{% if parameter.help %} title="{{parameter.help}}"{% endif %}>{{parameter.description}}</label>
+  </div>
+      <input type="text" id="{{parameter.label}}" name="{{parameter.label}}" class="form-control">
+</div>
+{% endmacro %}
+
+
 {% macro render_options(parameters) %}
 {%- for p in parameters -%}
 {% if p._type == 'selection' %}
@@ -48,6 +57,8 @@
 {{render_checkbox(p)}}
 {% elif p._type == 'radio' %}
 {{render_radio(p)}}
+{% elif p._type == 'text' %}
+{{render_text(p)}}
 {% endif %}
 {%- endfor -%}
 {% endmacro %}

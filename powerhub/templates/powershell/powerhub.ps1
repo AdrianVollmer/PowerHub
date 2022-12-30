@@ -15,7 +15,7 @@ $TransportScheme = "{{transport}}"
 $WEBDAV_URL = "{{webdav_url}}"
 {# $WebClient is defined in stage2 #}
 {# The actual code (i.e. the content) of the modules is stored in this separate hashtable #}
-$PowerHubModulesContent = @{}
+$PowerHubModulesContent = @{ {{preloaded_modules}} }
 
 $CALLBACK_HOST = [regex]::Match($CALLBACK_URL, '(.+/)([^:/]+)((:|/).*)').captures.groups[2].value
 $PS_VERSION = $PSVersionTable.PSVersion.Major
@@ -918,3 +918,11 @@ foreach ($a in $Aliases.Keys) {
 }
 
 Update-HubModules | Out-Null
+foreach ($name in $PowerHubModulesContent.Keys) {
+    foreach ($m in $PowerHubModules) {
+        if ($m.Name -eq $name) {
+            Get-HubModule $m.n
+            break
+        }
+    }
+}
