@@ -894,7 +894,8 @@ The following functions are available (some with short aliases):
   * Mount-Webdav (mwd)
   * Unmount-Webdav (umwd)
 
-Use 'Get-Help' to learn more about those functions.
+{% if not minimal %}Use 'Get-Help' to learn more about those Cmdlets.
+{% else %}Because minimal mode has been activated, comment-based help is not available for those Cmdlets.{% endif %}
 "@
 }
 

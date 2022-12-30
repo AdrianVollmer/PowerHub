@@ -170,7 +170,7 @@ params = [
     Parameter(
         'minimal', False, 'Minimal Mode', 'checkbox', get_arg='m',
         help=(
-            "In minimal mode, help strings and some obviously "
+            "In minimal mode, comment-based help of Cmdlets and some obviously "
             "malicious functions are removed. Run-Exe and Run-Shellcode "
             "won't be available."),
     ),
