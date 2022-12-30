@@ -13,12 +13,6 @@ try { Set-PSReadlineOption -HistorySaveStyle SaveNothing } catch {}
 
 $GLOBAL_KEY = ${{symbol_name("global_key")}}
 
-{% if slow_encryption %}
-function Decrypt-RC4_ {
-    {{symbol_name("Decrypt-RC4")}} $args[0] $args[1]
-}
-{% endif %}
-
 function Encrypt-AES {
     param(
         [Byte[]]$buffer,
@@ -63,11 +57,17 @@ function Decrypt-AES {
     $result
 }
 
+{% if slow_encryption %}
 {# Redefine xor for speed #}
 function {{symbol_name("xor")}} {
     param (${{symbol_name('A')}}, ${{symbol_name('B')}});
     return [Byte](${{symbol_name('A')}} -bxor ${{symbol_name('B')}})
 }
+
+function Decrypt-RC4_ {
+    {{symbol_name("Decrypt-RC4")}} $args[0] $args[1]
+}
+{% endif %}
 
 function {{symbol_name("Unpack")}} {
     param ($buffer)
