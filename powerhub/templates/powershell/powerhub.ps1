@@ -11,9 +11,9 @@ Run 'Help-PowerHub' for help
 
 $KEY = [System.Text.Encoding]::UTF8.GetBytes("{{key}}");
 $CALLBACK_URL = "{{callback_url}}"
-$WebClient = {{symbol_name("web_client")}}
 $TransportScheme = "{{transport}}"
 $WEBDAV_URL = "{{webdav_url}}"
+{# $WebClient is defined in stage2 #}
 {# The actual code (i.e. the content) of the modules is stored in this separate hashtable #}
 $PowerHubModulesContent = @{}
 
