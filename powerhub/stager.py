@@ -338,10 +338,15 @@ def obfuscate_file(fp_in, fp_out, natural=False, debug=False,
     if epilogue:
         stage3.append(epilogue)
 
+    context = dict(
+        kex='embedded',
+    )
+
     key = generate_random_key(16)
     output = get_stage(
         key,
         stage3_strings=stage3,
+        context=context,
         natural=natural,
         debug=debug,
         slow_encryption=slow_encryption,
