@@ -86,6 +86,11 @@ class ParameterCollection(object):
     def __init__(self, parameters):
         self.parameters = parameters
 
+        # assert get_args are unique
+        get_args = [p.get_arg.lower() for p in parameters if p.get_arg]
+        assert len(set(get_args)) == len(get_args),\
+            "Duplicate get_arg detected"
+
     def __repr__(self):
         return str(self.parameters)
 
