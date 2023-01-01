@@ -125,8 +125,9 @@ def stager():
     transport = param_collection['transport']
     slow_encryption = param_collection['slowenc']
     increment = request.args.get('increment')
-    if increment:
-        separator = '<#%s#>' % random.choices(string.ascii_letters, k=32)
+
+    if increment or decoy:
+        separator = '<#%s#>' % ''.join(random.choices(string.ascii_letters, k=32))
     else:
         separator = ''
 
