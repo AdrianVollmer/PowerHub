@@ -195,6 +195,10 @@ params = [
         help="Deliver first stage in several requests.",
     ),
     Parameter(
+        'decoy', False, 'Include Decoys', 'checkbox', get_arg='d',
+        help="Wrap suspicious code in real code from legitimate sources.",
+    ),
+    Parameter(
         'slowenc', False, 'Slow Encryption', 'checkbox', get_arg='s',
         help="Avoid API calls to fast encryption routines for more stealth.",
     ),

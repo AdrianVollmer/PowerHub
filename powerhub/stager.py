@@ -243,7 +243,7 @@ def debug_filter(msg, dbg=False):
 # TODO add jinja powershell decoys
 
 def get_stage(key, context={}, stage3_files=[], stage3_strings=[],
-              debug=False, natural=False):
+              debug=False, natural=False, remove_whitespace=True):
     from jinja2 import Environment, FileSystemLoader
 
     env = Environment(loader=FileSystemLoader(
@@ -283,7 +283,7 @@ def get_stage(key, context={}, stage3_files=[], stage3_strings=[],
 
     result = stage1_template.render(**context)
 
-    if not debug:
+    if remove_whitespace and not debug:
         result = remove_leading_whitespace(result)
         result = remove_blank_lines(result)
 

@@ -124,6 +124,7 @@ def stager():
     natural = param_collection['natural']
     transport = param_collection['transport']
     slow_encryption = param_collection['slowenc']
+    decoy = param_collection['decoy']
     increment = request.args.get('increment')
 
     if increment or decoy:
@@ -152,10 +153,16 @@ def stager():
         context=stager_context,
         debug=(log.getEffectiveLevel() <= logging.DEBUG),
         natural=natural,
+        remove_whitespace=(not decoy),
     )
+
+    if decoy:
+        result = insert_decoys(result, separator)
 
     if increment:
         result = result.split(separator)[int(increment)]
+    else:
+        result = result.replace(separator, '')
 
     return Response(result, content_type='text/plain; charset=utf-8')
 
@@ -265,4 +272,49 @@ def expand_csv(csvlist):
             result.extend(range(int(a), int(b)+1))
         else:
             result.append(int(item))
+    return result
+
+
+def insert_decoys(code, separator):
+    """Insert decoy code at positions marked by the separator
+
+    First, split the code at the separators. Then append and prepend 1-2 legit modules
+    to each segment. Finally, join the segments.
+    """
+
+    decoy_dir = os.path.join(directories.BASE_DIR, 'decoy')
+    decoy_list = [f for f in os.listdir(decoy_dir)
+                  if (os.path.isfile(os.path.join(decoy_dir, f)) and '.ps' in f)]
+
+    segments = code.split(separator)
+
+    def load_decoy_code(filename):
+        full_path = os.path.join(directories.BASE_DIR, 'decoy', filename)
+        return open(full_path, 'r').read()
+
+    for i, s in enumerate(segments):
+        # append
+        samples = draw_samples(decoy_list, 1, 2)
+        for x in samples:
+            segments[i] += '\n'*random.randrange(1, 5) + load_decoy_code(x)
+        # prepend
+        samples = draw_samples(decoy_list, 1, 2)
+        for x in samples:
+            segments[i] = '\n'*random.randrange(1, 5) + load_decoy_code(x) + segments[i]
+
+    result = ("\n\n%s\n\n" % separator).join(segments)
+
+    # Include the LICENSE to be sure:
+    license = open(os.path.join(directories.BASE_DIR, 'decoy', 'LICENSE'), 'r').read()
+    result = '<#\n%s\n#>%s\n\n' % (license, result)
+
+    return result
+
+
+def draw_samples(lst, a, b):
+    """Select between a und b random samples from a list and remove them"""
+    k = random.randrange(a, b+1)
+    result = random.sample(lst, k)
+    for each in result:
+        lst.remove(each)
     return result
