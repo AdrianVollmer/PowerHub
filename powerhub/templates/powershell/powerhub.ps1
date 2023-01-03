@@ -886,8 +886,7 @@ The following functions are available (some with short aliases):
   * Update-HubModules (uhm)
   * Get-SysInfo
   * Run-DotNETExe (rdne)
-{% if not minimal -%}
-  * Run-Exe (re)
+{% if not minimal %} * Run-Exe (re)
   * Run-Shellcode (rsh)
 {%- endif -%}
   * PushTo-Hub (pth)
