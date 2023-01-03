@@ -256,6 +256,7 @@ def get_stage(key, context={}, stage3_files=[], stage3_strings=[],
     env.filters['rc4encrypt'] = rc4encrypt
     env.filters['debug'] = lambda msg: debug_filter(msg, dbg=debug)
     env.globals['symbol_name'] = lambda name: symbol_name(name, natural=natural, debug=debug)
+    env.globals['set_alias'] = obfuscate_set_alias
 
     stage1_template = env.get_template(os.path.join('powershell', 'stage1.ps1'))
 
@@ -352,3 +353,33 @@ def obfuscate_file(fp_in, fp_out, natural=False, debug=False,
         slow_encryption=slow_encryption,
     )
     fp_out.write(output)
+
+
+def obfuscate_set_alias():
+    """Return an obfuscated version of the string `Set-Alias`"""
+
+    # These chars have special meanings when pre-fixed with `
+    special_chars = '0abefnrtuv"\''
+
+    cmd = random.choice(["sal", "Set-Alias"])
+
+    # Randomize capitalization
+    temp = ''
+    for x in cmd.lower():
+        if random.choice([True, False]):
+            temp += x
+        else:
+            temp += x.upper()
+    cmd = temp
+
+    result = cmd[0]
+    for i, e in enumerate(cmd[1:]):
+        if random.choice([True, False]):
+            result += '""'
+        if random.choice([True, False]):
+            result += "''"
+        if random.choice([True, False]) and cmd[i+1] not in special_chars:
+            result += "`"
+        result += e
+
+    return result

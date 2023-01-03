@@ -125,6 +125,7 @@ def stager():
     transport = param_collection['transport']
     slow_encryption = param_collection['slowenc']
     decoy = param_collection['decoy']
+    obfuscate_setalias = param_collection['obfuscate_setalias']
     increment = request.args.get('increment')
 
     if increment or decoy:
@@ -144,6 +145,7 @@ def stager():
         dh_endpoint=DH_ENDPOINT,
         separator=separator,
         slow_encryption=slow_encryption,
+        obfuscate_setalias=obfuscate_setalias,
     )
     log.debug("Delivering stage 1; context: %s" % stager_context)
 

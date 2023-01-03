@@ -199,6 +199,10 @@ params = [
         help="Wrap suspicious code in real code from legitimate sources.",
     ),
     Parameter(
+        'obfuscate_setalias', False, "Obfuscate 'Set-Alias'", 'checkbox', get_arg='o',
+        help="Wrap suspicious code in real code from legitimate sources.",
+    ),
+    Parameter(
         'slowenc', False, 'Slow Encryption', 'checkbox', get_arg='s',
         help="Avoid API calls to fast encryption routines for more stealth.",
     ),
