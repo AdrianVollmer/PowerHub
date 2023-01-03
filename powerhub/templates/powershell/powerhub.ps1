@@ -1,5 +1,5 @@
 $FooterLeft = "{{VERSION}}"
-$FooterRight = "written by Adrian Vollmer, 2018-2022"
+$FooterRight = "written by Adrian Vollmer, 2018-2023"
 $SpaceBuffer = " "*(64-2-$FooterLeft.Length-$FooterRight.Length)
 Write-Output @"
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______

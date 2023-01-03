@@ -96,7 +96,7 @@ Thanks!
 Author
 ======
 
-Adrian Vollmer, 2018-2022
+Adrian Vollmer, 2018-2023
 
 Disclaimer
 ==========
