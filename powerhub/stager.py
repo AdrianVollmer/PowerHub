@@ -271,12 +271,12 @@ def get_stage(key, context={}, stage3_files=[], stage3_strings=[],
             buffer = open(t, 'r').read()
         else:
             buffer = t
-        if context.get('slow_encryption'):
-            buffer = encrypt_rc4(buffer, key)
-        else:
-            buffer = encrypt_aes(buffer, key)
 
         if buffer:
+            if context.get('slow_encryption'):
+                buffer = encrypt_rc4(buffer, key)
+            else:
+                buffer = encrypt_aes(buffer, key)
             stage3.append(buffer)
 
     context['stage2'] = stage2
@@ -358,7 +358,7 @@ def obfuscate_file(fp_in, fp_out, natural=False, debug=False,
 def obfuscate_set_alias():
     """Return an obfuscated version of the string `Set-Alias`"""
 
-    # These chars have special meanings when pre-fixed with `
+    # These chars (case sensitive) have special meanings when pre-fixed with `
     special_chars = '0abefnrtuv"\''
 
     cmd = random.choice(["sal", "Set-Alias"])
@@ -372,13 +372,14 @@ def obfuscate_set_alias():
             temp += x.upper()
     cmd = temp
 
+    # Insert random quotes
     result = cmd[0]
     for i, e in enumerate(cmd[1:]):
         if random.choice([True, False]):
             result += '""'
         if random.choice([True, False]):
             result += "''"
-        if random.choice([True, False]) and cmd[i+1] not in special_chars:
+        if random.choice([True, False]) and e not in special_chars:
             result += "`"
         result += e
 
