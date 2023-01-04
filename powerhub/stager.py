@@ -110,7 +110,13 @@ def build_cradle_webclient(params, key, incremental=False):
     if query.endswith('?'):
         query = query[:-1]
 
-    if query:
+    # If the query is empty (i.e. all parameters are set to their default
+    # values), then it's not necessary to encrypt it. However, if
+    # incremental delivery is selected, this would break the syntax, so we
+    # need a non-empty encrypted query. Otherwise, paths like '//1, '//2',
+    # etc would be requested which would lead to the non-hidden flask app,
+    # resulting in 404
+    if query or incremental:
         # encrypt url
         query = encrypt_aes(query, key)
         # Make b64 encoding urlsafe
