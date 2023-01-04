@@ -195,6 +195,10 @@ params = [
         help="Deliver first stage in several requests.",
     ),
     Parameter(
+        'split_cradle', False, 'Split Cradle', 'checkbox',
+        help="Separate 'Invoke-Expression' from 'DownloadString' to cause less suspicion. "
+             "Requires interactive exectution.",),
+    Parameter(
         'decoy', False, 'Include Decoys', 'checkbox', get_arg='d',
         help="Wrap suspicious code in real code from legitimate sources.",
     ),

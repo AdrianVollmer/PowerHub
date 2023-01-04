@@ -171,6 +171,16 @@ def build_cradle(params, key):
         key=key,
     )
 
+    if params['split_cradle']:
+        store_dl = symbol_name('store_dl', natural=params['natural'], refresh=True)
+        result = result.replace("IEX ", "")
+        # Replace last semicolon
+        result = result.split(';')
+        result[-1] = ('$%s=' % store_dl) + result[-1]
+        result = ';'.join(result)
+        result = "# First execute this<br/>" + result
+        result += "<br/><br/># Then this<br/>" + ("$%s|IEX" % store_dl)
+
     # make sure to only use single quotes
     assert '"' not in result
 
