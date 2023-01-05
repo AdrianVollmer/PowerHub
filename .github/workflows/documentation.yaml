@@ -6,14 +6,30 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
+      - name: Determine directory to publish docs to
+        id: docs-publish-dir
+        run: |
+          python -c "
+          import os, re
+          github_ref = os.environ.get('GITHUB_REF')
+          if github_ref == 'refs/heads/master':
+            target = 'master'
+          elif github_ref.startswith('refs/tags/'):
+            m = re.match(r'^refs/tags/v([0-9]+\.[0-9]+\.[0-9]+)$', github_ref);
+            target = m.group(1)
+          else:
+            target = ''
+          print(f'::set-output name=target::{target}')"
       - name: Sphinx build
         run: |
           make docs
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        if: steps.docs-publish-dir.outputs.target != ''
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/_build/
+          destination_dir: ${{ steps.docs-publish-dir.outputs.target }}
+          keep_files: true
           force_orphan: true

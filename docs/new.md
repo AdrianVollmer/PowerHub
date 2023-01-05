@@ -2,7 +2,30 @@
 
 PowerHub grew over the years from a small script™ meant for personal
 experiments or even learning exercises to a tool that many people use, so
-with version 2.0 come some well-deserved changes.
+with version 2.0 come some well-deserved changes, like proper documentation,
+packaging and a more fleshed-out implementation of some ideas I had in the
+beginning.
+
+## Documentation
+
+Documentation is now hosted by GitHub pages; the GitHub wiki is disabled.
+
+## Packaging
+
+The `powerhub.py` and `requirements.txt` have been removed. The `setup.py`
+has been replaced with a `setup.cfg`. PowerHub is now a first-class
+Python package and should be treated as such. Like any other Python package,
+it should be installed with `pip install`, which will place executables in
+`~/.local/bin`.
+
+## No more dev branch
+
+Development will happen directly on the master branch. Releases will be
+tagged and made available on PyPI. Installing directly from the repository
+is not recommended, unless you want to test out the latest changes or you
+want to contribute to the project. I will be less inclined to help out with
+issues if you use a bleeding edge version. Bug reports will always be
+welcome, though!
 
 ## Depreciation of Load-HubModule
 
@@ -23,18 +46,12 @@ protected by various mechanisms, etc. It's better to use specialized tools
 as outlined [here](https://s3cur3th1ssh1t.github.io/Reflective-Dump-Tools/)
 and references therein.
 
-## No more dev branch
+## Pre-loaded modules
 
-Development will happen directly on the master branch. Releases will be
-tagged and made available on PyPI. Installing directly from the repository
-is not recommended, unless you want to test out the latest changes or you
-want to contribute to the project. I will be less inclined to help out with
-issues if you use a bleeding edge version. Bug reports will always be
-welcome, though!
-
-## Documentation
-
-Documentation is now hosted by GitHub pages; the GitHub wiki is disabled.
+It's now possible to deliver the PowerHub payload with some modules
+pre-loaded. This is interesting for environments without network access. If
+the key is also embedded in the stager, you can deliver it manually e.g. via
+USB to the target and use the modules.
 
 ## power-obfuscate
 
@@ -42,10 +59,3 @@ Installing PowerHub will yield a new executable: `power-obfuscate`. This
 makes it possible to use the obfuscation techniques of PowerHub on arbitrary
 PowerShell scripts or .NET executables without having to use the web
 application.
-
-## Pre-loaded modules
-
-It's now possible to deliver the PowerHub payload with some modules
-pre-loaded. This is interesting for environments without network access. If
-the key is also embedded in the stager, you can deliver it manually e.g. via
-USB to the target and use the modules.

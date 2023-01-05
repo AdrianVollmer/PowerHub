@@ -35,6 +35,25 @@ extensions = ["myst_parser"]
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
+# Add read the docs lower left menu
+try:
+    html_context
+except NameError:
+    html_context = dict()
+html_context['display_lower_left'] = True
+REPO_NAME = project
+from git import Repo  # noqa
+repo = Repo(search_parent_directories=True)
+current_version = repo.active_branch.name
+html_context['current_version'] = current_version
+html_context['version'] = current_version
+html_context['versions'] = list()
+versions = ['master']
+versions += [tag.name for tag in repo.tags if tag.name.startswith('2.')]
+for version in versions:
+    html_context['versions'].append((version, '/' + REPO_NAME + '/' + version + '/'))
+html_context['versions'].append(('latest', '/' + REPO_NAME + '/' + release + '/'))
+
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
