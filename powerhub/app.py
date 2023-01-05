@@ -120,17 +120,11 @@ class PowerHubApp(object):
         self.flask_app.jinja_env.globals['VERSION'] = __version__
 
     def init_db(self):
-        try:
-            from flask_sqlalchemy import SQLAlchemy
-            from powerhub.sql import init_db
-            db = SQLAlchemy(self.flask_app)
-            with self.flask_app.app_context():
-                init_db(db)
-        except ImportError as e:
-            log.error("You have unmet dependencies, "
-                      "database will not be available")
-            log.exception(e)
-            db = None
+        from flask_sqlalchemy import SQLAlchemy
+        from powerhub.sql import init_db
+        db = SQLAlchemy(self.flask_app)
+        with self.flask_app.app_context():
+            init_db(db)
         self.db = db
 
     def init_clipboard(self):
@@ -155,14 +149,11 @@ class PowerHubApp(object):
     def run(self, background=False):
         from powerhub.reverseproxy import run_proxy
         signal.signal(signal.SIGINT, signal_handler)
-        try:
-            from powerhub.webdav import run_webdav
-            start_thread(lambda: run_webdav(self.args.WEBDAV_PORT))
-        except ImportError as e:
-            print(str(e))
-            print("You have unmet dependencies. WebDAV won't be available. "
-                  "Consult the README.")
+
+        from powerhub.webdav import run_webdav
+        start_thread(lambda: run_webdav(self.args.WEBDAV_PORT))
         start_thread(self.run_flask_app)
+
         if background:
             start_thread(run_proxy)
         else:

@@ -1,9 +1,6 @@
 import logging
 
-try:
-    from sqlalchemy.exc import OperationalError
-except ImportError:
-    pass
+from sqlalchemy.exc import OperationalError
 
 _db = None
 log = logging.getLogger(__name__)
@@ -64,49 +61,7 @@ def init_settings():
 
 
 def get_clipboard():
-    if _db:
-        return get_clipboard_with_db(_db)
-    else:
-        return get_clipboard_without_db()
-
-
-def get_clipboard_without_db():
-    class Entry(object):
-        def __init__(self, id=id, content=None, time=None, IP=None, executable=None):
-            self.id = id
-            self.content = content
-            self.time = time
-            self.IP = IP
-            self.executable
-
-        @property
-        def timedelta(self):
-            return get_timedelta(self.time)
-
-    class Clipboard(object):
-        def __init__(self):
-            self.next_id = 0
-            self.entries = {}
-
-        def __iter__(self):
-            return iter(self.entries)
-
-        def add(self, content, time, IP):
-            e = Entry(id=self.next_id, content=content, time=time, IP=IP, executable=False)
-            self.entries[self.next_id] = e
-            self.next_id += 1
-            return e
-
-        def edit(self, id, content):
-            self.entries[id] = content
-
-        def delete(self, id):
-            del self.entries[id]
-
-        def __len__(self):
-            return len(self.entries.keys())
-
-    return Clipboard()
+    return get_clipboard_with_db(_db)
 
 
 def get_clipboard_with_db(db):
