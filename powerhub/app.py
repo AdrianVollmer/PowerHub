@@ -9,15 +9,9 @@ from werkzeug.serving import WSGIRequestHandler, _log
 from flask_socketio import SocketIO
 
 import powerhub.directories as ph_dir
-import powerhub.env as env
 from powerhub import __version__
 
 log = logging.getLogger(__name__)
-
-
-def signal_handler(sig, frame):
-    log.info("CTRL-C caught, exiting...")
-    env.powerhub_app.stop()
 
 
 def start_thread(f, *args):
@@ -44,8 +38,6 @@ class MyRequestHandler(WSGIRequestHandler):
 class PowerHubApp(object):
     """This is the main app class
 
-    It is a singleton and a reference will be stored in powerhub.env.
-
     It holds all parameters, settings and "sub apps", such as the flask app,
     the reverse proxy, the database, etc.
 
@@ -56,9 +48,6 @@ class PowerHubApp(object):
         empty, sys.argv will be used (i.e. the command line arguments).
 
         """
-        assert env.powerhub_app is None, \
-            "Instance of PowerHubApp already exists"
-        env.powerhub_app = self
 
         self.args = args
         ph_dir.init_directories(workspace_dir=args.WORKSPACE_DIR,
@@ -71,9 +60,7 @@ class PowerHubApp(object):
         from powerhub.modules import set_up_watchdog
         set_up_watchdog()
 
-        from powerhub.hiddenapp import hidden_app
-        setattr(hidden_app, 'key', self.key)
-        setattr(hidden_app, 'clipboard', self.clipboard)
+        self.set_flask_app_attributes()
 
         if not (self.args.AUTH or self.args.NOAUTH):
             from powerhub.tools import generate_random_key
@@ -119,6 +106,17 @@ class PowerHubApp(object):
         self.flask_app.jinja_env.globals['AUTH'] = self.args.AUTH
         self.flask_app.jinja_env.globals['VERSION'] = __version__
 
+    def set_flask_app_attributes(self):
+        """Set some global vars for the flask apps"""
+        from powerhub.hiddenapp import hidden_app
+        from powerhub.flask import app as flask_app
+        for app in [flask_app, hidden_app]:
+            setattr(app, 'key', self.key)
+            setattr(app, 'clipboard', self.clipboard)
+            setattr(app, 'args', self.args)
+            setattr(app, 'callback_urls', self.callback_urls())
+            setattr(app, 'webdav_url', self.webdav_url())
+
     def init_db(self):
         from flask_sqlalchemy import SQLAlchemy
         from powerhub.sql import init_db
@@ -137,6 +135,27 @@ class PowerHubApp(object):
         with self.flask_app.app_context():
             self.key = get_secret_key()
 
+    def callback_urls(self):
+        return {
+            'http': 'http://%s:%d/%s' % (
+                self.args.URI_HOST,
+                self.args.URI_PORT if self.args.URI_PORT else self.args.LPORT,
+                self.args.URI_PATH+'/' if self.args.URI_PATH else '',
+            ),
+            'https': 'https://%s:%d/%s' % (
+                self.args.URI_HOST,
+                self.args.URI_PORT if self.args.URI_PORT else self.args.SSL_PORT,
+                self.args.URI_PATH+'/' if self.args.URI_PATH else '',
+            ),
+        }
+
+    def webdav_url(self):
+        # TODO consider https
+        return 'http://%s:%d/webdav' % (
+            self.args.URI_HOST,
+            self.args.LPORT,
+        )
+
     def run_flask_app(self):
         self.socketio.run(
             self.flask_app,
@@ -146,21 +165,24 @@ class PowerHubApp(object):
             request_handler=MyRequestHandler,
         )
 
+    def signal_handler(self, sig, frame):
+        log.info("CTRL-C caught, exiting...")
+        self.stop()
+
     def run(self, background=False):
         from powerhub.reverseproxy import run_proxy
-        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGINT, self.signal_handler)
 
         from powerhub.webdav import run_webdav
         start_thread(lambda: run_webdav(self.args.WEBDAV_PORT))
         start_thread(self.run_flask_app)
 
         if background:
-            start_thread(run_proxy)
+            start_thread(lambda: run_proxy(self.args))
         else:
-            run_proxy()
+            run_proxy(self.args)
 
     def stop(self):
         from powerhub import reverseproxy
         if not reverseproxy.reactor._stopped:
             reverseproxy.reactor.stop()
-        env.powerhub_app = None

@@ -10,8 +10,6 @@ from tempfile import TemporaryDirectory
 from flask import Blueprint, render_template, request, Response, redirect, \
          send_from_directory, flash, abort, make_response
 
-from powerhub.env import powerhub_app as ph_app
-
 from powerhub.sql import get_clip_entry_list
 from powerhub.stager import build_cradle
 import powerhub.modules as phmod
@@ -37,8 +35,11 @@ def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
-    if ph_app.args.AUTH:
-        user, pwd = ph_app.args.AUTH.split(':')
+    if app.args.AUTH:
+        if ':' in app.args.AUTH:
+            user, pwd = app.args.AUTH.split(':')[:2]
+        else:
+            user, pwd = app.args.AUTH, ''
         return username == user and password == pwd
     else:
         return True
@@ -56,8 +57,7 @@ def requires_auth(f):
     @wraps(f)
     def decorated(*largs, **kwargs):
         auth = request.authorization
-        if ph_app.args.AUTH and (not auth or not check_auth(auth.username,
-                                                            auth.password)):
+        if app.args.AUTH and (not auth or not check_auth(auth.username, auth.password)):
             return authenticate()
         return f(*largs, **kwargs)
     return decorated
@@ -69,7 +69,7 @@ def push_notification(msg):
     :msg: A dict either with keys [title, subtitle, body, category] or
     [action, location]
     """
-    ph_app.socketio.emit(
+    app.socketio.emit(
         'push',
         msg,
         namespace="/push-notifications",
@@ -103,7 +103,7 @@ def catch_all(path):
             public_key = int(path.split('/')[1])
         except (IndexError, ValueError):
             abort(404)
-        response = ' '.join(dh_kex(public_key, ph_app.key))
+        response = ' '.join(dh_kex(public_key, app.key))
         return Response(response, content_type='text/plain; charset=utf-8')
 
     # Return hidden endpoint
@@ -115,7 +115,7 @@ def catch_all(path):
         else:
             increment = None
         path = urlsafe_b64decode(path)
-        path = decrypt_aes(path, ph_app.key).decode()
+        path = decrypt_aes(path, app.key).decode()
         if increment:
             path += '&increment=%s' % increment
         log.info("Forwarding hidden endpoint: %s" % path)
@@ -130,7 +130,7 @@ def catch_all(path):
 @app.route('/hub')
 @requires_auth
 def hub():
-    clip_entries = [('-1', 'None')] + get_clip_entry_list(ph_app.clipboard)
+    clip_entries = [('-1', 'None')] + get_clip_entry_list(app.clipboard)
     param_collection.update_options('clip-exec', clip_entries)
     return render_template("html/hub.html", parameters=param_collection.parameters)
 
@@ -148,7 +148,7 @@ def dlcradle():
         'cmd_enc',
         'bash',
     ]:
-        cmd = build_cradle(params, ph_app.key)
+        cmd = build_cradle(params, app.key, app.callback_urls)
         href = None
     else:
         # Return a download button for payload
@@ -209,9 +209,8 @@ def modules():
 @app.route('/clipboard')
 @requires_auth
 def clipboard():
-    entries = list(ph_app.clipboard.entries.values())
+    entries = list(app.clipboard.entries.values())
     context = {
-        "nonpersistent": ph_app.db is None,
         "clipboard": entries,
     }
     return render_template("html/clipboard.html", **context)
@@ -222,7 +221,7 @@ def clipboard():
 def add_clipboard():
     """Add a clipboard entry"""
     content = request.form.get("content")
-    ph_app.clipboard.add(
+    app.clipboard.add(
         content,
         str(datetime.utcnow()).split('.')[0],
         request.remote_addr
@@ -236,7 +235,7 @@ def add_clipboard():
 def del_clipboard():
     """Delete a clipboard entry"""
     id = int(request.form.get("id"))
-    ph_app.clipboard.delete(id)
+    app.clipboard.delete(id)
     return ""
 
 
@@ -246,7 +245,7 @@ def executable_clipboard():
     """Set executable flag of a clipboard entry"""
     id = int(request.form.get("id"))
     value = (request.form.get("value") == 'true')
-    ph_app.clipboard.set_executable(id, value)
+    app.clipboard.set_executable(id, value)
     return ""
 
 
@@ -256,7 +255,7 @@ def edit_clipboard():
     """Edit a clipboard entry"""
     id = int(request.form.get("id"))
     content = request.form.get("content")
-    ph_app.clipboard.edit(id, content)
+    app.clipboard.edit(id, content)
     return ""
 
 
@@ -264,8 +263,8 @@ def edit_clipboard():
 @requires_auth
 def del_all_clipboard():
     """Delete all clipboard entries"""
-    for id in list(ph_app.clipboard.entries.keys()):
-        ph_app.clipboard.delete(id)
+    for id in list(app.clipboard.entries.keys()):
+        app.clipboard.delete(id)
     return redirect("/clipboard")
 
 
@@ -274,7 +273,7 @@ def del_all_clipboard():
 def export_clipboard():
     """Export all clipboard entries"""
     result = ""
-    for e in list(ph_app.clipboard.entries.values()):
+    for e in list(app.clipboard.entries.values()):
         headline = "%s (%s)\r\n" % (e.time, e.IP)
         result += headline
         result += "="*(len(headline)-2) + "\r\n"
@@ -299,7 +298,7 @@ def process_file(file, is_from_script, remote_addr):
     log.info("File received from %s: %s" % (remote_addr, file.filename))
     key = None
     if is_from_script:
-        key = ph_app.key
+        key = app.key
     save_file(file, key=key)
     msg = {}
     return msg

