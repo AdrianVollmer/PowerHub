@@ -83,8 +83,7 @@ def build_cradle_https(params):
 
 
 def build_cradle_webclient(params, key, incremental=False):
-    natural = params['natural']
-    web_client = symbol_name('web_client', natural=natural, refresh=True)
+    web_client = symbol_name('web_client', natural=params['natural'], refresh=True)
 
     result = "$%(web_client)s=New-Object Net.WebClient;"
 

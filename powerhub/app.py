@@ -75,6 +75,14 @@ class PowerHubApp(object):
         setattr(hidden_app, 'key', self.key)
         setattr(hidden_app, 'clipboard', self.clipboard)
 
+        if not (self.args.AUTH or self.args.NOAUTH):
+            from powerhub.tools import generate_random_key
+            log.info("You specified neither '--no-auth' nor '--auth <user>:<pass>'. "
+                     "A password will be generated for your protection.")
+            self.args.AUTH = "powerhub:" + generate_random_key(10)
+            log.info("The credentials for basic authentication are '%s' "
+                     "(without quotes)." % self.args.AUTH)
+
     def init_socketio(self):
         self.socketio = SocketIO(
             self.flask_app,

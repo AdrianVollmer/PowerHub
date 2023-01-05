@@ -3,8 +3,6 @@
     `obfuscate` macro.
 
     Stage 1 should be written such that it survives removing linebreaks and leading whitespace, so try not to use multi-line strings and such and use semicolons.
-
-    TODO: Include decoy code
 -#}
 
 {{'$DebugPreference = "Continue"'|debug}}
