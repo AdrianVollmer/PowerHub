@@ -143,7 +143,7 @@ It's simple:
 
 1. Enable constrained language mode
 1. Make sure PowerShell version 2 is disabled
-1. Block [these LOLBINs](https://learn.microsoft.com/en-us/windows/security/threat-protection/windows-defender-application-control/microsoft-recommended-block-rules)
+1. Block all executables in user-writable directories as well as [these LOLBINs](https://learn.microsoft.com/en-us/windows/security/threat-protection/windows-defender-application-control/microsoft-recommended-block-rules)
 
 (Hey, no one said it would be easy, I only said it was simple ...)
 
