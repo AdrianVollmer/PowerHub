@@ -22,6 +22,7 @@ from cryptography.hazmat.primitives import hashes
 
 from powerhub.env import powerhub_app as ph_app
 from powerhub.tools import get_self_signed_cert
+from powerhub.directories import directories
 
 log = logging.getLogger(__name__)
 
@@ -122,8 +123,9 @@ def run_proxy():
     reactor.listenTCP(ph_app.args.LPORT, site, interface=ph_app.args.LHOST)
 
     if not ph_app.args.SSL_KEY or not ph_app.args.SSL_CERT:
+        cert_dir = directories.CERT_DIR
         ph_app.args.SSL_CERT, ph_app.args.SSL_KEY = \
-                get_self_signed_cert(ph_app.args.URI_HOST)
+            get_self_signed_cert(ph_app.args.URI_HOST, cert_dir)
 
     pem_data = open(ph_app.args.SSL_CERT, "br").read()
     cert = x509.load_pem_x509_certificate(pem_data, default_backend())

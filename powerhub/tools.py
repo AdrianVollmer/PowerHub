@@ -14,7 +14,6 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
-from powerhub.directories import directories
 from powerhub.sql import get_setting, set_setting
 
 log = logging.getLogger(__name__)
@@ -60,8 +59,8 @@ def create_self_signed_cert(hostname, cert_file, key_file):
         ))
 
 
-def get_self_signed_cert(hostname):
-    file_basename = os.path.join(directories.CERT_DIR, "cert_%s." % hostname)
+def get_self_signed_cert(hostname, cert_dir):
+    file_basename = os.path.join(cert_dir, "cert_%s." % hostname)
     cert_file = file_basename + 'cert'
     key_file = file_basename + 'key'
 
