@@ -2,13 +2,11 @@ import os
 from datetime import datetime
 from operator import itemgetter
 
-from powerhub.env import powerhub_app as ph_app
-
 from powerhub.directories import directories
 from powerhub.tools import decrypt_aes
 
 
-def save_file(file, dir=directories.UPLOAD_DIR, encrypted=False):
+def save_file(file, dir=directories.UPLOAD_DIR, key=None):
     """Save a file to the upload directory and return the filename
 
     If it already exists, append a counter.
@@ -19,9 +17,9 @@ def save_file(file, dir=directories.UPLOAD_DIR, encrypted=False):
         while os.path.isfile("%s.%d" % (filename, count)):
             count += 1
         filename += ".%d" % count
-    if encrypted:
+    if key:
         data = file.read()
-        data = decrypt_aes(data, ph_app.key)
+        data = decrypt_aes(data, key)
         with open(filename, 'bw') as f:
             f.write(data)
     else:

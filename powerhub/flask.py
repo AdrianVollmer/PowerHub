@@ -266,8 +266,11 @@ def fileexchange():
 
 def process_file(file, is_from_script, remote_addr):
     """Save the file and return a message for push notification"""
-    log.info("File received - %s" % file.filename)
-    save_file(file, encrypted=is_from_script)
+    log.info("File received from %s: %s" % (remote_addr, file.filename))
+    key = None
+    if is_from_script:
+        key = ph_app.key
+    save_file(file, key=key)
     msg = {}
     return msg
 
