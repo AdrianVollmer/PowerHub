@@ -1,55 +1,61 @@
+import logging
 import os
 import threading
-from cheroot import wsgi
-from wsgidav.wsgidav_app import WsgiDAVApp
-from powerhub.directories import directories
-from powerhub.env import powerhub_app as ph_app
 import time
-from watchdog.observers import Observer
+
+from cheroot import wsgi
 from watchdog.events import FileSystemEventHandler
-import logging
+from watchdog.observers import Observer
+from wsgidav.wsgidav_app import WsgiDAVApp
+
+from powerhub.directories import directories
 
 logger = logging.getLogger("wsgidav")
+main_logger = logging.getLogger(__name__)
 logger.propagate = True
-logger.setLevel(logging.DEBUG)
+logger.setLevel(main_logger.getEffectiveLevel())
 
-config = {
-    "host": '127.0.0.1',
-    "port": ph_app.args.WEBDAV_PORT,
-    "dir_browser": {"enable": True},
-    "http_authenticator": {
-        # None: dc.simple_dc.SimpleDomainController(user_mapping)
-        "domain_controller": None,
-        "accept_basic": True,  # Allow basic authentication, True or False
-        "accept_digest": True,  # Allow digest authentication, True or False
-        "default_to_digest": True,  # True  or False
-        # Name of a header field that will be accepted as authorized user
-        "trusted_auth_header": None,
-    },
-    #: Used by SimpleDomainController only
-    "simple_dc": {"user_mapping": {"*": True}},
-    "provider_mapping": {
-        "/webdav_ro": {
-            "root": directories.WEBDAV_RO,
-            "readonly": True,
-            "auth": "anonymous",
+
+def init_server(port):
+    config = {
+        "host": '127.0.0.1',
+        "port": port,
+        "dir_browser": {"enable": True},
+        "http_authenticator": {
+            # None: dc.simple_dc.SimpleDomainController(user_mapping)
+            "domain_controller": None,
+            "accept_basic": True,  # Allow basic authentication, True or False
+            "accept_digest": True,  # Allow digest authentication, True or False
+            "default_to_digest": True,  # True  or False
+            # Name of a header field that will be accepted as authorized user
+            "trusted_auth_header": None,
         },
-        "/webdav/": {
-            "root": directories.WEBDAV_DIR,
-            "readonly": False,
-            "auth": "anonymous",
+        #: Used by SimpleDomainController only
+        "simple_dc": {"user_mapping": {"*": True}},
+        "provider_mapping": {
+            "/webdav_ro": {
+                "root": directories.WEBDAV_RO,
+                "readonly": True,
+                "auth": "anonymous",
+            },
+            "/webdav/": {
+                "root": directories.WEBDAV_DIR,
+                "readonly": False,
+                "auth": "anonymous",
+            },
         },
-    },
-    "verbose": 1,
-    }
+        "verbose": 1,
+        }
 
-app = WsgiDAVApp(config)
+    app = WsgiDAVApp(config)
 
-server_args = {
-    "bind_addr": (config["host"], config["port"]),
-    "wsgi_app": app,
-    }
-server = wsgi.Server(**server_args)
+    server_args = {
+        "bind_addr": (config["host"], config["port"]),
+        "wsgi_app": app,
+        }
+    server = wsgi.Server(**server_args)
+
+    return server
 
 
 class MyHandler(FileSystemEventHandler):
@@ -75,11 +81,12 @@ def watch_blackhole_folder():
     observer.join()
 
 
-def run_webdav():
+def run_webdav(port):
     threading.Thread(
         target=watch_blackhole_folder,
         daemon=True,
     ).start()
+    server = init_server(port)
     try:
         server.start()
     except KeyboardInterrupt:

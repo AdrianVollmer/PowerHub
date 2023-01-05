@@ -157,7 +157,7 @@ class PowerHubApp(object):
         signal.signal(signal.SIGINT, signal_handler)
         try:
             from powerhub.webdav import run_webdav
-            start_thread(run_webdav)
+            start_thread(lambda: run_webdav(self.args.WEBDAV_PORT))
         except ImportError as e:
             print(str(e))
             print("You have unmet dependencies. WebDAV won't be available. "
