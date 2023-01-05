@@ -22,6 +22,21 @@ def start_thread(f, *args):
     ).start()
 
 
+def shut_up_twisted():
+    # I give up. I tried a thousand ways to shut up these damn exceptions in
+    # twisted, nothing works. This will monkey patch the module to suppress
+    # these #@$!%? stubborn, useless messages.
+
+    def dummy(**kwargs):
+        return
+
+    try:
+        from twisted.python import log
+        log.err = dummy
+    except (AttributeError, ImportError):
+        pass
+
+
 class MyRequestHandler(WSGIRequestHandler):
     def address_string(self):
         if 'x-forwarded-for' in dict(self.headers._headers):
@@ -48,6 +63,8 @@ class PowerHubApp(object):
         empty, sys.argv will be used (i.e. the command line arguments).
 
         """
+
+        shut_up_twisted()
 
         self.args = args
         ph_dir.init_directories(workspace_dir=args.WORKSPACE_DIR,
