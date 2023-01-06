@@ -230,9 +230,6 @@ def debug_filter(msg, dbg=False):
     return ""
 
 
-# TODO add jinja include_randomize_whitespace
-# TODO add jinja powershell decoys
-
 def get_stage(key, context={}, stage3_files=[], stage3_strings=[],
               debug=False, natural=False, remove_whitespace=True):
     from jinja2 import Environment, FileSystemLoader
