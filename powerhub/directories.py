@@ -12,6 +12,7 @@ DirList = collections.namedtuple(
         'UPLOAD_DIR',
         'WEBDAV_BLACKHOLE',
         'WEBDAV_DIR',
+        'WEBDAV_PRIVATE',
         'WEBDAV_PUBLIC',
         'WEBDAV_RO',
         'XDG_DATA_HOME',
@@ -46,6 +47,7 @@ def init_directories(workspace_dir, create_missing=False):
     WEBDAV_RO = os.path.join(WORKSPACE_DIR, 'webdav_ro')
     WEBDAV_BLACKHOLE = os.path.join(WEBDAV_DIR, 'blackhole')
     WEBDAV_PUBLIC = os.path.join(WEBDAV_DIR, 'public')
+    WEBDAV_PRIVATE = os.path.join(WORKSPACE_DIR, 'webdav_private')
 
     MOD_DIR = os.path.join(XDG_DATA_HOME, 'modules')
     CERT_DIR = os.path.join(XDG_DATA_HOME, 'ssl')
@@ -58,6 +60,7 @@ def init_directories(workspace_dir, create_missing=False):
         UPLOAD_DIR,
         WEBDAV_BLACKHOLE,
         WEBDAV_DIR,
+        WEBDAV_PRIVATE,
         WEBDAV_PUBLIC,
         WEBDAV_RO,
         XDG_DATA_HOME,

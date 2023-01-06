@@ -16,7 +16,7 @@ logger.propagate = True
 logger.setLevel(main_logger.getEffectiveLevel())
 
 
-def init_server(port):
+def init_server(port, user, password):
     config = {
         "host": '127.0.0.1',
         "port": port,
@@ -31,7 +31,18 @@ def init_server(port):
             "trusted_auth_header": None,
         },
         #: Used by SimpleDomainController only
-        "simple_dc": {"user_mapping": {"*": True}},
+        "simple_dc": {
+            "user_mapping": {
+                "/webdav_ro": True,
+                "/webdav": True,
+                "*": {
+                    user: {
+                        "password": password,
+                        "roles": ["editor"]
+                    },
+                },
+            },
+        },
         "provider_mapping": {
             "/webdav_ro": {
                 "root": directories.WEBDAV_RO,
@@ -42,6 +53,10 @@ def init_server(port):
                 "root": directories.WEBDAV_DIR,
                 "readonly": False,
                 "auth": "anonymous",
+            },
+            "/webdav_private/": {
+                "root": directories.WEBDAV_PRIVATE,
+                "readonly": False,
             },
         },
         "verbose": 1,
@@ -81,12 +96,12 @@ def watch_blackhole_folder():
     observer.join()
 
 
-def run_webdav(port):
+def run_webdav(port, user, passwod):
     threading.Thread(
         target=watch_blackhole_folder,
         daemon=True,
     ).start()
-    server = init_server(port)
+    server = init_server(port, user, passwod)
     try:
         server.start()
     except KeyboardInterrupt:

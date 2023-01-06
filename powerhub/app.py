@@ -191,7 +191,19 @@ class PowerHubApp(object):
         signal.signal(signal.SIGINT, self.signal_handler)
 
         from powerhub.webdav import run_webdav
-        start_thread(lambda: run_webdav(self.args.WEBDAV_PORT))
+
+        def _run_webdav():
+            if self.args.AUTH:
+                if ':' in self.args.AUTH:
+                    USER, PASS = self.args.AUTH.split(':')[:2]
+                else:
+                    USER, PASS = self.args.AUTH, ""
+            else:
+                USER, PASS = "", ""
+
+            run_webdav(self.args.WEBDAV_PORT, USER, PASS)
+
+        start_thread(_run_webdav)
         start_thread(self.run_flask_app)
 
         if background:
