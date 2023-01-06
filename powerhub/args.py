@@ -17,7 +17,7 @@ parser.add_argument(
 parser.add_argument(
     '-w', '--workspace-directory', dest="WORKSPACE_DIR", default=None,
     help="use this directory to store project-related files"
-         " (default: XDG_DATA_HOME)"
+         " (default: $XDG_DATA_HOME/powerhub/workspace)"
 )
 
 auth_group = parser.add_mutually_exclusive_group()

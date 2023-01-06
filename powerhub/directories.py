@@ -39,7 +39,7 @@ def init_directories(workspace_dir, create_missing=False):
         'powerhub',
     )
 
-    WORKSPACE_DIR = workspace_dir or XDG_DATA_HOME
+    WORKSPACE_DIR = workspace_dir or os.path.join(XDG_DATA_HOME, 'workspace')
 
     UPLOAD_DIR = os.path.join(WORKSPACE_DIR, "upload")
     STATIC_DIR = os.path.join(WORKSPACE_DIR, 'static')
