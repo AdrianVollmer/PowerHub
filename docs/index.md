@@ -13,3 +13,7 @@ changelog
 usage
 troubleshooting
 ```
+
+
+```{include} ../README.md
+```

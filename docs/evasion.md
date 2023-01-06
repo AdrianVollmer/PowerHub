@@ -99,7 +99,7 @@ obfuscation](https://www.blackhat.com/docs/us-17/thursday/us-17-Bohannon-Revoke-
 
 We wrap our code in legit PowerShell code. Downloaded from one of
 Microsoft's GitHub repositories, PowerHub has hundreds of modules that do
-nothing and which will be randomly chosen to pad supsicious code. Plus,
+nothing and which will be randomly chosen to pad suspicious code. Plus,
 instead of using randomly generated variable names, PowerHub can use
 variable names inspired by real code to make it look more natural.
 
@@ -111,11 +111,14 @@ with blobs in them.
 
 ### Technique
 
-TODO
+Hooking certain routines, such as the AES decryption routine, actually makes
+sense. If a process decrypts data that contains naughty strings like
+`Mimikatz`, it is killed immediately by some antivirus products.
 
 ### Our Bypass
 
-TODO
+PowerHub has the option to stick to RC4, which doesn't use any APIs. It's
+noticeably slower but should be stealthier at the same time.
 
 ## Behavior Analysis
 
@@ -141,9 +144,9 @@ So what you can do as a defender about software like PowerHub?
 
 It's simple:
 
-1. Enable constrained language mode
-1. Make sure PowerShell version 2 is disabled
-1. Block all executables in user-writable directories as well as [these LOLBINs](https://learn.microsoft.com/en-us/windows/security/threat-protection/windows-defender-application-control/microsoft-recommended-block-rules)
+* Enable constrained language mode
+* Make sure PowerShell version 2 is disabled
+* Block all executables in user-writable directories as well as [these LOLBINs](https://learn.microsoft.com/en-us/windows/security/threat-protection/windows-defender-application-control/microsoft-recommended-block-rules)
 
 (Hey, no one said it would be easy, I only said it was simple ...)
 
