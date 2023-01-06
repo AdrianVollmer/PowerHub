@@ -1,5 +1,8 @@
+Changelog
+=========
+
 Version 1.11
-============
+------------
 
 * Change: Merge `Load-HubModule` into `Get-HubModule`
 * Change: Determine module type by magic bytes instead of directories
@@ -7,7 +10,7 @@ Version 1.11
 * Add: aliases for PE and .NET executables
 
 Version 1.10
-============
+------------
 
 * Fix: When using `SeparateAMSI`, the clipboard entry was ignored
 * Change: Use AES instead of slow RC4 after the AMSI bypass has been applied
@@ -16,24 +19,24 @@ Version 1.10
 * Add: static files view (@exploide)
 
 Version 1.9
-===========
+-----------
 
 * Add: Separate AMSI Bypass
 
 Version 1.8-2
-=============
+-------------
 
 * Fix: Defeat Defender
 * Fix: Update socket.io
 
 Version 1.8-1
-=============
+-------------
 
 * Fix: Make compatible with PS2
 * Fix: Bypass newest Windows Defender
 
 Version 1.8
-===========
+-----------
 
 * Change: Obfuscate more parts of the PowerShell stager
 * Change: Always apply Rasta Mouse's AMSI bypass after the first bypass in
@@ -41,14 +44,14 @@ Version 1.8
 * Fix: Make `Get-SysInfo` more robust in case a Cmdlet is missing
 
 Version 1.7
-===========
+-----------
 
 * New feature: Place everything but the modules and generated certificates
   in a workspace directory
 * Change: Bypass new malware detection by Windows Defender
 
 Version 1.6
-===========
+-----------
 
 * New feature: Ability to generate payloads on the fly (exe, .NET, vbs)
 * Change: Use bootstrap toasts instead of messages
@@ -57,7 +60,7 @@ Version 1.6
 * Change: Clean up dependencies and add `setup.py`
 
 Version 1.5
-===========
+-----------
 
 * New feature: Ability to either open files in the File Exchange in browser or
   download them
@@ -65,7 +68,7 @@ Version 1.5
 * Fix: Things didn't work if `$XDG_DATA_HOME` was non-empty
 
 Version 1.4
-===========
+-----------
 
 * New feature: Automatically load 'profile.ps1' from data home at the end of
   the payload
@@ -86,7 +89,7 @@ Version 1.4
 * Refactor some code for internal improvements
 
 Version 1.3
-===========
+-----------
 
 * Change WebDAV directory structure to allow for proper read/write access
 * Move all user directories to `$XDG_DATA_HOME/.local/share/powerhub` to
