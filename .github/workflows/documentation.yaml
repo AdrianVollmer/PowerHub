@@ -21,6 +21,7 @@ jobs:
             target = ''
           print(f'::set-output name=target::{target}')"
       - name: Sphinx build
+        if: steps.docs-publish-dir.outputs.target != ''
         run: |
           make docs
       - name: Deploy
