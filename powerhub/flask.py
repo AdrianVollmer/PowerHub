@@ -7,6 +7,7 @@ import os
 import shutil
 from tempfile import TemporaryDirectory
 
+import flask.cli
 from flask import Blueprint, render_template, request, Response, redirect, \
          send_from_directory, flash, abort, make_response
 
@@ -22,6 +23,9 @@ from powerhub.hiddenapp import hidden_app
 from powerhub.dhkex import DH_ENDPOINT, dh_kex
 from powerhub.parameters import param_collection
 
+
+# Disable startup banner
+flask.cli.show_server_banner = lambda *args: None
 
 app = Blueprint('app', __name__)
 log = logging.getLogger(__name__)
