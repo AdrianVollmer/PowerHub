@@ -25,7 +25,7 @@ Note that you don't have to restart PowerHub each time you make changes to
 one of the template files if you run PowerHub in debug mode. The files that
 you are going to want to modify are probably in
 `~/.local/lib/python3.*/site-packages/powerhub/templates`, if you installed
-it as recommended.
+it as recommended. I'd start with `stage1.ps1`.
 
 Personally, when developing I perform an editable install from the git
 repository, i.e. `pip install -e .` and then just edit the files in the

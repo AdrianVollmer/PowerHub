@@ -41,6 +41,29 @@ $ cd ~/.local/share/powerhub
 $ mv powerhub_db.sqlite static upload webdav* workspace/
 ```
 
+## Key exchange
+
+In PowerHub 1.0, the key was simply embedded in the stager. In principle,
+this is a vulnerability, as specialized antivirus products could use the key
+to inspect the higher order stages. PowerHub 2.0 performs a Diffie-Hellman
+key exchange by default (but no server verification on top of the TLS
+handshake) and also supports an out-of-band key exchange, meaning the key is
+pasted on the command line.
+
+## Pre-loaded modules
+
+It's now possible to deliver the PowerHub payload with some modules
+pre-loaded. This is interesting for environments without network access. If
+the key is also embedded in the stager, you can deliver it manually e.g. via
+USB to the target and use the modules.
+
+## power-obfuscate
+
+Installing PowerHub will yield a new executable: `power-obfuscate`. This
+makes it possible to use the obfuscation techniques of PowerHub on arbitrary
+PowerShell scripts or .NET executables without having to use the web
+application.
+
 ## Depreciation of Load-HubModule
 
 It was confusing to have both `Load-HubModule` and `Get-HubModule`. We had
@@ -59,17 +82,3 @@ complicated lately. AVs are quarantining the dump file, the LSASS process is
 protected by various mechanisms, etc. It's better to use specialized tools
 as outlined [here](https://s3cur3th1ssh1t.github.io/Reflective-Dump-Tools/)
 and references therein.
-
-## Pre-loaded modules
-
-It's now possible to deliver the PowerHub payload with some modules
-pre-loaded. This is interesting for environments without network access. If
-the key is also embedded in the stager, you can deliver it manually e.g. via
-USB to the target and use the modules.
-
-## power-obfuscate
-
-Installing PowerHub will yield a new executable: `power-obfuscate`. This
-makes it possible to use the obfuscation techniques of PowerHub on arbitrary
-PowerShell scripts or .NET executables without having to use the web
-application.

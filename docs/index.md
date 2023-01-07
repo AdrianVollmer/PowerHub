@@ -5,11 +5,11 @@
 :maxdepth: 2
 :caption: "Contents:"
 
+installation
 philosophy
 new
-evasion
-installation
 changelog
+evasion
 usage
 troubleshooting
 ```
