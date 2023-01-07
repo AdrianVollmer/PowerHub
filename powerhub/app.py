@@ -193,13 +193,17 @@ class PowerHubApp(object):
         from powerhub.webdav import run_webdav
 
         def _run_webdav():
-            if self.args.AUTH:
-                if ':' in self.args.AUTH:
-                    USER, PASS = self.args.AUTH.split(':')[:2]
+            if self.args.WEBDAV_AUTH:
+                if ':' in self.args.WEBDAV_AUTH:
+                    USER, PASS = self.args.WEBDAV_AUTH.split(':')[:2]
                 else:
-                    USER, PASS = self.args.AUTH, ""
+                    USER, PASS = self.args.WEBDAV_AUTH, ''
             else:
-                USER, PASS = "", ""
+                from powerhub.tools import generate_random_key
+                USER = 'powerhub'
+                PASS = generate_random_key(8)
+                self.args.WEBDAV_AUTH = '%s:%s' % (USER, PASS)
+                log.warn("No WebDAV credentials given, using: %s:%s" % (USER, PASS))
 
             run_webdav(self.args.WEBDAV_PORT, USER, PASS)
 

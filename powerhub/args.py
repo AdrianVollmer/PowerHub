@@ -79,6 +79,16 @@ parser.add_argument(
          "(default: %(default)s)"
 )
 
+parser.add_argument(
+    '-wa',
+    '--webdav-auth',
+    default="",
+    dest="WEBDAV_AUTH",
+    type=str,
+    help="define credentials for the private webdav share in the form of"
+         " 'user:pass' (default: powerhub:<random>)"
+)
+
 
 parser.add_argument(
     '-k',

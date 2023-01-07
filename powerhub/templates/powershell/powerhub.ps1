@@ -13,6 +13,8 @@ $KEY = [System.Text.Encoding]::UTF8.GetBytes("{{key}}");
 $CALLBACK_URL = "{{callback_url}}"
 $TransportScheme = "{{transport}}"
 $WEBDAV_URL = "{{webdav_url}}"
+$WEBDAV_USER = "{{webdav_user}}"
+$WEBDAV_PASS = "{{webdav_pass}}"
 {# $WebClient is defined in stage2 #}
 {# The actual code (i.e. the content) of the modules is stored in this separate hashtable #}
 $PowerHubModulesContent = @{ {{preloaded_modules}} }
@@ -805,16 +807,32 @@ The letter the mounted public drive will receive (default: 'S')
         [parameter(Mandatory=$False)]
         [String]$Letter = "S",
         [parameter(Mandatory=$False)]
+        [String]$PrivateLetter = "O",
+        [parameter(Mandatory=$False)]
         [String]$RoLetter = "R"
     )
+
     Set-Variable -Name "WebdavLetter" -Value "$Letter" -Scope Global
     Set-Variable -Name "WebdavRoLetter" -Value "$RoLetter" -Scope Global
-    {{'Write-Debug "Mounting $WEBDAV_URL to $LETTER"'|debug}}
-    $netout = iex "net use ${Letter}: $WEBDAV_URL /persistent:no 2>&1" | Out-Null
-    {{'Write-Debug "Mounting ${WEBDAV_URL}_ro to $RoLETTER"'|debug}}
-    $netout = iex "net use ${RoLetter}: ${WEBDAV_URL}_ro /persistent:no 2>&1" | Out-Null
-    if (!$?) {
-        throw "Error while executing 'net use': $netout"
+    Set-Variable -Name "WebdavPrivateLetter" -Value "$RoLetter" -Scope Global
+
+    $shares = @{
+        $Letter = $WEBDAV_URL
+        $RoLetter = "${WEBDAV_URL}_ro"
+        $PrivateLetter = "${WEBDAV_URL}_private"
+    }
+
+    foreach ($k in $shares.Keys) {
+        $cmd = "net use ${k}: $($shares[$k]) /persistent:no"
+        if ($k -eq  $PrivateLetter) {
+            $cmd += " $WEBDAV_PASS /user:$WEBDAV_USER"
+        }
+        {{'Write-Debug "Mounting: $cmd"'|debug}}
+        $cmd += " 2>&1"
+        $netout = (iex $cmd)
+        if (!$?) {
+            Write-Error "Error while executing 'net use': $netout"
+        }
     }
 }
 
@@ -826,14 +844,12 @@ function Unmount-Webdav {
 Unmount the Webdav drive.
 
 #>
-    If (${WebdavLetter}) {
-        $netout = iex "net use ${WebdavLetter}: /delete 2>&1" | Out-Null
-        $netout = iex "net use ${WebdavRoLetter}: /delete 2>&1" | Out-Null
+    $shares = @($WebdavLetter, $WebdavRoLetter, $WebdavPrivateLetter)
+    foreach ($k in $shares) {
+        $netout = iex "net use ${k}: /delete 2>&1" | Out-Null
         if (!$?) {
-            throw "Error while executing 'net use': $netout"
+            Write-Error "Error while executing 'net use': $netout"
         }
-    } else {
-        throw "No Webdav drive mounted"
     }
 }
 

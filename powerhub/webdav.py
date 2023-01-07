@@ -38,7 +38,7 @@ def init_server(port, user, password):
                 "*": {
                     user: {
                         "password": password,
-                        "roles": ["editor"]
+                        "roles": ["admin"]
                     },
                 },
             },
@@ -49,12 +49,12 @@ def init_server(port, user, password):
                 "readonly": True,
                 "auth": "anonymous",
             },
-            "/webdav/": {
+            "/webdav": {
                 "root": directories.WEBDAV_DIR,
                 "readonly": False,
                 "auth": "anonymous",
             },
-            "/webdav_private/": {
+            "/webdav_private": {
                 "root": directories.WEBDAV_PRIVATE,
                 "readonly": False,
             },
