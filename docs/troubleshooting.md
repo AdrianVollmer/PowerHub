@@ -14,7 +14,7 @@ which part triggers it. Running PowerHub in debug mode will cause a few more
 helpful messages to be printed on both systems.
 
 To find the exact line that is causing the trigger, it helps to first find
-the file and then to perform something like a binary search. So to delete
+the file and then to perform something like a binary search. Meaning: you delete
 one half of the file and see if it passes or not, then proceed with the
 problematic half by halving it even further, etc. This cannot be automated
 easily, because we still want the file to be well-behaved PowerShell code,
