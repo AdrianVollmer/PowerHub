@@ -249,7 +249,11 @@ def get_preloaded_modules(csvlist):
     result = "\n"
 
     for i in csvlist:
-        m = phmod.modules[i]
+        try:
+            m = phmod.modules[i]
+        except IndexError:
+            log.error("Module not found: %s" % i)
+            continue
         name = m.name
         code = m.code
 
