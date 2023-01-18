@@ -755,6 +755,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
         $result = $result + $Stream
     }
     end {
+        if (-not $result -and -not $Files) { return }
         if (-not $Files) {
             {{'Write-Debug "Pushing stdin stream..."'|debug}}
             if ($result.length -ge 1 -and $result[0] -is [System.String]) {
