@@ -129,7 +129,7 @@ class Module(object):
 
 def find_module_by_path(path):
     for m in modules:
-        if m.path == path:
+        if m._path == path:
             return m
 
 
@@ -151,14 +151,14 @@ def on_modified(event):
     module = import_file(event.src_path)
     log.info("Module modified: %s" % module.name)
     m = find_module_by_path(event.src_path)
-    modules[m.i] = module
+    modules[m.n] = module
 
 
 def on_moved(event):
     m = find_module_by_path(event.src_path)
     log.info("Module renamed: %s" % m.name)
-    m.path = event.dest_path
-    m.name = m.path.replace(directories.MOD_DIR, '')
+    m._path = event.dest_path
+    m.name = m._path.replace(directories.MOD_DIR, '')
 
 
 def set_up_watchdog():
