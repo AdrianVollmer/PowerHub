@@ -23,7 +23,7 @@ class Parameter(object):
                  classes="relevant-to-http relevant-to-https", get_arg=None,
                  cli_arg=None, help=""):
         if options:
-            assert default_value in [o[0] for o in options],\
+            assert default_value in [str(o[0]) for o in options],\
                     "%s not in list: %s" % (default_value, options)
         assert _type in 'selection checkbox radio text'.split()
         assert default_value is not None
@@ -61,8 +61,11 @@ class Parameter(object):
 
     @value.setter
     def value(self, _value):
-        if self.options and _value not in [o[0] for o in self.options]:
-            raise ValueError("%s not in list: %s" % (_value, self.options))
+        __value = _value
+        if isinstance(_value, tuple):
+            __value = _value[0]
+        if self.options and __value not in [str(o[0]) for o in self.options]:
+            raise ValueError("%s not in list: %s" % (__value, self.options))
         if self._type == "checkbox":
             if isinstance(_value, str):
                 self._value = (_value.lower().startswith('t'))
