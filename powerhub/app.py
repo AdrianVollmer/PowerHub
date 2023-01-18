@@ -133,6 +133,7 @@ class PowerHubApp(object):
             setattr(app, 'args', self.args)
             setattr(app, 'callback_urls', self.callback_urls())
             setattr(app, 'webdav_url', self.webdav_url())
+            setattr(app, 'socketio', self.socketio)
 
     def init_db(self):
         from flask_sqlalchemy import SQLAlchemy
