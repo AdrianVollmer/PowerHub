@@ -53,6 +53,7 @@ def get_stage3():
     transport = param_collection['transport']
     slow_encryption = param_collection['slowenc']
     preloaded_modules = param_collection['preloaded']
+    preloaded_modules_content = get_preloaded_modules_content(preloaded_modules)
     preloaded_modules = get_preloaded_modules(preloaded_modules)
 
     webdav_user, webdav_pass = hidden_app.args.WEBDAV_AUTH.split(':')
@@ -60,6 +61,7 @@ def get_stage3():
     powerhub_context = dict(
         modules=phmod.modules,
         preloaded_modules=preloaded_modules,
+        preloaded_modules_content=preloaded_modules_content,
         callback_url=hidden_app.callback_urls[transport],
         transport=transport,
         webdav_url=hidden_app.webdav_url,
@@ -229,6 +231,39 @@ def load_module():
 
 
 def get_preloaded_modules(csvlist):
+    """Return a string that will be inserted into a PowerShell array
+
+    The format of each line is this:
+        New-Object PSObject -Property @{ Name="<NAME">, ... }
+    """
+
+    if not csvlist:
+        return ""
+
+    try:
+        csvlist = expand_csv(csvlist)
+    except Exception:
+        log.error("Couldn't parse CSV list: %s" % csvlist)
+        return ""
+
+    result = "\n"
+
+    for i in csvlist:
+        try:
+            m = phmod.modules[i]
+        except IndexError:
+            log.error("Module not found: %s" % i)
+            continue
+
+        obj = '@{ Name="%s"; Type="%s"; N=%d; Loaded=$True; Alias="" }' % (
+            m.name, m.type, m.n,
+        )
+        result += 'New-Object PowerHubModule -Property %s \n' % obj
+
+    return result
+
+
+def get_preloaded_modules_content(csvlist):
     """Return a string that will be inserted into a PowerShell hashtable
 
     The format of each line is this:

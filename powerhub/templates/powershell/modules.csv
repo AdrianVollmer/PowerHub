@@ -1,4 +1,3 @@
-#TYPE PowerHub.Module
 "Name","Type","N","Loaded","Alias"
 {%- for m in modules %}
 "{{m.name}}","{{m.type}}","{{m.n}}","$False","{{m.alias}}"
