@@ -133,15 +133,17 @@ function Unzip-Code {
 
 function Update-HubModules {
     Write-Verbose "Updating module list..."
-    $ModuleList = Transport-String "list"
-    Invoke-Expression "$ModuleList"  | Out-Null
-    $Global:PowerHubModules = $PowerHubModules
-    $PowerHubModules | Format-Table -AutoSize -Property N,Type,Name,Loaded
+    $ModuleList = Transport-String "list" | ConvertFrom-Csv
+    $Global:PowerHubModules = $ModuleList
     foreach ($m in $PowerHubModules) {
+        $m.n = [Int]($m.n)
         if ($PowerHubModulesContent.ContainsKey($m.Name)) {
             $m.Loaded = $True
+        } else {
+            $m.Loaded = $False
         }
     }
+    $PowerHubModules | Format-Table -AutoSize -Property N,Type,Name,Loaded
 }
 
 function Import-HubModule {

@@ -182,7 +182,7 @@ def hub_modules():
     }
 
     result = render_template(
-        "powershell/modules.ps1",
+        "powershell/modules.csv",
         **context,
     )
 
