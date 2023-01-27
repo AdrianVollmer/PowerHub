@@ -431,10 +431,15 @@ Load the PE module with the name 'meterpreter.exe' in memory and save it to disk
 
     foreach ($m in $Module) {
         $code = $PowerHubModulesContent.($m.Name)
+        $BaseName = $m.Name
+        if ($BaseName -match '/') {
+            $BaseName = $BaseName.split('/')
+            $BaseName = $BaseName[$BaseName.Length-1]
+        }
         if ($Directory) {
-            $Filename = "$Directory/$($m.BaseName)"
+            $Filename = "$Directory\$BaseName"
         } else {
-            $Filename = $m.BaseName
+            $Filename = $BaseName
         }
         if ($m.Type -eq "ps1") {
             $code | Set-Content "$Filename" -Encoding UTF8
