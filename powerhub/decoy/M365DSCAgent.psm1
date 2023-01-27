@@ -245,7 +245,3 @@ function Set-M365DSCAgentCertificateConfiguration
     }
     return $thumbprint
 }
-
-    'Set-M365DSCAgentCertificateConfiguration',
-    'Test-M365DSCAgent'
-)

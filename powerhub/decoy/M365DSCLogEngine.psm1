@@ -674,11 +674,3 @@ function Assert-M365DSCIsNonInteractiveShell
 
     return $true
 }
-
-    'Add-M365DSCEvent',
-    'Export-M365DSCDiagnosticData',
-    'New-M365DSCLogEntry',
-    'Get-M365DSCNotificationEndPointRegistration',
-    'New-M365DSCNotificationEndPointRegistration',
-    'Remove-M365DSCNotificationEndPointRegistration'
-)

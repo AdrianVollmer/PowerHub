@@ -271,6 +271,3 @@ function New-ExoUnitTest
     Write-TokenReplacement -Token '<RemoveCmdletName>' -value "Remove-$($CmdletNoun)" -FilePath $unitTestPath
     Write-TokenReplacement -Token '<NewCmdletName>' -value "New-$($CmdletNoun)" -FilePath $unitTestPath
 }
-
-    'New-ExoUnitTest'
-)

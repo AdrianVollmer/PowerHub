@@ -84,6 +84,3 @@ function Format-M365DSCString
 
     return $newProperties
 }
-
-    'Format-M365DSCString'
-)

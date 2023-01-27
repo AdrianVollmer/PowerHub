@@ -1189,8 +1189,3 @@ function Initialize-M365DSCReporting
     return $parsedContent
 
 }
-
-    'Compare-M365DSCConfigurations',
-    'New-M365DSCDeltaReport',
-    'New-M365DSCReportFromConfiguration'
-)

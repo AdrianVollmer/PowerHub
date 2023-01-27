@@ -208,6 +208,3 @@ function Get-PropertyReport
     $report | Export-Csv -NoTypeInformation -Path "$DestinationFolder\M365DSC-Properties-Report.csv" -Delimiter ','
     $missingResources | Out-File "$DestinationFolder\MissingDSCResources.csv"
 }
-
-    'Get-PropertyReport'
-)

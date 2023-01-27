@@ -243,6 +243,3 @@ function New-M365DSCStubFiles
     }
     $Content | Out-File $DestinationFilePath -Encoding utf8
 }
-
-    'New-M365DSCStubFiles'
-)

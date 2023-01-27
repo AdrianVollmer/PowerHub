@@ -353,9 +353,3 @@ function Format-M365DSCTelemetryParameters
     }
     return $data
 }
-
-    'Add-M365DSCTelemetryEvent',
-    'Format-M365DSCTelemetryParameters',
-    'Get-M365DSCTelemetryOption',
-    'Set-M365DSCTelemetryOption'
-)

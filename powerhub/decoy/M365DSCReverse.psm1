@@ -881,6 +881,3 @@ function Get-M365DSCResourcesByWorkloads
     }
     return $Components
 }
-
-    'Start-M365DSCConfigurationExtract'
-)

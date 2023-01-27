@@ -22,6 +22,3 @@ function Save-M365DSCPartialExport
     $tempPath = Join-Path -Path $env:TEMP -ChildPath $FileName
     $Content | Out-File -FilePath $tempPath -Append:$true -Force
 }
-
-    'Save-M365DSCPartialExport'
-)

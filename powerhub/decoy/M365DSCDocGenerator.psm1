@@ -920,6 +920,3 @@ function Update-M365DSCResourceDocumentationPage
 
     Remove-Item -Path $tempPath -Force -Confirm:$false
 }
-
-    'Update-M365DSCResourceDocumentationPage'
-)

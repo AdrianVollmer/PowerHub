@@ -1582,11 +1582,3 @@ function Update-M365DSCAzureAdApplication
         Write-LogEntry '      See the documentation for any required permissions.'
     }
 }
-
-    'Get-M365DSCCompiledPermissionList',
-    'Update-M365DSCAllowedGraphScopes',
-    'Update-M365DSCAzureAdApplication',
-    'Update-M365DSCExchangeResourcesSettingsJSON',
-    'Update-M365DSCSharePointResourcesSettingsJSON',
-    'Update-M365DSCResourcesSettingsJSON'
-)
