@@ -40,6 +40,7 @@ def init_directories(workspace_dir, create_missing=False):
     )
 
     WORKSPACE_DIR = workspace_dir or os.path.join(XDG_DATA_HOME, 'workspace')
+    WORKSPACE_DIR = os.path.abspath(WORKSPACE_DIR)
 
     UPLOAD_DIR = os.path.join(WORKSPACE_DIR, "upload")
     STATIC_DIR = os.path.join(WORKSPACE_DIR, 'static')
@@ -72,6 +73,7 @@ def init_directories(workspace_dir, create_missing=False):
             ensure_dir_exists(d)
 
     DB_FILENAME = os.path.join(WORKSPACE_DIR, "powerhub_db.sqlite")
+    DB_FILENAME = os.path.abspath(DB_FILENAME)
     _directories.append(DB_FILENAME)
 
     global directories
