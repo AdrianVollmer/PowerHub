@@ -2,6 +2,17 @@
 
 ## Nomenclature
 
+### Download cradle
+
+### Stager
+
+### Launcher
+
+### Payload
+
+### Module
+
+
 ## Typical workflow
 
 ## Features
@@ -71,7 +82,7 @@ function Run-Init {
 }
 ```
 
-### Payloads
+### Binary payloads
 
 ## Examples
 

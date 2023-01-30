@@ -97,13 +97,13 @@ obfuscation](https://www.blackhat.com/docs/us-17/thursday/us-17-Bohannon-Revoke-
 
 ### Our Bypass
 
-We wrap our code in legit PowerShell code. Downloaded from one of
+We (optionally) wrap our code in legit PowerShell code. Downloaded from one of
 Microsoft's GitHub repositories, PowerHub has hundreds of modules that do
 nothing and which will be randomly chosen to pad suspicious code. Plus,
 instead of using randomly generated variable names, PowerHub can use
 variable names inspired by real code to make it look more natural.
 
-We will still have large encoded binary blobs in our code, but let's just
+We will still have large encoded binary blobs in our code, but we must
 assume that it won't be feasible for antivirus products to block all scripts
 with blobs in them.
 
@@ -119,6 +119,21 @@ sense. If a process decrypts data that contains naughty strings like
 
 PowerHub has the option to stick to RC4, which doesn't use any APIs. It's
 noticeably slower but should be stealthier at the same time.
+
+## Yet unknown static analysis
+
+### Technique
+
+Malicious code such as the cradle itself could be detected simply by
+blocking code which contains both `DownloadString` and `Invoke-Expression`.
+
+### Our Bypass
+
+PowerHub has two approaches. One is the "incremental delivery", by which
+pieces of the stager are loaded incrementally. To avoid the cradle itself
+being detected, PowerHub knows the option "split cradle". You will then have
+to execute two commands in the same PowerShell session, which may not always
+be possible.
 
 ## Behavior Analysis
 
