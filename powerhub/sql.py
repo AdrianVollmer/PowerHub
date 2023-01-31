@@ -1,6 +1,7 @@
 import logging
 
 from sqlalchemy.exc import OperationalError
+from sqlalchemy import text
 
 _db = None
 log = logging.getLogger(__name__)
@@ -26,10 +27,10 @@ def init_db(db):
 def upgrade_from_111_to_200(db):
     """Add the `executable` column to the `Entry` table"""
     with db.engine.connect() as connection:
-        connection.execute(
+        connection.execute(text(
             'alter table Entry add column executable Boolean'
             ' not null default false'
-        )
+        ))
         log.info("Schema upgrade successful (2.0)")
 
 
