@@ -1,3 +1,9 @@
+Version 1.11.1
+==============
+
+* Fix: Update dependencies to avoid incompatibilities with flask-sqlalchemy,
+  sqlalchemy, dns-python and eventlet
+
 Version 1.11
 ============
 
