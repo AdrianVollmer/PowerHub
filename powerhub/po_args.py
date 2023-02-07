@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    '-v', '--version', action='version', version='PowerHub ' + __version__
+    '-v', '--version', action='version', version=__version__
 )
 
 parser.add_argument(
