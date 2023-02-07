@@ -62,8 +62,11 @@ PowerHub can be installed like any other Python package. Just execute
 `python3 -m pip install powerhub`. If you like to work with virtual
 environments, I recommend [pipx](https://github.com/pypa/pipx/).
 
-If you want to use the latest version on the dev branch, clone this
-repository and install with `python3 -m pip install -e .`.
+If you want to use the latest version, install with `python3 -m pip install
+git+https://github.com/AdrianVollmer/PowerHub`.
+
+Developers should clone the repository and do an editable install with
+`python3 -m pip install -e .`.
 
 For building the payloads, you need the MinGW GCC and Mono C# compilers. On
 Debian-like systems, you can install them with `apt-get install mono-mcs
