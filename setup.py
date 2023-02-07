@@ -21,10 +21,10 @@ setuptools.setup(
     install_requires=[
         'cheroot',
         'cryptography',
+        'eventlet>=0.33.3',
         'Flask>=1.0.2',
         'Flask-SocketIO>=3.1.2',
-        'flask-sqlalchemy>=2.1,<3.0',
-        'sqlalchemy<2.0',
+        'flask-sqlalchemy>=3.0',
         'Jinja2>=3.0',
         'pyOpenSSL',
         'pypykatz>=0.2.2',
