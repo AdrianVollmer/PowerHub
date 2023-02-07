@@ -110,8 +110,8 @@ parser.add_argument(
     '-a', '--allow',
     dest='ALLOWLIST',
     default=None,
-    help="comma separated value of allowed source IP addresses or address ranges"
-         " (leave empty to allow all)"
+    help="comma separated value of allowed source IP addresses or address "
+         " ranges (leave empty to allow all)"
 )
 
 parser.add_argument(
