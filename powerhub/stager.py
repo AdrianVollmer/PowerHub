@@ -177,7 +177,7 @@ def build_cradle(params, key, callback_urls):
 
 def symbol_name(name, natural=False, refresh=False, debug=False):
     """Choose an obfuscated symbol name for a given name. Uniqueness
-    garantueed.
+    guaranteed.
 
     If natural=True, choose a name that is typically used in scripts.
     If refresh=True, choose a new symbol name instead of using the one that
