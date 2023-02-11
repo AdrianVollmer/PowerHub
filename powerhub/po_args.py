@@ -40,6 +40,16 @@ parser.add_argument(
     help=("use natural variable names"),
 )
 
+parser.add_argument(
+    '-y', '--decoy', default=False, action="store_true",
+    help=("include decoy code"),
+)
+
+parser.add_argument(
+    '-s', '--slow-encryption', default=False, action="store_true",
+    help=("avoid system routines for fast encryption"),
+)
+
 
 def parse_args():
     return parser.parse_args()

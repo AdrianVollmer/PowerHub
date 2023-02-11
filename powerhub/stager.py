@@ -311,7 +311,7 @@ def wrap_in_ps1(code, name):
     return result
 
 
-def obfuscate_file(fp_in, fp_out, natural=False, debug=False,
+def obfuscate_file(fp_in, fp_out, natural=False, debug=False, decoy=False,
                    slow_encryption=False, epilogue=''):
     import magic
 
@@ -333,19 +333,37 @@ def obfuscate_file(fp_in, fp_out, natural=False, debug=False,
     if epilogue:
         stage3.append(epilogue)
 
-    context = dict(
+    key = generate_random_key(16)
+
+    if decoy:
+        separator = '<#%s#>' % ''.join(random.choices(string.ascii_letters, k=32))
+    else:
+        separator = ''
+
+    amsi_bypass = 'reflection'
+    amsi_bypass = os.path.join('powershell', 'amsi', amsi_bypass + '.ps1')
+    stager_context = dict(
         kex='embedded',
+        key=key,
+        amsibypass=amsi_bypass,
+        separator=separator,
+        slow_encryption=slow_encryption,
     )
 
-    key = generate_random_key(16)
     output = get_stage(
         key,
         stage3_strings=stage3,
-        context=context,
-        natural=natural,
+        context=stager_context,
         debug=debug,
-        slow_encryption=slow_encryption,
+        natural=natural,
+        remove_whitespace=(not decoy),
     )
+
+    if decoy:
+        output = insert_decoys(output, separator)
+
+    output = output.replace(separator, '')
+
     fp_out.write(output)
 
 
@@ -377,4 +395,49 @@ def obfuscate_set_alias():
             result += "`"
         result += e
 
+    return result
+
+
+def insert_decoys(code, separator):
+    """Insert decoy code at positions marked by the separator
+
+    First, split the code at the separators. Then append and prepend 1-2 legit modules
+    to each segment. Finally, join the segments.
+    """
+
+    decoy_dir = os.path.join(directories.BASE_DIR, 'decoy')
+    decoy_list = [f for f in os.listdir(decoy_dir)
+                  if (os.path.isfile(os.path.join(decoy_dir, f)) and '.ps' in f)]
+
+    segments = code.split(separator)
+
+    def load_decoy_code(filename):
+        full_path = os.path.join(directories.BASE_DIR, 'decoy', filename)
+        return open(full_path, 'r').read()
+
+    for i, s in enumerate(segments):
+        # append
+        samples = draw_samples(decoy_list, 1, 2)
+        for x in samples:
+            segments[i] += '\n'*random.randrange(1, 5) + load_decoy_code(x)
+        # prepend
+        samples = draw_samples(decoy_list, 1, 2)
+        for x in samples:
+            segments[i] = '\n'*random.randrange(1, 5) + load_decoy_code(x) + segments[i]
+
+    result = ("\n\n%s\n\n" % separator).join(segments)
+
+    # Include the LICENSE to be sure:
+    license = open(os.path.join(directories.BASE_DIR, 'decoy', 'LICENSE'), 'r').read()
+    result = '<#\n%s\n#>%s\n\n' % (license, result)
+
+    return result
+
+
+def draw_samples(lst, a, b):
+    """Select between a und b random samples from a list and remove them"""
+    k = random.randrange(a, b+1)
+    result = random.sample(lst, k)
+    for each in result:
+        lst.remove(each)
     return result

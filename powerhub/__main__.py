@@ -23,5 +23,6 @@ def power_obfuscate():
     from powerhub.stager import obfuscate_file
     obfuscate_file(
         args.input, args.output, epilogue=args.epilogue,
+        slow_encryption=args.slow_encryption, decoy=args.decoy,
         debug=args.debug, natural=args.natural,
     )

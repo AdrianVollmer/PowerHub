@@ -9,7 +9,7 @@ from flask import render_template, request, Response, Flask
 
 from powerhub.tools import encrypt_rc4, encrypt_aes, compress
 import powerhub.modules as phmod
-from powerhub.stager import get_stage
+from powerhub.stager import get_stage, insert_decoys
 from powerhub.directories import directories
 from powerhub.dhkex import DH_G, DH_MODULUS, DH_ENDPOINT
 from powerhub.parameters import param_collection
@@ -126,6 +126,8 @@ def stager():
     amsi_bypass = param_collection['amsi']
     amsi_bypass = os.path.join('powershell', 'amsi', amsi_bypass + '.ps1')
 
+    key = hidden_app.key
+
     kex = param_collection['kex']
     natural = param_collection['natural']
     transport = param_collection['transport']
@@ -139,8 +141,6 @@ def stager():
     else:
         separator = ''
 
-    key = hidden_app.key
-
     stager_context = dict(
         key=key,
         amsibypass=amsi_bypass,
@@ -153,7 +153,6 @@ def stager():
         slow_encryption=slow_encryption,
         obfuscate_setalias=obfuscate_setalias,
     )
-    log.debug("Delivering stage 1; context: %s" % stager_context)
 
     result = get_stage(
         key,
@@ -171,6 +170,8 @@ def stager():
         result = result.split(separator)[int(increment)]
     else:
         result = result.replace(separator, '')
+
+    log.debug("Delivering stage 1; context: %s" % stager_context)
 
     return Response(result, content_type='text/plain; charset=utf-8')
 
@@ -317,49 +318,4 @@ def expand_csv(csvlist):
             result.extend(range(int(a), int(b)+1))
         else:
             result.append(int(item))
-    return result
-
-
-def insert_decoys(code, separator):
-    """Insert decoy code at positions marked by the separator
-
-    First, split the code at the separators. Then append and prepend 1-2 legit modules
-    to each segment. Finally, join the segments.
-    """
-
-    decoy_dir = os.path.join(directories.BASE_DIR, 'decoy')
-    decoy_list = [f for f in os.listdir(decoy_dir)
-                  if (os.path.isfile(os.path.join(decoy_dir, f)) and '.ps' in f)]
-
-    segments = code.split(separator)
-
-    def load_decoy_code(filename):
-        full_path = os.path.join(directories.BASE_DIR, 'decoy', filename)
-        return open(full_path, 'r').read()
-
-    for i, s in enumerate(segments):
-        # append
-        samples = draw_samples(decoy_list, 1, 2)
-        for x in samples:
-            segments[i] += '\n'*random.randrange(1, 5) + load_decoy_code(x)
-        # prepend
-        samples = draw_samples(decoy_list, 1, 2)
-        for x in samples:
-            segments[i] = '\n'*random.randrange(1, 5) + load_decoy_code(x) + segments[i]
-
-    result = ("\n\n%s\n\n" % separator).join(segments)
-
-    # Include the LICENSE to be sure:
-    license = open(os.path.join(directories.BASE_DIR, 'decoy', 'LICENSE'), 'r').read()
-    result = '<#\n%s\n#>%s\n\n' % (license, result)
-
-    return result
-
-
-def draw_samples(lst, a, b):
-    """Select between a und b random samples from a list and remove them"""
-    k = random.randrange(a, b+1)
-    result = random.sample(lst, k)
-    for each in result:
-        lst.remove(each)
     return result
