@@ -58,7 +58,7 @@ def build_cradle_https(params):
 
 
 def build_cradle_webclient(params, key, callback_urls, incremental=False):
-    web_client = symbol_name('web_client', natural=params['natural'], refresh=True)
+    web_client = symbol_name('web_client', natural=params['natural'], seed=key)
 
     result = "$%(web_client)s=New-Object Net.WebClient;"
 
@@ -127,7 +127,7 @@ def build_cradle(params, key, callback_urls):
 
     result = ""
     natural = params['natural']
-    key_var = symbol_name('global_key', natural=natural)
+    key_var = symbol_name('global_key', natural=natural, seed=key)
 
     result += build_cradle_https(params)
 
@@ -148,7 +148,7 @@ def build_cradle(params, key, callback_urls):
     )
 
     if params['split_cradle']:
-        store_dl = symbol_name('store_dl', natural=params['natural'], refresh=True)
+        store_dl = symbol_name('store_dl', natural=params['natural'], seed=key)
         result = result.replace("IEX ", "")
         # Replace last semicolon
         result = result.split(';')
@@ -175,17 +175,28 @@ def build_cradle(params, key, callback_urls):
     return result
 
 
-def symbol_name(name, natural=False, refresh=False, debug=False):
+def symbol_name(name, natural=False, seed=None, debug=False):
     """Choose an obfuscated symbol name for a given name. Uniqueness
     guaranteed.
 
+    The random seed can be specified so that chosen variables can stay
+    constant across sessions; in particular those appearing in the download
+    cradle.
+
     If natural=True, choose a name that is typically used in scripts.
-    If refresh=True, choose a new symbol name instead of using the one that
-    was already defined.
+
     If debug=True, the new symbol name is equal to the old symbol name.
     """
-    if refresh and name in symbol_list:
-        del symbol_list[name]
+
+    if seed:
+        temp_random = random.Random(seed)
+    else:
+        temp_random = random
+
+    # this is done so the symbol_name will be refreshed when getting the
+    # natural symbol_name of an already used (non-natural) variable.
+    if natural:
+        name = name + '_natural'
 
     if name not in symbol_list:
         if debug:
@@ -193,13 +204,14 @@ def symbol_name(name, natural=False, refresh=False, debug=False):
             symbol_list[name] = name
         else:
             if natural:
-                symbol_list[name] = choose_natural_name()
+                symbol_list[name] = choose_natural_name(temp_random)
             else:
-                symbol_list[name] = choose_random_name()
+                symbol_list[name] = choose_random_name(temp_random)
+
     return symbol_list[name]
 
 
-def choose_natural_name():
+def choose_natural_name(random):
     if not VARLIST:
         with open(os.path.join(directories.BASE_DIR, 'variables.txt'), 'r') as fp:
             for line in fp:
@@ -213,7 +225,7 @@ def choose_natural_name():
     return result
 
 
-def choose_random_name():
+def choose_random_name(random):
     result = None
     length = random.choice(range(4, 8))
     while not result or result in list(symbol_list.values()):
