@@ -184,6 +184,3 @@ def set_up_watchdog():
 
     watchdog = threading.Thread(target=my_observer.start, daemon=True)
     watchdog.start()
-
-
-update_modules()

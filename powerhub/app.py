@@ -74,7 +74,9 @@ class PowerHubApp(object):
         self.init_clipboard()
         self.init_socketio()
         self.init_settings()
-        from powerhub.modules import set_up_watchdog
+
+        from powerhub.modules import set_up_watchdog, update_modules
+        update_modules()
         set_up_watchdog()
 
         self.set_flask_app_attributes()
