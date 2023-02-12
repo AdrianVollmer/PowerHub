@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 from powerhub.directories import directories
 
 repositories = {
-    "ZeroDayLab/PowerSploit": "https://github.com/ZeroDayLab/PowerSploit.git",
+    "AdrianVollmer/PowerSploit": "https://github.com/AdrianVollmer/PowerSploit.git",
     "SharpHound.exe": "https://github.com/BloodHoundAD/BloodHound/raw/master/Collectors/SharpHound.exe",  # noqa
     "SharpHound.ps1": "https://github.com/BloodHoundAD/BloodHound/raw/master/Collectors/SharpHound.ps1",  # noqa
     "ASREPRoast.ps1": "https://raw.githubusercontent.com/HarmJ0y/ASREPRoast/master/ASREPRoast.ps1",
