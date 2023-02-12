@@ -382,6 +382,16 @@ def obfuscate_file(fp_in, fp_out, natural=False, debug=False, decoy=False,
 
     fp_out.write(output)
 
+    outfile = fp_out.name
+
+    if outfile == '<stdout>':
+        outfile = '<ps1 script>'
+    log.info("Output written to %s" % fp_out.name)
+    log.info(
+        "Execute the file with 'cat %(outfile)s|iex' or 'ipmo %(outfile)s' on the target"
+        % dict(outfile=outfile)
+    )
+
 
 def obfuscate_set_alias():
     """Return an obfuscated version of the string `Set-Alias`"""
