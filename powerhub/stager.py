@@ -324,7 +324,7 @@ def wrap_in_ps1(code, name):
 
 
 def obfuscate_file(fp_in, fp_out, natural=False, debug=False, decoy=False,
-                   slow_encryption=False, epilogue=''):
+                   slow_encryption=False, epilogue='', name=None):
     import magic
 
     code = fp_in.read()
@@ -334,11 +334,15 @@ def obfuscate_file(fp_in, fp_out, natural=False, debug=False, decoy=False,
         file_type = magic.from_buffer(code)
         code = sanitize_ps1(code, file_type)
     except UnicodeError:
-        try:
+        # It's a binary, assume .NET
+        if not name:
             name = os.path.basename(fp_in.name)
-        except AttributeError:
-            # it is a stream, not a file
-            name = 'stdin.exe'
+            if name == '<stdin>':
+                # it is a stream, not a file
+                name = symbol_name('power-obfuscate', natural=natural)
+                log.warning(
+                    "Reading from stdin; since you did not specify a name: the code can be called with '%s'" % name
+                )
         code = wrap_in_ps1(code, name)
 
     stage3 = [code]

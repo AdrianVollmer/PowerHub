@@ -23,6 +23,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    '-N', '--name',
+    default=None,
+    help="for .NET binaries: determine a function name with which to call the code"
+         " (default: the filename, or a random name when reading from stdin",
+)
+
+parser.add_argument(
     '-o', '--output',
     default='-',
     type=argparse.FileType(mode='w'),

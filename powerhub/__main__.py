@@ -24,5 +24,5 @@ def power_obfuscate():
     obfuscate_file(
         args.input, args.output, epilogue=args.epilogue,
         slow_encryption=args.slow_encryption, decoy=args.decoy,
-        debug=args.debug, natural=args.natural,
+        debug=args.debug, natural=args.natural, name=args.name,
     )
