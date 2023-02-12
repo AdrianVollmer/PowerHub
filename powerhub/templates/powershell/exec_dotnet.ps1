@@ -1,4 +1,4 @@
-{# Load .NET assembly in memory and create alias for the function that executes it #}
+{# Load .NET assembly in memory and function that executes it #}
 
 function {{name}} {
     $Code = [System.Convert]::FromBase64String("{{code}}")
