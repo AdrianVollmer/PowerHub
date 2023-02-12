@@ -335,7 +335,7 @@ def obfuscate_file(fp_in, fp_out, natural=False, debug=False, decoy=False,
         code = sanitize_ps1(code, file_type)
     except UnicodeError:
         try:
-            name = os.path.basename(fp_in.filename)
+            name = os.path.basename(fp_in.name)
         except AttributeError:
             # it is a stream, not a file
             name = 'stdin.exe'
