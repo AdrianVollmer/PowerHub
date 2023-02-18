@@ -43,7 +43,7 @@ def init_directories(workspace_dir, create_missing=False):
     WORKSPACE_DIR = os.path.abspath(WORKSPACE_DIR)
 
     UPLOAD_DIR = os.path.join(WORKSPACE_DIR, "upload")
-    STATIC_DIR = os.path.join(WORKSPACE_DIR, 'static')
+    STATIC_DIR = os.path.join(XDG_DATA_HOME, 'static')
     WEBDAV_DIR = os.path.join(WORKSPACE_DIR, 'webdav')
     WEBDAV_RO = os.path.join(WORKSPACE_DIR, 'webdav_ro')
     WEBDAV_BLACKHOLE = os.path.join(WEBDAV_DIR, 'blackhole')

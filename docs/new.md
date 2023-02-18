@@ -32,13 +32,13 @@ welcome, though!
 There is now a clearer separation of files that belong to the workspace
 directory. To be precise, the database and most directories in
 `$XDG_DATA_HOME/powerhub` have been moved into a new subdirectory named
-`workspace`. As a side effect, this may make your clipboard, uploads and
-static files appear empty. This fixes that (assuming `$XDG_DATA_HOME` is
+`workspace`. As a side effect, this may make your clipboard and uploads
+files appear empty. This fixes that (assuming `$XDG_DATA_HOME` is
 undefined):
 
 ```console
 $ cd ~/.local/share/powerhub
-$ mv powerhub_db.sqlite static upload webdav* workspace/
+$ mv powerhub_db.sqlite upload webdav* workspace/
 ```
 
 ## Key exchange

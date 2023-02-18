@@ -135,9 +135,9 @@ def find_module_by_path(path):
 
 def on_created(event):
     module = import_file(event.src_path)
-    module.n = len(modules) - 1
     modules.append(module)
-    log.info("Module added: %s" % module.name)
+    module.n = len(modules) - 1
+    log.info("Module added (%d): %s" % (module.n, module.name))
 
 
 def on_deleted(event):
@@ -151,6 +151,7 @@ def on_modified(event):
     module = import_file(event.src_path)
     log.info("Module modified: %s" % module.name)
     m = find_module_by_path(event.src_path)
+    module.n = m.n
     modules[m.n] = module
 
 
