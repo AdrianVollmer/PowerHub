@@ -9,7 +9,7 @@ class FlaskFilter(logging.Filter):
         return "* Running on http://" not in record.getMessage()
 
 
-def init_logging(debug):
+def init_logging(debug, stream=sys.stdout):
     if debug:
         FORMAT = '%(levelname).1s %(asctime)-15s '
         FORMAT += '%(filename)s:%(lineno)d %(message)s'
@@ -17,7 +17,7 @@ def init_logging(debug):
         FORMAT = '%(levelname).1s %(asctime)-15s %(message)s'
 
     logging.basicConfig(
-        stream=sys.stdout,
+        stream=stream,
         level=logging.DEBUG if debug else logging.INFO,
         format=FORMAT,
         datefmt="%Y-%m-%d %H:%M:%S",

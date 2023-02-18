@@ -18,7 +18,8 @@ def power_obfuscate():
     args = parse_args()
 
     from powerhub.logging import init_logging
-    init_logging(args.debug)
+    import sys
+    init_logging(args.debug, stream=sys.stderr)
 
     from powerhub.directories import init_directories
     init_directories(None, create_missing=False)
