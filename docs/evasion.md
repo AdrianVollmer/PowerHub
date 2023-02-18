@@ -7,7 +7,7 @@ attempts to bypass them.
 
 ### Technique
 
-Antivirus Detection does not necessarily have to happen on the endpoint.
+Antivirus detection does not necessarily have to happen on the endpoint.
 It's common to check files transferred from the network for malicious code
 before it even reaches the endpoint. Usually, this happens in web proxies.
 
@@ -46,7 +46,7 @@ PowerHub doesn't use any novel AMSI bypass. There are long
 [lists](https://github.com/S3cur3Th1sSh1t/Amsi-Bypass-Powershell) of AMSI
 bypasses, because PowerShell is so powerful, it can modify its own behavior.
 
-The challenge is to get one of the bypasses by AMSI, because the
+The challenge is to get one of the bypasses by AMSI itself, because the
 bypasses are obviously immediately detected if executed naively. Some
 bypasses are quite short and the only suspicious thing about them are some
 strings. For example, this is one of the first bypasses by Matt Graeber and
@@ -65,7 +65,7 @@ TODO screenshot.
 Imagine we replaced the strings:
 
 ```powershell
-[Ref].Assembly.GetType($string1).GetField($string2,string3).SetValue($null,$true)
+[Ref].Assembly.GetType($string1).GetField($string2,$string3).SetValue($Null,$True)
 ```
 
 Surely this line cannot be considered malware, or else it would break
@@ -105,7 +105,7 @@ variable names inspired by real code to make it look more natural.
 
 We will still have large encoded binary blobs in our code, but we must
 assume that it won't be feasible for antivirus products to block all scripts
-with blobs in them.
+with blobs in them. There is no way around this -- I think.
 
 ## API Hooking
 
@@ -120,7 +120,7 @@ sense. If a process decrypts data that contains naughty strings like
 PowerHub has the option to stick to RC4, which doesn't use any APIs. It's
 noticeably slower but should be stealthier at the same time.
 
-## Yet unknown static analysis
+## Static Analysis
 
 ### Technique
 
@@ -162,6 +162,8 @@ It's simple:
 * Enable constrained language mode
 * Make sure PowerShell version 2 is disabled
 * Block all executables in user-writable directories as well as [these LOLBINs](https://learn.microsoft.com/en-us/windows/security/threat-protection/windows-defender-application-control/microsoft-recommended-block-rules)
+* Fine, also allow signed binaries matching a fixed list of product names like
+  "Microsoft Teams" even if they are located in writable directories
 
 (Hey, no one said it would be easy, I only said it was simple ...)
 
