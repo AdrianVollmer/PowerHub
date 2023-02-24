@@ -62,10 +62,10 @@ class FilteredSite(Site):
                     allow = True
                     break
 
-            log.warning("Block request from %s" % addr.host)
-
         if allow:
             return Site.buildProtocol(self, addr)
+        else:
+            log.warning("Block request from %s" % addr.host)
 
 
 class DynamicProxy(Resource):
