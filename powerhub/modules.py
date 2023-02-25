@@ -144,8 +144,10 @@ def on_created(event):
 
 def on_deleted(event):
     m = find_module_by_path(event.src_path)
+    if not m:
+        return
     log.info("Module deleted: %s" % m.name)
-    modules.pop(m.n)
+    modules.remove(m)
     enumerate_modules()
 
 
