@@ -209,7 +209,7 @@ class PowerHubApp(object):
                 USER = 'powerhub'
                 PASS = generate_random_key(8)
                 self.args.WEBDAV_AUTH = '%s:%s' % (USER, PASS)
-                log.warn("No WebDAV credentials given, using: %s:%s" % (USER, PASS))
+                log.warning("No WebDAV credentials given, using: %s:%s" % (USER, PASS))
 
             run_webdav(self.args.WEBDAV_PORT, USER, PASS)
 
