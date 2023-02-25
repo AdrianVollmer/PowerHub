@@ -37,6 +37,7 @@ dependencies = [
     'pyOpenSSL',
     'python-magic',
     'service_identity',
+    'simple-websocket',
     'twisted>=18.9.0',
     'watchdog',
     'werkzeug>=0.15',
