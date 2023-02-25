@@ -130,12 +130,15 @@ class PowerHubApp(object):
         from powerhub.hiddenapp import hidden_app
         from powerhub.flask import app as flask_app
         for app in [flask_app, hidden_app]:
-            setattr(app, 'key', self.key)
-            setattr(app, 'clipboard', self.clipboard)
-            setattr(app, 'args', self.args)
-            setattr(app, 'callback_urls', self.callback_urls())
-            setattr(app, 'webdav_url', self.webdav_url())
-            setattr(app, 'socketio', self.socketio)
+            for k, v in {
+                'key': self.key,
+                'clipboard': self.clipboard,
+                'args': self.args,
+                'callback_urls': self.callback_urls(),
+                'webdav_url': self.webdav_url(),
+                'socketio': self.socketio,
+            }.items():
+                setattr(app, k, v)
 
     def init_db(self):
         from flask_sqlalchemy import SQLAlchemy
