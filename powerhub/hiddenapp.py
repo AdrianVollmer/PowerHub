@@ -56,7 +56,10 @@ def get_stage3():
     preloaded_modules_content = get_preloaded_modules_content(preloaded_modules)
     preloaded_modules = get_preloaded_modules(preloaded_modules)
 
-    webdav_user, webdav_pass = hidden_app.args.WEBDAV_AUTH.split(':')
+    if hidden_app.args.WEBDAV_AUTH:
+        webdav_user, webdav_pass = hidden_app.args.WEBDAV_AUTH.split(':')
+    else:
+        webdav_user, webdav_pass = '', ''
 
     powerhub_context = dict(
         modules=phmod.modules,
