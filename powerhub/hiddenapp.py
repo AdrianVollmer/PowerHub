@@ -19,7 +19,7 @@ hidden_app = Flask(
     'hidden_app',
     template_folder=os.path.join(directories.BASE_DIR, 'templates'),
 )
-hidden_app.templates_auto_reload = True
+hidden_app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 log = logging.getLogger(__name__)
 
