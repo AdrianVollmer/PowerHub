@@ -168,11 +168,11 @@ params = [
         get_arg='t',
     ),
     Parameter(
-        'kex', 'dh', 'Key Exchange', 'selection',
+        'kex', 'oob', 'Key Exchange', 'selection',
         options=[
-            ("dh", "Diffie-Hellman (secure; requires extra request)"),
-            ("oob", "Out of Band (less secure; less compact)"),
-            ("embedded", "Embedded (least secure; most compact)"),
+            ("oob", "Out of Band (most secure; least compact)"),
+            ("dh", "Diffie-Hellman (medium secure; compact; requires extra request)"),
+            ("embedded", "Embedded (least secure; compact; self-contained)"),
         ],
         get_arg='k',
     ),
