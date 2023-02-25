@@ -146,6 +146,7 @@ params = [
             #  ("rundll32" , "Rundll32"),
             #  ("installutil" , "InstallUtil"),
         ],
+        get_arg='launcher',
     ),
     Parameter(
         'amsi', 'reflection', 'AMSI Bypass', 'selection',
