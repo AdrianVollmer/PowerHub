@@ -186,6 +186,7 @@ class PowerHubApp(object):
             host='127.0.0.1',
             use_reloader=False,
             request_handler=MyRequestHandler,
+            allow_unsafe_werkzeug=True,
         )
 
     def signal_handler(self, sig, frame):
