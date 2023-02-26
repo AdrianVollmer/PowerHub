@@ -89,6 +89,15 @@ class PowerHubApp(object):
             log.info("The credentials for basic authentication are '%s' "
                      "(without quotes)." % self.args.AUTH)
 
+        # Call symbol_name so some variables have a constant obfuscate name
+        # across sessions (but not across instances).
+        # This enables the user to use to same download cradle after
+        # restarts of PowerHub.
+        from powerhub.stager import symbol_name
+        for var in "global_key store_dl web_client".split():
+            symbol_name(var, natural=False, seed=self.key)
+            symbol_name(var, natural=True, seed=self.key)
+
     def init_socketio(self):
         self.socketio = SocketIO(
             self.flask_app,
@@ -107,6 +116,7 @@ class PowerHubApp(object):
 
     def init_flask(self):
         from powerhub.flask import app as flask_blueprint
+
         self.flask_app = Flask(__name__, static_url_path='/invalid')
         self.flask_app.register_blueprint(flask_blueprint)
         self.flask_app.wsgi_app = ProxyFix(
@@ -115,6 +125,7 @@ class PowerHubApp(object):
             x_host=1,
             x_port=1
         )
+
         self.flask_app.config.update(
             DEBUG=self.args.DEBUG,
             SECRET_KEY=os.urandom(16),

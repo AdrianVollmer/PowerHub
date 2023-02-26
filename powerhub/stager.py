@@ -58,7 +58,7 @@ def build_cradle_https(params):
 
 
 def build_cradle_webclient(params, key, callback_urls, incremental=False):
-    web_client = symbol_name('web_client', natural=params['natural'], seed=key)
+    web_client = symbol_name('web_client', natural=params['natural'])
 
     result = "$%(web_client)s=New-Object Net.WebClient;"
 
@@ -127,7 +127,7 @@ def build_cradle(params, key, callback_urls):
 
     result = ""
     natural = params['natural']
-    key_var = symbol_name('global_key', natural=natural, seed=key)
+    key_var = symbol_name('global_key', natural=natural)
 
     result += build_cradle_https(params)
 
@@ -148,7 +148,7 @@ def build_cradle(params, key, callback_urls):
     )
 
     if params['split_cradle']:
-        store_dl = symbol_name('store_dl', natural=params['natural'], seed=key)
+        store_dl = symbol_name('store_dl', natural=params['natural'])
         result = result.replace("IEX ", "")
         # Replace last semicolon
         result = result.split(';')
@@ -188,15 +188,15 @@ def symbol_name(name, natural=False, seed=None, debug=False):
     If debug=True, the new symbol name is equal to the old symbol name.
     """
 
-    if seed:
-        temp_random = random.Random(seed)
-    else:
-        temp_random = random
-
     # this is done so the symbol_name will be refreshed when getting the
     # natural symbol_name of an already used (non-natural) variable.
     if natural:
         name = name + '_natural'
+
+    if seed:
+        temp_random = random.Random(seed + name)
+    else:
+        temp_random = random
 
     if name not in symbol_list:
         if debug:
