@@ -15,11 +15,13 @@ jobs:
           if github_ref == 'refs/heads/master':
             target = 'master'
           elif github_ref.startswith('refs/tags/'):
-            m = re.match(r'^refs/tags/v([0-9]+\.[0-9]+\.[0-9]+)$', github_ref);
+            m = re.match(r'^refs/tags/(.*)$', github_ref);
             target = m.group(1)
           else:
             target = ''
-          print(f'::set-output name=target::{target}')"
+          if 'GITHUB_OUTPUT' in os.environ:
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              print('{0}={1}'.format('target', target), file=f)"
       - name: Sphinx build
         if: steps.docs-publish-dir.outputs.target != ''
         run: |
@@ -33,4 +35,4 @@ jobs:
           publish_dir: docs/_build/
           destination_dir: ${{ steps.docs-publish-dir.outputs.target }}
           keep_files: true
-          force_orphan: true
+          force_orphan: false

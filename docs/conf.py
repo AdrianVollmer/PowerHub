@@ -22,7 +22,7 @@ copyright = '2018-2023, Adrian Vollmer'
 author = 'Adrian Vollmer'
 
 # The full version, including alpha/beta/rc tags
-release = '2.0'
+release = "2.0.0"
 
 
 # -- General configuration ---------------------------------------------------
@@ -44,9 +44,8 @@ html_context['display_lower_left'] = True
 REPO_NAME = project
 from git import Repo  # noqa
 repo = Repo(search_parent_directories=True)
-current_version = repo.active_branch.name
-html_context['current_version'] = current_version
-html_context['version'] = current_version
+html_context['current_version'] = release
+html_context['version'] = release
 html_context['versions'] = list()
 versions = ['master']
 versions += [tag.name for tag in repo.tags if tag.name.startswith('2.')]
