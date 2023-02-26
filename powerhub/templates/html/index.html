@@ -1,0 +1,97 @@
+{% import 'macros.html' as macros %}
+{% import 'helpstrings.jinja2' as help %}
+<!doctype html>
+<html lang="en" style="font-size: 20px">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>PowerHub</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+    </style>
+    <!-- Custom styles for this template -->
+    <link href="/css/dashboard.css" rel="stylesheet">
+  </head>
+<body>
+
+<nav class="navbar navbar-expand navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+  <a class="navbar navbar-brand mr-0"
+     role="button"
+     href='#'
+     id="dropdownMenuLink"
+     data-toggle="dropdown"
+     aria-haspopup="true"
+     aria-expanded="false">
+  <span class="navbar-toggler-icon"></span>
+  </a>
+  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    {% if AUTH != "" %}
+        <div class="dropdown-item">Basic Authentication
+        Credentials:</br><code>{{AUTH}}</code></div>
+    {% endif %}
+    <div class="dropdown-item">Version: {{VERSION}}</div>
+    <div class="dropdown-item">by Adrian Vollmer</div>
+    <div class="dropdown-item"><a title="Github source" target="_blank" href="https://github.com/AdrianVollmer/PowerHub">github.com/AdrianVollmer/PowerHub</a></div>
+    <div class="dropdown-item"><a title="Read the docs" target="_blank" href="https://adrianvollmer.github.io/PowerHub/">Read the docs</a></div>
+  </div>
+  <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">PowerHub</a>
+
+  <ul class="nav nav-pills">
+    <li class="nav-item">
+      <a class="nav-link {% block hub_active %}{% endblock %}"
+         href="/hub">Hub</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% block modules_active %}{% endblock %}"
+         href="/modules">Modules</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% block clipboard_active %}{% endblock %}"
+         href="/clipboard">Clipboard</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% block fileexchange_active %}{% endblock %}"
+         href="/fileexchange">File Exchange</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% block liststatic_active %}{% endblock %}"
+         href="/list-static">Static Files</a>
+    </li>
+  </ul>
+</nav>
+
+{% include "html/toasts.html" %}
+
+<div class="container pt-5">
+    {% block content %}{% endblock %}
+</div>
+
+{# this is an invisible toast that will be used for push notifications #}
+{% with show='', hidden='hidden', message={'title': '', 'body': '', 'category': 'primary'} %}
+     {% include 'html/single-toast.html' %}
+{% endwith %}
+
+<script src="/js/jquery-3.3.1.min.js"></script>
+<script>window.jQuery || document.write('<script src="/js/jquery-3.3.1.min.js"><\/script>')</script>
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/socket.io.min.js"></script>
+<script src="/js/feather.min.js"></script>
+<script src="/js/powerhub.js" ></script>
+</body>
+</html>

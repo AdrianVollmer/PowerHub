@@ -1,0 +1,18 @@
+<table class="table">
+    <thead>
+    <tr>
+        <th scope="col">#</th>
+        <th scope="col">Type</th>
+        <th scope="col">Name</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for m in modules %}
+    <tr>
+        <td>{{m.n}}</td>
+        <td>{{m.type}}</td>
+        <td>{{m.name}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>

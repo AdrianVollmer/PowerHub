@@ -1,1 +1,0 @@
-powerhub_app = None

@@ -1,0 +1,22 @@
+{% extends "html/index.html" %}
+{% block liststatic_active %}active{% endblock %}
+
+{% macro dir_list(dir, prefix) %}
+<ul style="list-style-type: none">
+{% for file in dir.files %}
+    <li><span data-feather="file"></span> <a href="{{ prefix }}/{{ file }}" target="_blank">{{ file }}</a></li>
+{% endfor %}
+{% for subdir in dir.subdirs %}
+    <li><span data-feather="folder"></span> {{ subdir.name }}/
+        {{ dir_list(subdir, prefix+"/"+subdir.name) }}
+    </li>
+{% endfor %}
+</ul>
+{% endmacro %}
+
+{% block content %}
+<p>
+<h2>Static Files {{macros.inline_help(help.liststatic_main)}}</h2>
+{{ dir_list(rootdir, "static") }}
+</p>
+{% endblock %}

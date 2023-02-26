@@ -6,18 +6,28 @@ function update_cradle() {
         return
     };
     var parameters = {};
+
+    $('#cradle-options input').each(function(){
+        if ($(this).attr('type') == 'radio') {
+            if ($(this).is(':checked')) {
+                parameters[$(this).attr('name')] = this.id;
+            }
+            $(this).parent().hide();
+        } else if ($(this).attr('type') == 'text') {
+            parameters[this.id] = this.value;
+        } else {
+            parameters[this.id] = $(this).is(':checked');
+            $(this).parent().hide();
+        }
+    });
+
     $('#cradle-options select').each(function(){
         parameters[this.id] = this.value;
-    });
-    $('#cradle-options input').each(function(){
-        parameters[this.id] = $(this).is(':checked');
-        $(this).parent().hide();
-    });
-    $('#cradle-options select').each(function(){
         $('#cradle-options .relevant-to-'+this.value).each(function(){
             $(this).show();
         });
     });
+
     $.get(
         "dlcradle",
         parameters
@@ -35,6 +45,17 @@ function toggleDiv(id) {
     var div = document.getElementById(id);
     div.style.display = div.style.display == "none" ? "block" : "none";
 }
+
+$('input.executable').change(function(e){
+    e.preventDefault();
+    var id = $(this).attr('data-id');
+    var checkbox = e.currentTarget;
+    console.log(e);
+    $.post({
+        url: "clipboard/executable",
+        data: {"id": id, "value": checkbox.checked},
+    });
+});
 
 $('.edit-clipboard').click(function(e){
     e.preventDefault();
@@ -69,6 +90,9 @@ $('.edit-cancel').click(function(e){
 
 $('.delete-clipboard').click(function(e){
     e.preventDefault();
+    if (!confirm("Are you sure you want to delete this entry? This cannot be undone.")) {
+        return;
+    }
     var id = $(this).attr('data-id');
     $.post("clipboard/delete", {id: id});
     $("#card-" + id).remove();

@@ -1,0 +1,11 @@
+{% with messages = get_flashed_messages() %}
+    <div id='toast-container' class="pt-5 position-absolute w-100 p-4 d-flex flex-column align-items-end">
+      {% if messages %}
+          {% for message in messages %}
+             {% with show='show' %}
+                 {% include 'html/single-toast.html' %}
+             {% endwith %}
+          {% endfor %}
+      {% endif %}
+    </div>
+{% endwith %}

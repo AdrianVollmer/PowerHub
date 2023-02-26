@@ -1,0 +1,12 @@
+{% if dl_str %}
+    <p>Paste this in your launcher (PowerShell/CMD/Bash command):</p>
+    <div class="code_div mb-3" contenteditable='true'>
+        <code id='dlcradle' data-flavor="hub">{{ dl_str|safe }}</code>
+    </div>
+{% else %}
+    <p>Download the payload:
+        <a class='ml-2 btn btn-warning btn-sm' id='file-cradle-dl-button' href="{{href}}">
+            <span data-feather="download"></span>
+        </a>
+    </p>
+{% endif %}

@@ -1,0 +1,10 @@
+{% extends "html/index.html" %}
+{% block hub_active %}active{% endblock %}
+{% block content %}
+<p id='mainp'>
+<h2>Hub {{macros.inline_help(help.hub_main)}}
+</h2>
+<div id='download-cradle'>
+</div>
+<div id="cradle-options">{{macros.render_options(parameters)}}</div>
+{% endblock %}

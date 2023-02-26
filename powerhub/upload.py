@@ -2,13 +2,11 @@ import os
 from datetime import datetime
 from operator import itemgetter
 
-from powerhub.env import powerhub_app as ph_app
-
-from powerhub.directories import UPLOAD_DIR
+from powerhub.directories import directories
 from powerhub.tools import decrypt_aes
 
 
-def save_file(file, dir=UPLOAD_DIR, encrypted=False):
+def save_file(file, dir=directories.UPLOAD_DIR, key=None):
     """Save a file to the upload directory and return the filename
 
     If it already exists, append a counter.
@@ -19,9 +17,9 @@ def save_file(file, dir=UPLOAD_DIR, encrypted=False):
         while os.path.isfile("%s.%d" % (filename, count)):
             count += 1
         filename += ".%d" % count
-    if encrypted:
+    if key:
         data = file.read()
-        data = decrypt_aes(data, ph_app.key)
+        data = decrypt_aes(data, key)
         with open(filename, 'bw') as f:
             f.write(data)
     else:
@@ -31,13 +29,13 @@ def save_file(file, dir=UPLOAD_DIR, encrypted=False):
 
 def get_filelist():
     """Return a list of files in the upload directory"""
-    onlyfiles = [f for f in os.listdir(UPLOAD_DIR)
-                 if os.path.isfile(os.path.join(UPLOAD_DIR, f))]
+    onlyfiles = [f for f in os.listdir(directories.UPLOAD_DIR)
+                 if os.path.isfile(os.path.join(directories.UPLOAD_DIR, f))]
     result = [{
                 "name": f,
-                "size": os.path.getsize(os.path.join(UPLOAD_DIR, f)),
+                "size": os.path.getsize(os.path.join(directories.UPLOAD_DIR, f)),
                 "date": datetime.fromtimestamp(os.path.getmtime(
-                            os.path.join(UPLOAD_DIR, f)
+                            os.path.join(directories.UPLOAD_DIR, f)
                             )).strftime('%Y-%m-%d %H:%M:%S'),
             } for f in onlyfiles]
     result = sorted(result, key=itemgetter('name'))

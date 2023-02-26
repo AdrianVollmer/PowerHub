@@ -1,0 +1,4 @@
+[flake8]
+show-source = True
+builtins = unicode
+max-line-length = 120

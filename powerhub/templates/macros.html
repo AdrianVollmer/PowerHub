@@ -1,0 +1,64 @@
+{% macro inline_help(msg) -%}
+<sup>
+    <a href="#"
+       title="What's this?"
+       data-toggle="popover"
+       data-html="true"
+       data-trigger="focus"
+       data-content="{{msg}}">
+    <span data-feather="help-circle"></span></a>
+</sup>
+{%- endmacro %}
+
+{% macro render_selection(parameter) %}
+<div class="input-group input-group-sm mb-3">
+  <div class="input-group-prepend">
+      <label class="input-group-text" for="{{parameter.label}}" style="width: 150px;">{{parameter.description}}</label>
+  </div>
+  <select class="custom-select" id="{{parameter.label}}">
+{% for label, desc in parameter.options %}
+      <option value="{{label}}"{% if loop.index==1%} selected{% endif %}>{{desc}}</option>
+{% endfor %}
+  </select>
+</div>
+{% endmacro %}
+
+{% macro render_checkbox(parameter) %}
+<div class="form-check form-check-inline{% if parameter.classes %} {{parameter.classes}}{% endif %}">
+  <input class="form-check-input" type="checkbox" id="{{parameter.label}}" value="{{parameter.label}}">
+  <label class="form-check-label" for="{{parameter.label}}"{% if parameter.help %} title="{{parameter.help}}"{% endif %}>{{parameter.description}}</label>
+</div>
+{% endmacro %}
+
+{% macro render_radio(parameter) %}
+{% for label, desc in parameter.options %}
+<div class="custom-control custom-radio custom-control-inline{% if parameter.classes %} {{parameter.classes}}{% endif %}">
+  <input type="radio" id="{{label}}" name="{{parameter.label}}" class="custom-control-input"{% if parameter.value == label %} checked{% endif %}>
+  <label class="custom-control-label" for="{{label}}"{% if parameter.help %} title="{{parameter.help}}"{% endif %}>{{desc}}</label>
+</div>
+{% endfor %}
+{% endmacro %}
+
+{% macro render_text(parameter) %}
+<div class="input-group input-group-sm mb-3">
+  <div class="input-group-prepend">
+      <label class="input-group-text" for="{{parameter.label}}" style="width: 150px;"{% if parameter.help %} title="{{parameter.help}}"{% endif %}>{{parameter.description}}</label>
+  </div>
+      <input type="text" id="{{parameter.label}}" name="{{parameter.label}}" class="form-control">
+</div>
+{% endmacro %}
+
+
+{% macro render_options(parameters) %}
+{%- for p in parameters -%}
+{% if p._type == 'selection' %}
+{{render_selection(p)}}
+{% elif p._type == 'checkbox' %}
+{{render_checkbox(p)}}
+{% elif p._type == 'radio' %}
+{{render_radio(p)}}
+{% elif p._type == 'text' %}
+{{render_text(p)}}
+{% endif %}
+{%- endfor -%}
+{% endmacro %}

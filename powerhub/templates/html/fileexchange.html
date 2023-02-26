@@ -1,0 +1,56 @@
+{% extends "html/index.html" %}
+{% block fileexchange_active %}active{% endblock %}
+{% block content %}
+<p>
+<h2>File Exchange {{macros.inline_help(help.fileexchange_main)}}
+</h2>
+<div class="row mb-4">
+  <form action="upload" method="POST" enctype="multipart/form-data"
+        class="col-sm-auto form-inline">
+    <div class="form-group">
+      <input value="file"
+             name="file[]"
+             type="file"
+             multiple="multiple"
+             class="form-control-file btn btn-default btn-file btn-sm" />
+    </div>
+    <div class="form-group">
+      <input type=submit value=Upload class="submitButton btn btn-primary btn-sm" />
+    </div>
+  </form>
+  <div class="col-sm text-right">
+      <a href="/d-all" class="btn btn-secondary btn-sm flush-right"><span class="align-baseline" data-feather="download"></span> Download all</a>
+  </div>
+</div>
+</p>
+<div class="container">
+{% if files %}
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Name</th>
+      <th scope="col">Size</th>
+      <th scope="col">Date</th>
+      <th scope="col"><span class="align-baseline" data-feather="download"></span></th>
+    </tr>
+  </thead>
+  <tbody>
+{% for f in files %}
+    <tr>
+      <th scope="row">{{loop.index}}</th>
+      <td><a href="/d/{{f.name}}" title="Open in Browser: {{f.name}}">{{f.name}}</a></td>
+      <td>{{f.size}}</td>
+      <td>{{f.date}}</td>
+      <td scope="col">
+        <a href="/d/{{f.name}}?dl" title="Download: {{f.name}}">
+          <span class="align-baseline" data-feather="download"></span>
+        </a>
+      </td>
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
+{% endif %}
+</div>
+{% endblock %}

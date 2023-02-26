@@ -1,0 +1,88 @@
+{% extends "html/index.html" %}
+{% block clipboard_active %}active{% endblock %}
+{% block content %}
+<p>
+<h2>Clipboard {{macros.inline_help(help.clipboard_main)}}
+</h2>
+    <div class="col">
+    <form action="clipboard/add" method="post" id="clipform" class='row'>
+        <div class="input-group mb-3">
+          <textarea id="clipboard-area" rows="4" cols="80" name="content"
+              form="clipform" class="form-control"
+              aria-describedby="basic-addon2"></textarea>
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="submit">+</button>
+          </div>
+        </div>
+    </form>
+    {% if nonpersistent %}
+    <div class="alert alert-danger" role="alert">
+      Warning: Because you are missing a dependency (flask_sqlalchemy), the
+      clipboard is not persistent!
+    </div>
+    {% endif %}
+{% if clipboard|length == 0 %}
+        <p>Clipboard is empty</p>
+{% else %}
+    <div class="row mb-3">
+        <div class="col-sm text-right">
+            <form action="/clipboard/del-all" method="post" class="col-sm">
+                <button type="submit"
+                        onclick="return confirm('Are you sure you want to delete everything?')"
+                        class="btn btn-danger btn-sm">
+                    Delete all
+                </button>
+                <a href="/clipboard/export" class="btn btn-secondary btn-sm flush-right">
+                    <span class="align-baseline" data-feather="download"></span> Export
+                </a>
+            </form>
+        </div>
+    </div>
+    {% for c in clipboard %}
+        <div class="card row" id="card-{{c.id}}">
+          <div class="card-body">
+            <h5 class="card-title">
+                From {{c.IP}}, <span title="{{c.time}}">{{c.timedelta}} ago</span>
+                <div class="card-id">{{c.id}}</div>
+            </h5>
+            <h6 class="card-subtitle mb-2 text-muted">
+              <sup>
+                <a href="#" class="card-link edit-clipboard" data-id="{{c.id}}">
+                    <span data-feather="edit">edit</span>
+                </a>
+              </sup>
+              <sup>
+                <a href="#" class="card-link delete-clipboard" data-id="{{c.id}}">
+                    <span data-feather="trash-2">delete</span>
+                </a>
+              </sup>
+              <sup>
+                  <label for="executable-{{c.id}}">
+                  <input type="checkbox"
+                         class='executable'
+                         data-id="{{c.id}}"
+                         id="executable-{{c.id}}"
+                         name="executable-{{c.id}}"
+                         {% if c.executable %}checked{% endif %}>
+                     Executable
+                 </label>
+              </sup>
+            </h6>
+            <pre style="white-space: pre-wrap; word-break: break-all;">{{ c.content }}</pre>
+            <div id="buttons-{{c.id}}" class="pt-2 col-sm text-right collapse">
+                <a href="#" class="btn btn-primary btn-sm flush-right
+                edit-ok" data-id="{{c.id}}">
+                    OK
+                </a>
+                <a href="#" class="btn btn-secondary btn-sm flush-right
+                edit-cancel" data-id="{{c.id}}">
+                    Cancel
+                </a>
+            </div>
+          </div>
+        </div>
+    {% endfor %}
+{% endif %}
+    </div>
+</p>
+{% endblock %}

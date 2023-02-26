@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "powerhub"
+version = "2.0.0"
+authors = [
+    {name = "Adrian Vollmer", email = "computerfluesterer@protonmail.com"},
+]
+description = "A post exploitation tool based on a web application, focusing on bypassing endpoint protection and application whitelisting"
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = ["pentest", "c2", "powershell", "obfuscation", "post-exploitation"]
+license = {text = "MIT License"}
+classifiers = [
+    "Operating System :: Linux",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+dependencies = [
+    'cheroot',
+    'cryptography',
+    'dnspython>=2.3',
+    'eventlet>=0.33.3',
+    'Flask>=1.0.2',
+    'Flask-SocketIO>=3.1.2',
+    'flask-sqlalchemy>=3.0',
+    'importlib-metadata; python_version<"3.8"',
+    'Jinja2>=3.0',
+    'pyOpenSSL',
+    'python-magic',
+    "requests",
+    'service_identity',
+    'simple-websocket',
+    'sqlalchemy>=2.0',
+    'twisted>=18.9.0',
+    'watchdog',
+    'werkzeug>=0.15',
+    'wsgidav>=3.0.0',
+]
+
+[tool.setuptools]
+packages = ["powerhub"]
+
+[project.urls]
+"Homepage" = "https://github.com/AdrianVollmer/PowerHub"
+"Bug Tracker" =  "https://github.com/AdrianVollmer/PowerHub/issues"
+
+[project.scripts]
+powerhub = "powerhub.__main__:main"
+power-obfuscate = "powerhub.__main__:power_obfuscate"
+
+[project.optional-dependencies]
+tests = [
+  'pytest',
+  'flake8',
+]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py310,lint
+isolated_build = True
+
+[testenv:py30]
+extras = tests
+commands = pytest
+deps = .[tests]
+
+[testenv:lint]
+skip_install = true
+deps = .[tests]
+commands = flake8 powerhub tests
+"""

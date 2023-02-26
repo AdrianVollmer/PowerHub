@@ -1,0 +1,59 @@
+{% extends "html/index.html" %}
+{% block modules_active %}active{% endblock %}
+{% block content %}
+<p id='mainp'>
+<h2>Modules {{macros.inline_help(help.modules_main)}}
+</h2>
+
+<p>
+
+<button type="button" class="btn btn-primary btn-sm" data-toggle="modal"
+    data-target=".bd-getmodules-modal-lg">Need more?</button>
+
+<div>
+    {% if modules %}
+        {% include "html/hub/modulelist.html" %}
+    {% else %}
+        {{ help.hub_no_modules|safe }}
+    {% endif %}
+</div>
+
+<div class="modal fade bd-getmodules-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">
+                Get Modules {{macros.inline_help(help.modules)}}
+            </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form action="/getrepo" method="POST">
+              <div class="form-group">
+                <label for="gitrepo-select">Select a git repository</label>
+                <select class="form-control" id="gitrepo-select" name='repo'>
+                    {% for repo in repositories %}
+                        <option>{{repo}}</option>
+                    {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="custom-url">Custom URL</label>
+                <input type='text' id='custom-url' class="form-control"
+                name='custom-repo'>
+              </div>
+              <input type="submit" value="Clone" type="btn btn-primary">
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+    </div>
+  </div>
+</div>
+
+</p>
+
+{% endblock %}

@@ -3,6 +3,7 @@
 
 import os
 import sys
+import tempfile
 
 import pytest
 
@@ -13,33 +14,46 @@ init_tests()
 
 
 @pytest.fixture
-def get_args():
-    from collections import namedtuple
-    import powerhub.env
-    Args = namedtuple(
-        'Args',
-        'URI_HOST URI_PORT URI_PATH DEBUG WORKSPACE_DIR LPORT',
-    )
-    args = Args('testhost', 1234, 'testpath', True, '/tmp', 9999)
-    PHApp = namedtuple('PHApp', 'args')
-    ph_app = PHApp(args)
-    powerhub.env.powerhub_app = ph_app
+def parameters():
+    #  from collections import namedtuple
+    #  import powerhub.env
+    #  Args = namedtuple(
+    #      'Args',
+    #      'URI_HOST URI_PORT URI_PATH DEBUG WORKSPACE_DIR LPORT',
+    #  )
+    #  args = Args('testhost', 1234, 'testpath', True, '/tmp', 9999)
+    #  PHApp = namedtuple('PHApp', 'args')
+    #  ph_app = PHApp(args)
+    #  powerhub.env.powerhub_app = ph_app
+    with tempfile.TemporaryDirectory(
+        prefix='powerhub_tests',
+        ignore_cleanup_errors=True,
+    ) as tmpdir:
+        os.environ['XDG_DATA_HOME'] = tmpdir
+        from powerhub.directories import init_directories
+        init_directories(None, create_missing=True)
 
-    args = {
-        "Launcher": None,
-        "Amsi": "reflection",
-        "SeparateAMSI": "true",
-        "Transport": "http",
-        "ClipExec": "none",
-        "Proxy": "false",
-        "TLS1.2": "false",
-        "Fingerprint": "true",
-        "NoVerification": "false",
-        "CertStore": "false",
-        "32bit": "false",
-        "64bit": "true",
-    }
-    yield args
+        args = {
+            "launcher": "powershell",
+            "amsi": "reflection",
+            "transport": "http",
+            "proxy": "false",
+            "tlsv1.2": "false",
+            "fingerprint": "true",
+            "noverification": "false",
+            "certstore": "false",
+            "arch": "64bit",
+            "natural": "false",
+            "incremental": "false",
+            "useragent": "false",
+            "kex": 'embedded',
+        }
+        key = 'A'*16
+        callback_urls = {
+            'http': 'http://127.0.0.1',
+            'https': 'https://127.0.0.1',
+        }
+        yield args, key, callback_urls
 
 
 def copy_and_execute(filename, payload, interpreter=""):
@@ -59,15 +73,18 @@ def copy_and_execute(filename, payload, interpreter=""):
         pass
 
     execute_cmd(f"scp {tmpf.name} win10:C:/Windows/Temp/{filename}")
-    out = execute_cmd(f"ssh win10 {interpreter} C:/Windows/Temp/{filename}")
+    out = execute_cmd(f"ssh win10 '{interpreter} C:/Windows/Temp/{filename}'")
     return out
 
 
-def test_vbs(get_args):
+def test_vbs(parameters):
     from powerhub.payloads import create_vbs
-    args = get_args
-    args['Launcher'] = 'vbs'
-    filename, payload = create_vbs(args)
+    from powerhub.parameters import param_collection
+    args, key, callback_urls = parameters
+
+    args['launcher'] = 'vbs'
+    param_collection.parse_get_args(args)
+    filename, payload = create_vbs(param_collection, key, callback_urls)
     assert filename == 'powerhub-vbs-reflection-http.vbs'
 
     out = copy_and_execute(filename, payload, "cscript.exe")
@@ -75,24 +92,30 @@ def test_vbs(get_args):
     assert "error" not in out
 
 
-def test_gcc(get_args):
+def test_gcc(parameters):
     from powerhub.payloads import create_exe
-    args = get_args
-    args['Launcher'] = 'mingw32'
-    filename, payload = create_exe(args)
+    from powerhub.parameters import param_collection
+    args, key, callback_urls = parameters
+
+    args['launcher'] = 'mingw32'
+    param_collection.parse_get_args(args)
+    filename, payload = create_exe(param_collection, key, callback_urls)
     assert filename == 'powerhub-mingw32-reflection-http-64bit.exe'
     assert b"DOS" in payload
     assert payload.startswith(b'MZ')
 
     out = copy_and_execute(filename, payload)
-    assert out == ""
+    assert out == "1"
 
 
-def test_mcs(get_args):
+def test_mcs(parameters):
     from powerhub.payloads import create_dotnet
-    args = get_args
-    args['Launcher'] = 'dotnetexe'
-    filename, payload = create_dotnet(args)
+    from powerhub.parameters import param_collection
+    args, key, callback_urls = parameters
+
+    args['launcher'] = 'dotnetexe'
+    param_collection.parse_get_args(args)
+    filename, payload = create_dotnet(param_collection, key, callback_urls)
     assert filename == 'powerhub-dotnetexe-reflection-http-64bit.exe'
     assert b"DOS" in payload
     assert payload.startswith(b'MZ')

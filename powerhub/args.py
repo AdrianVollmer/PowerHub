@@ -1,23 +1,23 @@
 import argparse
-from powerhub._version import __version__
+from powerhub import __version__
 
 parser = argparse.ArgumentParser(
     description="Leverage PowerShell to load sketchy code over HTTP"
 )
 
 parser.add_argument(
-    '-v', '--version', action='version', version='PowerHub ' + __version__
+    '-v', '--version', action='version', version=__version__
 )
 
 parser.add_argument(
     '-d', '--debug', dest="DEBUG", default=False, action="store_true",
-    help=("show debug messages"),
+    help=("enable debug mode"),
 )
 
 parser.add_argument(
     '-w', '--workspace-directory', dest="WORKSPACE_DIR", default=None,
     help="use this directory to store project-related files"
-         " (default: XDG_DATA_HOME)"
+         " (default: $XDG_DATA_HOME/powerhub/workspace)"
 )
 
 auth_group = parser.add_mutually_exclusive_group()
@@ -79,6 +79,16 @@ parser.add_argument(
          "(default: %(default)s)"
 )
 
+parser.add_argument(
+    '-wa',
+    '--webdav-auth',
+    default="",
+    dest="WEBDAV_AUTH",
+    type=str,
+    help="define credentials for the private webdav share in the form of"
+         " 'user:pass' (default: powerhub:<random>)"
+)
+
 
 parser.add_argument(
     '-k',
@@ -94,6 +104,14 @@ parser.add_argument(
     dest="SSL_CERT",
     default=None,
     help="path to a file containing an X.509 certificate in PEM format"
+)
+
+parser.add_argument(
+    '-a', '--allow',
+    dest='ALLOWLIST',
+    default=None,
+    help="comma separated value of allowed source IP addresses or address "
+         " ranges (leave empty to allow all)"
 )
 
 parser.add_argument(
@@ -115,7 +133,7 @@ parser.add_argument(
 )
 
 
-def parse_args(argv):
+def parse_args(argv=None):
     args = parser.parse_args(argv)
 
     if ((args.SSL_KEY and not args.SSL_CERT)
@@ -123,6 +141,9 @@ def parse_args(argv):
         print("If you supply one of SSL_CERT or SSL_KEY you must also supply "
               "the other")
         exit(1)
+
+    if args.ALLOWLIST:
+        args.ALLOWLIST = args.ALLOWLIST.split(',')
 
     if args.SSL_KEY:
         args.PROTOCOL = 'https'

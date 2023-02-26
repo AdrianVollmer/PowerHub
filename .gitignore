@@ -2,6 +2,7 @@ env
 venv
 .env
 .venv
+.docvenv
 notes
 data
 tests/helpers/test_config.py
@@ -12,3 +13,4 @@ __pycache__
 .tox
 build/
 dist/
+docs/_build/
