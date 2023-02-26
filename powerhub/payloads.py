@@ -89,7 +89,6 @@ def compile_source(parameters, key, callback_url, source_file, compile_cmd, form
         LEN_CMD=size,
         KEY=key,
     )
-    print(c_code)
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         outfile = os.path.join(tmpdirname, 'powerhub.out')
