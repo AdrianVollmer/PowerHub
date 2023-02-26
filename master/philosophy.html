@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Motivation &amp; Philosophy &mdash; PowerHub 2.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="New in PowerHub 2.0" href="new.html" />
+    <link rel="prev" title="Installation and Quickstart" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PowerHub
+          </a>
+              <div class="version">
+                2.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Motivation &amp; Philosophy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#motivation">Motivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#philosophy">Philosophy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="new.html">New in PowerHub 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evasion.html">Antivirus Evasion Techniques</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PowerHub</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Motivation &amp; Philosophy</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/philosophy.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="motivation-philosophy">
+<h1>Motivation &amp; Philosophy<a class="headerlink" href="#motivation-philosophy" title="Permalink to this heading"></a></h1>
+<section id="motivation">
+<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this heading"></a></h2>
+<p>Pentesters are often tasked to analyze a client system or are given one as
+part of an assessment. They are often locked down to various degrees, and
+almost all of them have some sort of antivirus solution on them. One of the
+first things I want to do on them is to run a local privesc check and
+SharpHound, which is typically considered malware. I needed a way to
+conveniently load PowerShell scripts and binaries onto the system without
+having to mess around too much with AV evasion techniques. Pretty much all
+of those systems are able to communicate with the outside world (or at least
+another machine on the network) via HTTP, so a web-based solution seemed
+obvious.</p>
+<p>Since I also found myself wanting to be able to have some sort of shared
+clipboard between the Windows client I was provided with during a pentest
+and my attacker machine, let’s say to transfer hashes or PowerShell
+one-liners, I decided to pack it all in one web application and called it
+PowerHub.</p>
+<p>Something was still missing, and that is a good interactive shell on remote
+Windows systems to deliver my code. I don’t see the point of using something
+like the Meterpreter shell if a much more powerful shell is already
+available: The Windows PowerShell. It already provides so much
+functionality, in particular the ability to load code over the network, that
+I don’t need anything else. This is also why I never use Meterpreter on a
+Linux machine. Bash can already do everything I need. Now, the old
+<code class="docutils literal notranslate"><span class="pre">cmd.exe</span></code> may not, that’s why you’d need a Meterpreter. But PowerShell is
+just as powerful as bash, if not more so. Fire up PowerShell, load
+your exploit, e.g. Mimikatz, via a safe transport mechanism, execute it in
+memory and transfer the results back.</p>
+<p>So what PowerHub does is to “upgrade” an existing PowerShell session and
+endows it with the capability of loading and executing code remotely without
+touching the disk as well as sending files back and forth. All with an
+additional layer of encryption on top of HTTPS.</p>
+</section>
+<section id="philosophy">
+<h2>Philosophy<a class="headerlink" href="#philosophy" title="Permalink to this heading"></a></h2>
+<p>PowerHub does not come with any exploits. I believe it’s best to let other
+people focus on developing their exploits independently, and then provide
+some infrastructure to transfer them conveniently and without triggering
+antivirus products to the target machine if necessary.</p>
+<p>And contrary to popular believe, I’m convinced PowerShell is not dead yet.
+There seems to be a shift back to binary exploits using the .NET framework
+happening. First, PowerShell is still more available on end points compared
+to .NET. Second, the best antivirus evasion in my opinion is still execution
+in memory, which you cannot do with binaries alone. The concerns about AMSI
+and PowerShell logging are valid, but they can be bypassed much more easily
+than regular antivirus solutions.</p>
+<p>So what PowerHub does is to disable AMSI and PowerShell logging first,
+encrypt exploits with RC4, transfer them via HTTP (more transport methods
+are planned), decrypt them in-memory and keep them there. Then they can be
+imported as script blocks or executed via reflective PE injection – thanks
+to PowerSploit.</p>
+<p>While this is still not a panacea and is or will be caught by some endpoint
+protection solutions, the vast majority – in particular Windows Defender
+and Device Guard – are fooled this way.</p>
+<p>I also believe in good UX and aimed at making the usage of PowerHub as
+simple as possible. That means having a sensible default configuration,
+providing a clear user interface and automating as much as possible, but not
+more.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation and Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="new.html" class="btn btn-neutral float-right" title="New in PowerHub 2.0" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018-2023, Adrian Vollmer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: 2.0.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      
+      <dl>
+        <dt>Versions</dt>
+        
+          
+          <dd><a href="/PowerHub/master/">master</a></dd>
+          
+        
+          
+          <dd><a href="/PowerHub/2.0.0/">latest</a></dd>
+          
+        
+      </dl>
+      
+      <hr/>
+    </div>
+  </div>
+<script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+  <link rel="stylesheet" type="text/css" href="_static/custom.css">
+
+
+
+</body>
+</html>
