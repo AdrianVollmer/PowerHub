@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.0.0] - 2023-02-26
+
 ### Added
 
 * Many more options for the download cradle
