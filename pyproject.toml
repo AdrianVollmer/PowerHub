@@ -23,8 +23,6 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-    "requests",
-    'importlib-metadata; python_version<"3.8"',
     'cheroot',
     'cryptography',
     'dnspython>=2.3',
@@ -32,12 +30,14 @@ dependencies = [
     'Flask>=1.0.2',
     'Flask-SocketIO>=3.1.2',
     'flask-sqlalchemy>=3.0',
-    'sqlalchemy>=2.0',
+    'importlib-metadata; python_version<"3.8"',
     'Jinja2>=3.0',
     'pyOpenSSL',
     'python-magic',
+    "requests",
     'service_identity',
     'simple-websocket',
+    'sqlalchemy>=2.0',
     'twisted>=18.9.0',
     'watchdog',
     'werkzeug>=0.15',
@@ -54,3 +54,26 @@ packages = ["powerhub"]
 [project.scripts]
 powerhub = "powerhub.__main__:main"
 power-obfuscate = "powerhub.__main__:power_obfuscate"
+
+[project.optional-dependencies]
+tests = [
+  'pytest',
+  'flake8',
+]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py310,lint
+isolated_build = True
+
+[testenv:py30]
+extras = tests
+commands = pytest
+deps = .[tests]
+
+[testenv:lint]
+skip_install = true
+deps = .[tests]
+commands = flake8 powerhub tests
+"""
