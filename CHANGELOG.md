@@ -1,6 +1,32 @@
 Changelog
 =========
 
+All notable changes to this project will be documented in this file.
+
+## [Unreleased]
+
+### Added
+
+* Many more options for the download cradle
+* The `power-obfuscate` command
+* An authenticated WebDAV share
+* Ability to allowlist IP adresses
+
+### Changed
+
+* Clipboard entries must be marked for execution
+* Changes to the modules on disk are automatically recognized
+* Default locations of the database, upload directory, webdav directories
+  and static directory
+
+### Removed
+
+* The Loot tab
+* PowerShell v2 support
+* The `Load-HubModule` command has been replaced by `Get-HubModule`
+* The `powerhub.py` executable
+
+
 Version 1.11
 ------------
 
