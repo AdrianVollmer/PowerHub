@@ -55,10 +55,10 @@ Documentation
 
 Read the docs [here](https://adrianvollmer.github.io/PowerHub/).
 
-**Installation:** <https://adrianvollmer.github.io/PowerHub/installation.html>
-**Usage:** <https://adrianvollmer.github.io/PowerHub/usage.html>
-**Contributing:** <https://adrianvollmer.github.io/PowerHub/contrib.html>
-**Changelog:** <https://adrianvollmer.github.io/PowerHub/changelog.html>
+* **Installation:** <https://adrianvollmer.github.io/PowerHub/installation.html>
+* **Usage:** <https://adrianvollmer.github.io/PowerHub/usage.html>
+* **Contributing:** <https://adrianvollmer.github.io/PowerHub/contrib.html>
+* **Changelog:** <https://adrianvollmer.github.io/PowerHub/changelog.html>
 
 
 Credits

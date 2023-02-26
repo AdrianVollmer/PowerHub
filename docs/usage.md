@@ -153,8 +153,8 @@ Sometimes you simply need to serve some static files (payloads, tools, etc.)
 using an HTTP server that are available without any authentication. These are
 situations where you might be tempted to fire up `python -m http.server`. If
 you are already running PowerHub, just put your files inside the static
-folder instead. It will respect the tree-like structure of files and make
-them accessible for everyone without authentication.
+folder instead. It will respect the tree-like structure of files and
+directories and make them accessible for everyone without authentication.
 
 
 ### WebDAV
@@ -216,9 +216,18 @@ function Run-Init {
 }
 ```
 
+(binary_payloads)=
 ### Binary payloads
 
-TODO
+PowerHub can build binaries that execute the download cradle. The supported
+formats are:
+
+* Visual Basic Script (`*.vbs`)
+* PE Executables
+* .NET Executables
+
+Since they are build with the MinGW cross-compiler, they are near certainly
+flagged as malicious by antivirus software.
 
 ### power-obfuscate
 

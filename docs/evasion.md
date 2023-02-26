@@ -50,17 +50,17 @@ The challenge is to get one of the bypasses by AMSI itself, because the
 bypasses are obviously immediately detected if executed naively. Some
 bypasses are quite short and the only suspicious thing about them are some
 strings. For example, this is one of the first bypasses by Matt Graeber and
-fits in a Tweet:
+it fits in a Tweet:
 
 ```powershell
 [Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true)
 ```
 
-In fact, Windows Defender will consider this malware simply because it
+In fact, Windows Defender will consider this malicious simply because it
 contains the string `AmsiUtils`. Try it out: Open a PowerShell and type
 `"AmsiUtil"`. Then type `"AmsiUtils"`:
 
-TODO screenshot.
+![AmsiUtils are malicious](docs/img/amsiutils.png)
 
 Imagine we replaced the strings:
 
@@ -68,7 +68,7 @@ Imagine we replaced the strings:
 [Ref].Assembly.GetType($string1).GetField($string2,$string3).SetValue($Null,$True)
 ```
 
-Surely this line cannot be considered malware, or else it would break
+Surely this line cannot be considered malicious, or else it would probably break
 legitimate scripts. So if we manage to obfuscate the original strings, we
 should be good. There are infinite ways to obfuscate a string. You can split
 them up, rearrange them using format strings, put them together from bytes,

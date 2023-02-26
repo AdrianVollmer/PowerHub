@@ -11,6 +11,10 @@ Installation from the GitHub repository should be avoided, unless you are
 willing to test out new features. You will be more likely to encounter bugs
 than if you install the releases.
 
+To build the [binary payloads](binary_payloads), you will need the MinGW GCC and Mono C#
+compilers. On Debian-like systems, you can install them with `apt-get
+install mono-mcs gcc-mingw-w64-x86-64 gcc-mingw-w64-i686`.
+
 After the installation, two new executables will be placed in `~/.local/bin`:
 
 1. `powerhub`
