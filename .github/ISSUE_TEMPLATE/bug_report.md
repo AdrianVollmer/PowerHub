@@ -30,6 +30,7 @@ I 2023-02-27 21:54:20 dhkex.py:19 Generating new Diffie-Hellman parameters
 D 2023-02-27 21:54:20 tools.py:106 Loaded secret key: S0H5CrNL1aWshJnCMwnCZ6Cg9HlTztuO
 I 2023-02-27 21:54:20 modules.py:52 Importing modules...
 [...]
+```
 
 PowerShell log:
 ```
