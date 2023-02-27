@@ -28,7 +28,7 @@ dependencies = [
     'dnspython>=2.3',
     'eventlet>=0.33.3',
     'Flask>=1.0.2',
-    'Flask-SocketIO>=3.1.2',
+    'Flask-SocketIO>=5.3.0',
     'flask-sqlalchemy>=3.0',
     'importlib-metadata; python_version<"3.8"',
     'Jinja2>=3.0',
