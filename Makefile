@@ -14,7 +14,7 @@ test:
 # \n in sed only works in GNU sed
 release:
 	@read -p "Enter version string (Format: x.y.z): " version; \
-    echo "Version Bump: $$version"; \
+	echo "Version Bump: $$version"; \
 	date=$$(date +%F); \
 	sed -i "s/^version = \".*\"/version = \"$$version\"/" pyproject.toml && \
 	sed -i "s/^release = \".*\"/relase = \"$$version\"/" docs/conf.py && \
