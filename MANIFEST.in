@@ -1,0 +1,7 @@
+graft powerhub/templates
+graft powerhub/static
+graft powerhub/decoy
+prune tests
+prune docs
+prune .*
+exclude .*
