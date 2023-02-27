@@ -1,5 +1,5 @@
 clean:
-	@rm -rf build __pycache__ powerhub.egg-info docs/_build .docvenv .tox
+	@rm -rf build __pycache__ *.egg-info docs/_build .docvenv .tox dist powerhub/*.egg-info powerhub/__pycache__
 
 docs:
 	@find .docvenv -maxdepth 0 -type d || python3 -m venv .docvenv ; \
@@ -24,4 +24,7 @@ release:
 	read -p "Committed. Do you want to tag and push the new version? [y/n] " ans && \
 	if [ $$ans = 'y' ] ; then git tag $$version && git push && git push origin tag $$version && echo "Tagged and pushed." ; else echo "Tag it and push it yourself then." ; fi
 
-.PHONY: clean docs test release
+build:
+	python -m build
+
+.PHONY: clean docs test release build
