@@ -11,7 +11,7 @@ If you find PowerHub useful and want to give back, there are a number of options
 ## Creating bug reports
 
 Since PowerHub is obfuscating everything under the sun, debugging can be
-hard. Even more so if I as the developer cannot reproduce what it is going
+hard. Even more so if I as the developer cannot reproduce what is going
 on.
 
 To make bug reports more useful, run PowerHub in debug mode by using the
