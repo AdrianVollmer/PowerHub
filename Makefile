@@ -27,4 +27,16 @@ release:
 build:
 	python -m build
 
+test-publish:
+	@file=$$(ls -1t dist/powerhub-*.tar.gz | head -n1); \
+	read -p "[TEST] Ready to upload $$file? Type yes: " ans; \
+	if [ $$ans = 'yes' ] ; then twine upload -r testpypi $$file ; fi
+
+
+publish:
+	@file=$$(ls -1t dist/powerhub-*.tar.gz | head -n1); \
+	read -p "Ready to upload $$file? Type yes: " ans; \
+	if [ $$ans = 'yes' ] ; then twine upload $$file ; fi
+
+
 .PHONY: clean docs test release build
