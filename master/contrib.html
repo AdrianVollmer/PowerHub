@@ -54,7 +54,10 @@
 <li class="toctree-l1"><a class="reference internal" href="evasion.html">Antivirus Evasion Techniques</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-bug-reports">Creating bug reports</a></li>
+</ul>
+</li>
 </ul>
 
         </div>
@@ -91,6 +94,26 @@
 <li><p><strong>Create pull requests.</strong> Bug reports that come with a solution are the best
 reports.</p></li>
 </ul>
+<section id="creating-bug-reports">
+<h2>Creating bug reports<a class="headerlink" href="#creating-bug-reports" title="Permalink to this heading"></a></h2>
+<p>Since PowerHub is obfuscating everything under the sun, debugging can be
+hard. Even more so if I as the developer cannot reproduce what is going
+on.</p>
+<p>To make bug reports more useful, run PowerHub in debug mode by using the
+<code class="docutils literal notranslate"><span class="pre">--debug</span></code> flag. This will make PowerHub somewhat more susceptible to
+detection, so let’s hope that this doesn’t interfere. Before you execute the
+download cradle, run <code class="docutils literal notranslate"><span class="pre">$ErrorActionPreference=&quot;Stop&quot;</span></code>. Usually the first
+error is the most important one. If you think the first error is not
+helpful, run <code class="docutils literal notranslate"><span class="pre">$ErrorActionPreference=&quot;Continue&quot;</span></code>, but try to trim the output
+and only submit the first three PowerShell errors or so.</p>
+<p>Include the output of the Python program as well in the bug report. Don’t
+forget to use code fences (three backticks) to format the output properly,
+or else it will become unreadable. You may trim the Python output to the
+relevant parts as well, but when in doubt, err on the side of more
+verbosity. Besides the versions of all software packages involved (on both
+machines), the download cradle parameters will be particularly important.</p>
+<p>In short, try to include everything so the issue can be reproduced.</p>
+</section>
 </section>
 
 
