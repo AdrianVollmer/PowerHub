@@ -14,7 +14,7 @@ requires-python = ">=3.7"
 keywords = ["pentest", "c2", "powershell", "obfuscation", "post-exploitation"]
 license = {text = "MIT License"}
 classifiers = [
-    "Operating System :: Linux",
+    "Operating System :: POSIX :: Linux",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.7",
