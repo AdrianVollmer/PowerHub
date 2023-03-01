@@ -20,6 +20,8 @@ ${{symbol_name("global_key")}} = [System.Text.Encoding]::UTF8.GetBytes("{{key}}"
 ${{symbol_name("global_key")}} = [System.Text.Encoding]::UTF8.GetBytes(${{symbol_name("global_key")}});
 {% endif -%}
 
+{{('Write-Debug "Key is: $'+symbol_name("global_key")+'"')|debug}}
+
 {{separator}}
 
 function {{symbol_name("Decrypt-String")}} {[System.Text.Encoding]::UTF8.GetString(({{symbol_name("Decrypt-RC4")}} ([System.Convert]::FromBase64String($args[0])) ${{symbol_name("global_key")}}))};
