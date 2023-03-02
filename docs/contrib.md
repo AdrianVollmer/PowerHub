@@ -23,7 +23,7 @@ Usually the first error is the most important one. If you think the first
 error is not helpful, run `$ErrorActionPreference="Continue"`, but try to
 trim the output and only submit the first three PowerShell errors or so.
 
-It would be helpful it could you pin down the issue to the first problematic
+It would be helpful it you could pin down the issue to the first problematic
 line. For this, open the URL in a browser or with `curl` and execute
 portions of the script in blocks. Again, using `--debug` makes this more
 feasible because it preserves whitespace and does not obfuscate the
