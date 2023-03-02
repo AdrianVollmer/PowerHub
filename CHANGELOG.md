@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+* Syntax issues with non-default AMSI bypasses
+
 ## [2.0.0] - 2023-02-26
 
 ### Added

