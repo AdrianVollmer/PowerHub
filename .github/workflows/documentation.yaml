@@ -1,8 +1,6 @@
 name: Docs
 on:
   push:
-    branches:
-      - master
     paths:
       - docs/**
       - README.md
