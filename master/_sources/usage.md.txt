@@ -83,6 +83,10 @@ download cradle can be configured such the system proxy is used to access
 the PowerHub host. In case of HTTPS we can do certificate pinning, use the
 Windows certificate store or disable verification entirely.
 
+Also, some version of Windows are reluctant to use TLSv1.2 for whatever
+reason. There is a checkbox to enforce TLSv1.2 in case your system on which
+the Python backend is running does not support earlier versions.
+
 The AMSI bypass can be chosen as well as the key exchange. The key, with
 which the RC4 and AES encryption is used, will be exchanged using the
 Diffie-Hellman (DH) protocol by default. Note that no host verification will be

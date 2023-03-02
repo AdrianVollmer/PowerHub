@@ -11,10 +11,8 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -101,17 +99,23 @@ hard. Even more so if I as the developer cannot reproduce what is going
 on.</p>
 <p>To make bug reports more useful, run PowerHub in debug mode by using the
 <code class="docutils literal notranslate"><span class="pre">--debug</span></code> flag. This will make PowerHub somewhat more susceptible to
-detection, so let’s hope that this doesn’t interfere. Before you execute the
-download cradle, run <code class="docutils literal notranslate"><span class="pre">$ErrorActionPreference=&quot;Stop&quot;</span></code>. Usually the first
-error is the most important one. If you think the first error is not
-helpful, run <code class="docutils literal notranslate"><span class="pre">$ErrorActionPreference=&quot;Continue&quot;</span></code>, but try to trim the output
-and only submit the first three PowerShell errors or so.</p>
-<p>Include the output of the Python program as well in the bug report. Don’t
-forget to use code fences (three backticks) to format the output properly,
-or else it will become unreadable. You may trim the Python output to the
-relevant parts as well, but when in doubt, err on the side of more
-verbosity. Besides the versions of all software packages involved (on both
-machines), the download cradle parameters will be particularly important.</p>
+detection, so let’s hope that this doesn’t interfere.</p>
+<p>Before you execute the download cradle, run <code class="docutils literal notranslate"><span class="pre">$ErrorActionPreference=&quot;Stop&quot;</span></code>.
+Usually the first error is the most important one. If you think the first
+error is not helpful, run <code class="docutils literal notranslate"><span class="pre">$ErrorActionPreference=&quot;Continue&quot;</span></code>, but try to
+trim the output and only submit the first three PowerShell errors or so.</p>
+<p>It would be helpful it could you pin down the issue to the first problematic
+line. For this, open the URL in a browser or with <code class="docutils literal notranslate"><span class="pre">curl</span></code> and execute
+portions of the script in blocks. Again, using <code class="docutils literal notranslate"><span class="pre">--debug</span></code> makes this more
+feasible because it preserves whitespace and does not obfuscate the
+parameter names.</p>
+<p>Finally, include the output of the Python program as well in the bug report;
+in particular exceptions including a full traceback. Don’t forget to use
+code fences (three backticks) to format the output properly, or else it will
+become unreadable. You may trim the Python output to the relevant parts as
+well, but when in doubt, err on the side of more verbosity. Besides the
+versions of all software packages involved (on both machines), the download
+cradle parameters will be particularly important.</p>
 <p>In short, try to include everything so the issue can be reproduced.</p>
 </section>
 </section>

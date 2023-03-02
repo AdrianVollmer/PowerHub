@@ -11,10 +11,8 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -194,6 +192,9 @@ can be HTTP or HTTPS (SMB might be coming in the future), in which case the
 download cradle can be configured such the system proxy is used to access
 the PowerHub host. In case of HTTPS we can do certificate pinning, use the
 Windows certificate store or disable verification entirely.</p>
+<p>Also, some version of Windows are reluctant to use TLSv1.2 for whatever
+reason. There is a checkbox to enforce TLSv1.2 in case your system on which
+the Python backend is running does not support earlier versions.</p>
 <p>The AMSI bypass can be chosen as well as the key exchange. The key, with
 which the RC4 and AES encryption is used, will be exchanged using the
 Diffie-Hellman (DH) protocol by default. Note that no host verification will be
