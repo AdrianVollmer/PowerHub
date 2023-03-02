@@ -47,11 +47,13 @@ repo = Repo(search_parent_directories=True)
 html_context['current_version'] = release
 html_context['version'] = release
 html_context['versions'] = list()
-versions = ['master']
-versions += [tag.name for tag in repo.tags if tag.name.startswith('2.')]
+versions = set(['master', release])
+versions.update([tag.name for tag in repo.tags
+                 if tag.name.startswith('2.')])
 for version in versions:
     html_context['versions'].append((version, '/' + REPO_NAME + '/' + version + '/'))
-html_context['versions'].append(('latest', '/' + REPO_NAME + '/' + release + '/'))
+html_context['versions'].append(('latest', '/' + REPO_NAME + '/latest/'))
+html_context['versions'].sort(key=lambda k: k[0])
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
