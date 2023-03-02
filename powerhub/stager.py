@@ -261,7 +261,16 @@ def get_stage(key, context={}, stage3_files=[], stage3_strings=[],
     def rc4encrypt(msg):
         return base64.b64encode(encrypt_rc4(msg.encode(), key)).decode()
 
+    def rc4byteencrypt(data):
+        """This is a function for encrypting bytes in jinja2 templates
+
+        data must be hexascii encoded.
+        """
+        encrypted = encrypt_rc4(base64.b64encode(binascii.unhexlify(data)), key)
+        return base64.b64encode(encrypted).decode()
+
     env.filters['rc4encrypt'] = rc4encrypt
+    env.filters['rc4byteencrypt'] = rc4byteencrypt
     env.filters['debug'] = lambda msg: debug_filter(msg, dbg=debug)
     env.globals['symbol_name'] = lambda name: symbol_name(name, natural=natural, debug=debug)
     env.globals['set_alias'] = obfuscate_set_alias

@@ -1,5 +1,4 @@
 from base64 import b64encode
-import binascii
 import logging
 import os
 import random
@@ -36,16 +35,6 @@ def debug(msg):
 def rc4encrypt(msg):
     """This is a function for encrypting strings in jinja2 templates"""
     return b64encode(encrypt_rc4(msg.encode(), hidden_app.key)).decode()
-
-
-@hidden_app.add_template_filter
-def rc4byteencrypt(data):
-    """This is a function for encrypting bytes in jinja2 templates
-
-    data must be hexascii encoded.
-    """
-    encrypted = encrypt_rc4(b64encode(binascii.unhexlify(data)), hidden_app.key)
-    return b64encode(encrypted).decode()
 
 
 def get_stage3():
