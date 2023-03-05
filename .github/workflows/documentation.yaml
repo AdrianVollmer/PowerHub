@@ -27,10 +27,16 @@ jobs:
           if 'GITHUB_OUTPUT' in os.environ:
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               print('{0}={1}'.format('target', target), file=f)"
+      - uses: octokit/request-action@v2.x
+        id: get_all_tags
+        with:
+          route: GET /repos/${{github.repository}}/git/matching-refs/tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Sphinx build
         if: steps.docs-publish-dir.outputs.target != ''
         run: |
-          make docs
+          make docs git_tags='${{steps.get_all_tags.outputs.data}}'
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: steps.docs-publish-dir.outputs.target != ''

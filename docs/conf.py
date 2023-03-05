@@ -41,6 +41,7 @@ try:
 except NameError:
     html_context = dict()
 html_context['display_lower_left'] = True
+
 REPO_NAME = project
 from git import Repo  # noqa
 repo = Repo(search_parent_directories=True)
@@ -50,6 +51,12 @@ html_context['versions'] = list()
 versions = set(['master', release])
 versions.update([tag.name for tag in repo.tags
                  if tag.name.startswith('2.')])
+
+# get tags from env variable (in case we are in a github action env)
+import os
+if 'git_tags' in os.environ:
+    print('Tags:', os.environ['git_tags'])
+    versions.update(os.environ['git_tags'].split())
 for version in versions:
     html_context['versions'].append((version, '/' + REPO_NAME + '/' + version + '/'))
 html_context['versions'].append(('latest', '/' + REPO_NAME + '/latest/'))
