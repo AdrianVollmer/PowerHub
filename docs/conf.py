@@ -60,7 +60,7 @@ if 'git_tags' in os.environ:
     tags = json.loads(os.environ['git_tags'])
     tags = [t['ref'].split('/')[2] for t in tags]
     tags = [t for t in tags if t.startswith('2.')]
-    print('Tags:', os.environ['git_tags'])
+    print('Tags:', tags)
     versions.update(tags)
 for version in versions:
     html_context['versions'].append((version, '/' + REPO_NAME + '/' + version + '/'))
