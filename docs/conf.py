@@ -55,8 +55,13 @@ versions.update([tag.name for tag in repo.tags
 # get tags from env variable (in case we are in a github action env)
 import os
 if 'git_tags' in os.environ:
+    import json
     print('Tags:', os.environ['git_tags'])
-    versions.update(os.environ['git_tags'].split())
+    tags = json.loads(os.environ['git_tags'])
+    tags = [t['ref'].split('/')[2] for t in tags]
+    tags = [t for t in tags if t.startswith('2.')]
+    print('Tags:', os.environ['git_tags'])
+    versions.update(tags)
 for version in versions:
     html_context['versions'].append((version, '/' + REPO_NAME + '/' + version + '/'))
 html_context['versions'].append(('latest', '/' + REPO_NAME + '/latest/'))
