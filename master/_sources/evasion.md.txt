@@ -127,6 +127,7 @@ noticeably slower but should be stealthier at the same time.
 Malicious code such as the cradle itself could be detected simply by
 blocking code which contains both `DownloadString` and `Invoke-Expression`.
 
+(incremental_delivery=)
 ### Our Bypass
 
 PowerHub has two approaches. One is the "incremental delivery", by which
