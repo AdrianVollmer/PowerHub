@@ -78,7 +78,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#static-analysis">Static Analysis</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id9">Technique</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id10">Our Bypass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#incremental-delivery">Our Bypass</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#behavior-analysis">Behavior Analysis</a><ul>
@@ -116,6 +116,7 @@
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
            <div itemprop="articleBody">
              
   <section id="antivirus-evasion-techniques">
@@ -240,10 +241,9 @@ noticeably slower but should be stealthier at the same time.</p>
 <h3>Technique<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
 <p>Malicious code such as the cradle itself could be detected simply by
 blocking code which contains both <code class="docutils literal notranslate"><span class="pre">DownloadString</span></code> and <code class="docutils literal notranslate"><span class="pre">Invoke-Expression</span></code>.</p>
-<p>(incremental_delivery=)</p>
 </section>
-<section id="id10">
-<h3>Our Bypass<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h3>
+<section id="incremental-delivery">
+<span id="id10"></span><h3>Our Bypass<a class="headerlink" href="#incremental-delivery" title="Permalink to this heading"></a></h3>
 <p>PowerHub has two approaches. One is the “incremental delivery”, by which
 pieces of the stager are loaded incrementally. To avoid the cradle itself
 being detected, PowerHub knows the option “split cradle”. You will then have
@@ -291,6 +291,8 @@ using AppLocker or Application Guard.</p>
 
            </div>
           </div>
+<a href="https://github.com/you"><img decoding="async" loading="lazy" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_white_ffffff.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1" style="position: absolute; top: 0; right: 0; border: 0;"></a>
+
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="changelog.html" class="btn btn-neutral float-left" title="Changelog" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
