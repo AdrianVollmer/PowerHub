@@ -153,10 +153,10 @@ def on_deleted(event):
 
 def on_modified(event):
     module = import_file(event.src_path)
-    if not module:
+    m = find_module_by_path(event.src_path)
+    if not m or not module:
         return
     log.info("Module modified: %s" % module.name)
-    m = find_module_by_path(event.src_path)
     module.n = m.n
     modules[m.n] = module
 
