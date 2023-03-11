@@ -7,6 +7,8 @@
 
 {{'$DebugPreference = "Continue"'|debug}}
 {{'Write-Debug "Starting up..."'|debug}}
+{{'Write-Debug "PowerShell Version: $PSVersionTable"'|debug}}
+{{('Write-Debug "PowerHub Version: ' + VERSION + '"')|debug}}
 {%- include "powershell/rc4.ps1" -%}
 
 {{separator}}
@@ -37,7 +39,12 @@ function {{symbol_name("Decrypt-String")}} {[System.Text.Encoding]::UTF8.GetStri
 
 {{'Write-Debug "Load AMSI Bypass..."'|debug}}
 
-{% if amsibypass %}{% include amsibypass %}{% endif %}
+{% if amsibypass %}
+    try{ {% include amsibypass %}
+}catch{
+{{'Write-Debug "AMSI Bypass failed: $_"'|debug}}
+};
+{%- endif %}
 
 {{separator}}
 

