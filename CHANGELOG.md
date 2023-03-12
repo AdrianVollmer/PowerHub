@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.0.2] - 2023-03-12
+
 ### Changed
 
 * Update info hints in the Hub tab
