@@ -68,22 +68,6 @@ class FilteredSite(Site):
             log.warning("Block request from %s" % addr.host)
 
 
-# Override DefaultOpenSSLContextFactory to call ctx.use_certificate_chain_file
-# instead of ctx.use_certificate_file and to allow certificate chains to be
-# loaded.
-# Credit: https://github.com/twonds/punjab/blob/master/punjab/ssl.py
-# MIT Licensed: Original Author: Christopher Zorn aka twonds
-class OpenSSLContextFactoryChaining(ssl.DefaultOpenSSLContextFactory):
-    def __init__(self, *args, **kwargs):
-        ssl.DefaultOpenSSLContextFactory.__init__(self, *args, **kwargs)
-
-    def cacheContext(self):
-        ctx = self._contextFactory(self.sslmethod)
-        ctx.use_certificate_chain_file(self.certificateFileName)
-        ctx.use_privatekey_file(self.privateKeyFileName)
-        self._context = ctx
-
-
 class DynamicProxy(Resource):
     isLeaf = False
     allowedMethods = ("GET", "POST", "PUT", "DELETE", "HEAD",
