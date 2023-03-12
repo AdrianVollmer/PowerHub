@@ -152,7 +152,7 @@ params = [
         'amsi', 'reflection', 'AMSI Bypass', 'selection',
         options=[
             ("reflection", "Matt Graber's Reflection method"),
-            ("reflection2", "Matt Graber's 2nd Reflection method (caught by latest Defender)"),
+            ("reflection2", "Matt Graber's 2nd Reflection method"),
             ("rasta-mouse", "Rasta Mouse"),
             ("am0nsec", "am0nsec (Requires PowerShell Version 5)"),
             ("adam-chester",

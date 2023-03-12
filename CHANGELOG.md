@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+* Matt Graeber's second reflection method
+
 ## [2.0.2] - 2023-03-12
 
 ### Changed

@@ -145,7 +145,7 @@ def test_start(backend, stager):
         if (
             backend['psversion'] >= 5 and
             'This script contains malicious content' in out and
-            ({'zc00l', 'reflection2', 'adam-chester', 'none'} & set(v.values()))
+            ({'zc00l', 'adam-chester', 'none'} & set(v.values()))
         ):
             continue
         assert "Adrian Vollmer" in out
