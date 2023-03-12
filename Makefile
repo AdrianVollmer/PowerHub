@@ -17,7 +17,7 @@ release:
 	echo "Version Bump: $$version"; \
 	date=$$(date +%F); \
 	sed -i "s/^version = \".*\"/version = \"$$version\"/" pyproject.toml && \
-	sed -i "s/^release = \".*\"/relase = \"$$version\"/" docs/conf.py && \
+	sed -i "s/^release = \".*\"/release = \"$$version\"/" docs/conf.py && \
 	sed -i "s/^## \[Unreleased\]/## [Unreleased]\n\n## [$$version] - $$date/" CHANGELOG.md && \
 	git add CHANGELOG.md pyproject.toml docs/conf.py && \
 	git commit -m "Version bump: $$version" && \
