@@ -12,7 +12,7 @@ If you find PowerHub useful and want to give back, there are a number of options
 
 Like any other software, PowerHub has bugs. If something doesn't work right,
 the best and probably quickest way to solve is to try to fix it yourself.
-See the notes on [troubleshooting](troubleshooting) first.
+See the notes on [troubleshooting](sec_troubleshooting) first.
 
 Since PowerHub is obfuscating everything under the sun, debugging can be
 hard. Even more so if I as the developer cannot reproduce what is going

@@ -1,4 +1,4 @@
-(troubleshooting)=
+(sec_troubleshooting)=
 # Troubleshooting
 
 It's inevitable that PowerHub will be caught by some antivirus product

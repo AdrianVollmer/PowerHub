@@ -12,14 +12,16 @@ stages, onto the target when executed.
 By "stager" we mean the first stage that sets up all following stages. It
 will perform the following tasks:
 
-
 * PowerHub will first define the routine for RC4 decryption and not much else.
-* Then, an AMSI bypass will be executed using RC4 for de-obfuscation.
-* Next, logging will be disabled as much as possible.
+* Then, a chosen AMSI bypass will be executed using RC4 for de-obfuscation.
+* Next, logging will be disabled as much as possible, including the local
+  history file.
 * Then the second stage is loaded. It is RC4-encrypted and will define more
   routines that allow us to load following stages more conveniently. For
   example, it will define some routines that take advantage of AES
-  libraries so encryption will perform better.
+  libraries so encryption will perform better. Also, a secondary
+  [process-specific](https://s3cur3th1ssh1t.github.io/Powershell-and-the-.NET-AMSI-Interface/)
+  AMSI bypass is loaded.
 * Now we are ready to load the actual payload. By default, it is the
   actual "PowerHub" PowerShell module. It is responsible for manually
   loading PowerHub modules, mounting WebDAV directories, routines for
@@ -78,31 +80,67 @@ via `PushTo-Hub` or the web interface.
 ### Hub
 
 The first tab lets you configure the download cradle. The transport method
-can be HTTP or HTTPS (SMB might be coming in the future), in which case the
-download cradle can be configured such the system proxy is used to access
-the PowerHub host. In case of HTTPS we can do certificate pinning, use the
-Windows certificate store or disable verification entirely.
+can be HTTP or HTTPS (SMB might be coming in the future). Usage of the
+system's default HTTP proxy can be enabled on demand.
+
+#### HTTPS
+
+In case of HTTPS we can do certificate pinning, use the Windows certificate
+store or disable verification entirely.
 
 Also, some versions of Windows are reluctant to use TLSv1.2 for whatever
 reason. There is a checkbox to enforce TLSv1.2 in case your system on which
 the Python backend is running does not support earlier versions.
 
-The AMSI bypass can be chosen as well as the key exchange. The key, with
-which the RC4 and AES encryption is used, will be exchanged using the
-Diffie-Hellman (DH) protocol by default. Note that no host verification will be
-performed on top of the HTTPS connection, so this might be vulnerable to
-highly specific active man-in-the-middle attacks.
+#### AMSI Bypass
+
+There is a choice of AMSI bypasses. In my experience, the original bypass by
+Matt Graeber still works most of the time using PowerHub's obfuscation
+mechanism. Some are known to trigger the Microsoft Defender, but they are
+there in case other antiviruses won't recognize them. Some use features that
+will break the stager if the PowerShell version is less than 5.
+
+A
+[process-specific](https://s3cur3th1ssh1t.github.io/Powershell-and-the-.NET-AMSI-Interface/)
+AMSI bypass will automatically be loaded right after the first one.
+
+#### Key Exchange
+
+The key which is used for the RC4 and AES encryption is used can be
+exchanged using different mechanism with different pros and cons.
+
+By default, the key exchange happens out-of-band. This means that it won't
+be visible easily on the wire. It's also not likely that it will be
+recovered in forensics after the fact.
+
+It's next to impossible to recover the key in forensics if Diffie-Hellman is
+used for the key exchange. However, an active analyst that has
+unathenticated access to the PowerHub server while it is running could
+retrieve it.
+
+Note that no host verification will be performed on top of the HTTPS
+connection, so this might be vulnerable to highly specific active
+man-in-the-middle attacks.
 
 The DH key exchange requires an extra request, which may not always be an
-option, so we can also embed they key directly (in which case all code can
-be restored in digital forensics) or provide the key out-of-band on the
-command line.
+option, so we can also embed they key directly in which case the key can
+be recovered trivially by a forensic analyst "post-mortem". However, this
+will be most compact, which can sometimes be useful.
+
+#### Clip-Exec
 
 The hub also lets us specify a Clipboard entry to be executed automatically
-or pre-load some modules, so that they will be contained in the stager.
-Together with the "embedded" or "out-of-band" key exchange option, this will
-produce an entirely self-contained file that could also be transported to
-the target host in arbitrary ways such as a USB drive.
+after the last stage has loaded.
+
+#### Preload
+
+Modules can be pre-loaded, so they will be included as an additional stage.
+
+Together with the "embedded" key exchange option, this will produce an
+entirely self-contained file that could also be transported to the target
+host in arbitrary ways such as a USB drive. The "out-of-band" could also be
+used, just remember to define the key variable on the command line as seen
+in the download cradle.
 
 ### Modules
 
