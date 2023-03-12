@@ -152,7 +152,7 @@ params = [
         'amsi', 'reflection', 'AMSI Bypass', 'selection',
         options=[
             ("reflection", "Matt Graber's Reflection method"),
-            ("reflection2", "Matt Graber's 2nd Reflection method"),
+            ("reflection2", "Matt Graber's 2nd Reflection method (caught by latest Defender)"),
             ("rasta-mouse", "Rasta Mouse"),
             ("am0nsec", "am0nsec (Requires PowerShell Version 5)"),
             ("adam-chester",
@@ -170,9 +170,9 @@ params = [
     Parameter(
         'kex', 'oob', 'Key Exchange', 'selection',
         options=[
-            ("oob", "Out of Band (most secure; least compact)"),
-            ("dh", "Diffie-Hellman (medium secure; compact; requires extra request)"),
-            ("embedded", "Embedded (least secure; compact; self-contained)"),
+            ("oob", "Out of Band"),
+            ("dh", "Diffie-Hellman (requires PowerShell Version 5)"),
+            ("embedded", "Embedded"),
         ],
         get_arg='k',
     ),
@@ -204,7 +204,8 @@ params = [
              "Requires interactive execution.",),
     Parameter(
         'decoy', False, 'Include Decoys', 'checkbox', get_arg='d',
-        help="Wrap suspicious code in real code from legitimate sources.",
+        help="Wrap suspicious code in real code from legitimate sources. "
+             "Requires PowerShell Version 5.",
     ),
     Parameter(
         'obfuscate_setalias', False, "Obfuscate 'Set-Alias'", 'checkbox', get_arg='o',

@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+* Update info hints in the Hub tab
+
 ### Added
 
 * Restored compatibility with PowerShell v2
