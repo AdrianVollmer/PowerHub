@@ -17,11 +17,10 @@ $WEBDAV_USER = "{{webdav_user}}"
 $WEBDAV_PASS = "{{webdav_pass}}"
 {# $WebClient is defined in stage2 #}
 {# The actual code (i.e. the content) of the modules is stored in this separate hashtable #}
-class PowerHubModule { [String]$Name; [String]$Type; [Int]$N; [Bool]$Loaded; [String]$Alias }
 $PowerHubModulesContent = @{ {{preloaded_modules_content}} }
 $PowerHubModules = @( {{preloaded_modules}} )
 
-$CALLBACK_HOST = [regex]::Match($CALLBACK_URL, '(.+/)([^:/]+)((:|/).*)').captures.groups[2].value
+$CALLBACK_HOST = [regex]::Match($CALLBACK_URL, '(.+/)([^:/]+)((:|/).*)').groups[2].value
 $PS_VERSION = $PSVersionTable.PSVersion.Major
 {{'$DebugPreference = "Continue"'|debug}}
 {% if minimal %}
@@ -139,7 +138,6 @@ function Update-HubModules {
     $Global:PowerHubModules = $ModuleList
     foreach ($m in $PowerHubModules) {
         $m.n = [Int]($m.n)
-        $m | Add-Member -TypeName  "PowerHubModule"
         if ($PowerHubModulesContent.ContainsKey($m.Name)) {
             $m.Loaded = $True
         } else {
@@ -360,8 +358,7 @@ Description
 Run the binary whose name matches 'procdump64' in memory and dump the lsass process.
 #>
     Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHubModule")] $Module,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
 
         [parameter(Mandatory=$false,Position=1)] [String] $ExeArgs,
 
@@ -423,8 +420,7 @@ Description
 Load the PE module with the name 'meterpreter.exe' in memory and save it to disk
 #>
     Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHubModule")] $Module,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
 
         [parameter(Mandatory=$false,Position=1)] $Directory = ""
     )
@@ -467,8 +463,7 @@ Name of the new alias. Default: the module's name.
 #>
     Param(
         [parameter(Mandatory=$false)] [String] $Name,
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHubModule")] $Module
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module
     )
     $Function = {
         $Module | Run-Exe -ExeArgs ([string[]]$args -join " ")
@@ -514,8 +509,7 @@ Description
 Load the shellcode module with the name 'meterpreter.bin' in memory and run it
 #>
     Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHubModule")] $Module,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
 
         [ValidateNotNullOrEmpty()] [UInt16] $ProcessID
     )
@@ -583,8 +577,7 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
 #>{% endif %}
 
     Param(
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHubModule")] $Module,
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module,
 
         [parameter(Mandatory=$false)] [String] $OutFile,
 
@@ -638,8 +631,7 @@ Name of the new alias. Default: the module's name.
 #>
     Param(
         [parameter(Mandatory=$false)] [String] $Name,
-        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-        [PSTypeName("PowerHubModule")] $Module
+        [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module
     )
     $Function = {
         $Module | Run-DotNETExe -Arguments ([string[]]$args)

@@ -41,13 +41,6 @@ $ cd ~/.local/share/powerhub
 $ mv powerhub_db.sqlite upload webdav* workspace/
 ```
 
-## PowerShell v2
-
-PowerShell v2 is not supported anymore. It becomes less and less common and
-the amount of effort it takes to make PowerHub run on v2 is not justified by
-the benefit. Besides, AMSI does not exist in v2, so just load the modules
-directly. PowerHub has the "Static List" feature for this.
-
 ## Key exchange
 
 In PowerHub 1.0, the key was simply embedded in the stager. In principle,
