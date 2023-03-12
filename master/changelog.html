@@ -50,14 +50,19 @@
 <li class="toctree-l1"><a class="reference internal" href="philosophy.html">Motivation &amp; Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="new.html">New in PowerHub 2.0</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#unreleased">[Unreleased]</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id1">[2.0.1] - 2023-03-02</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased">[Unreleased]</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">[2.0.0] - 2023-02-26</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">[2.0.1] - 2023-03-02</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">[2.0.0] - 2023-02-26</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#removed">Removed</a></li>
 </ul>
 </li>
@@ -110,20 +115,39 @@
 <p>All notable changes to this project will be documented in this file.</p>
 <section id="unreleased">
 <h2>[Unreleased]<a class="headerlink" href="#unreleased" title="Permalink to this heading"></a></h2>
+<section id="changed">
+<h3>Changed<a class="headerlink" href="#changed" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Update info hints in the Hub tab</p></li>
+</ul>
+</section>
+<section id="added">
+<h3>Added<a class="headerlink" href="#added" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Restored compatibility with PowerShell v2</p></li>
+</ul>
+</section>
+<section id="fixed">
+<h3>Fixed<a class="headerlink" href="#fixed" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Fix bug in payload generation</p></li>
+<li><p>Fixed a rare bug related to incremental delivery</p></li>
+</ul>
+</section>
 </section>
 <section id="id1">
 <h2>[2.0.1] - 2023-03-02<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
-<section id="fixed">
-<h3>Fixed<a class="headerlink" href="#fixed" title="Permalink to this heading"></a></h3>
+<section id="id2">
+<h3>Fixed<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p>Syntax issues with non-default AMSI bypasses</p></li>
 </ul>
 </section>
 </section>
-<section id="id2">
-<h2>[2.0.0] - 2023-02-26<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h2>
-<section id="added">
-<h3>Added<a class="headerlink" href="#added" title="Permalink to this heading"></a></h3>
+<section id="id3">
+<h2>[2.0.0] - 2023-02-26<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h2>
+<section id="id4">
+<h3>Added<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p>Many more options for the download cradle</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">power-obfuscate</span></code> command</p></li>
@@ -131,8 +155,8 @@
 <li><p>Ability to allowlist IP adresses</p></li>
 </ul>
 </section>
-<section id="changed">
-<h3>Changed<a class="headerlink" href="#changed" title="Permalink to this heading"></a></h3>
+<section id="id5">
+<h3>Changed<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p>Clipboard entries must be marked for execution</p></li>
 <li><p>Changes to the modules on disk are automatically recognized</p></li>

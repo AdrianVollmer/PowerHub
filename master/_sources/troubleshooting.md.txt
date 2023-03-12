@@ -1,3 +1,4 @@
+(sec_troubleshooting)=
 # Troubleshooting
 
 It's inevitable that PowerHub will be caught by some antivirus product
@@ -5,7 +6,7 @@ eventually. It's a cat and mouse game, as everybody knows.
 
 When that happens, try to find out what it is that triggers the response.
 For many detection techniques, PowerHub comes pre-equipped with evasion
-features. Play around with those, which might already help.
+features. Play around with those, it may already help.
 
 If you want to drill down further, make use of the [Incremental
 Delivery](incremental_delivery) feature. It will execute parts of the stager

@@ -95,6 +95,9 @@ reports.</p></li>
 </ul>
 <section id="creating-bug-reports">
 <h2>Creating bug reports<a class="headerlink" href="#creating-bug-reports" title="Permalink to this heading"></a></h2>
+<p>Like any other software, PowerHub has bugs. If something doesn’t work right,
+the best and probably quickest way to solve is to try to fix it yourself.
+See the notes on <a class="reference internal" href="troubleshooting.html#sec-troubleshooting"><span class="std std-ref">troubleshooting</span></a> first.</p>
 <p>Since PowerHub is obfuscating everything under the sun, debugging can be
 hard. Even more so if I as the developer cannot reproduce what is going
 on.</p>
@@ -114,9 +117,12 @@ parameter names.</p>
 in particular exceptions including a full traceback. Don’t forget to use
 code fences (three backticks) to format the output properly, or else it will
 become unreadable. You may trim the Python output to the relevant parts as
-well, but when in doubt, err on the side of more verbosity. Besides the
-versions of all software packages involved (on both machines), the download
-cradle parameters will be particularly important.</p>
+well, but when in doubt, err on the side of more verbosity. In PowerShell,
+the first error message is usually the only useful, while in Python the last
+part of the traceback is most important (but all parts are useful or
+sometimes even necessary).</p>
+<p>Besides the versions of all software packages involved (on both machines),
+the download cradle parameters will be particularly important.</p>
 <p>In short, try to include everything so the issue can be reproduced.</p>
 </section>
 </section>

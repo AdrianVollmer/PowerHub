@@ -10,6 +10,10 @@ If you find PowerHub useful and want to give back, there are a number of options
 
 ## Creating bug reports
 
+Like any other software, PowerHub has bugs. If something doesn't work right,
+the best and probably quickest way to solve is to try to fix it yourself.
+See the notes on [troubleshooting](sec_troubleshooting) first.
+
 Since PowerHub is obfuscating everything under the sun, debugging can be
 hard. Even more so if I as the developer cannot reproduce what is going
 on.
@@ -33,8 +37,12 @@ Finally, include the output of the Python program as well in the bug report;
 in particular exceptions including a full traceback. Don't forget to use
 code fences (three backticks) to format the output properly, or else it will
 become unreadable. You may trim the Python output to the relevant parts as
-well, but when in doubt, err on the side of more verbosity. Besides the
-versions of all software packages involved (on both machines), the download
-cradle parameters will be particularly important.
+well, but when in doubt, err on the side of more verbosity. In PowerShell,
+the first error message is usually the only useful, while in Python the last
+part of the traceback is most important (but all parts are useful or
+sometimes even necessary).
+
+Besides the versions of all software packages involved (on both machines),
+the download cradle parameters will be particularly important.
 
 In short, try to include everything so the issue can be reproduced.
