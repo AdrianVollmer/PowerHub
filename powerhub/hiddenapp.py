@@ -77,6 +77,8 @@ def get_profile():
     try:
         with open(os.path.join(directories.XDG_DATA_HOME, "profile.ps1"), "r") as f:
             profile = f.read()
+    except FileNotFoundError:
+        profile = ""
     except Exception as e:
         log.error("Error while reading profile.ps1: %s" % str(e))
         profile = ""
