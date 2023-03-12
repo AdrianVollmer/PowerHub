@@ -8,23 +8,13 @@ import tempfile
 import pytest
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
-from test_init import TEST_URI, TEST_COMMANDS, init_tests, execute_cmd  # noqa
+from test_init import BACKENDS, init_tests, execute_cmd  # noqa
 
 init_tests()
 
 
 @pytest.fixture
 def parameters():
-    #  from collections import namedtuple
-    #  import powerhub.env
-    #  Args = namedtuple(
-    #      'Args',
-    #      'URI_HOST URI_PORT URI_PATH DEBUG WORKSPACE_DIR LPORT',
-    #  )
-    #  args = Args('testhost', 1234, 'testpath', True, '/tmp', 9999)
-    #  PHApp = namedtuple('PHApp', 'args')
-    #  ph_app = PHApp(args)
-    #  powerhub.env.powerhub_app = ph_app
     with tempfile.TemporaryDirectory(
         prefix='powerhub_tests',
         ignore_cleanup_errors=True,
@@ -66,14 +56,16 @@ def copy_and_execute(filename, payload, interpreter=""):
     tmpf.write(payload)
     tmpf.close()
 
-    try:
-        execute_cmd(f"ssh win10 del C:/Windows/Temp/{filename}")
-    except subprocess.CalledProcessError:
-        # this happens if the file does not exist
-        pass
+    for _, b in BACKENDS:
+        try:
+            execute_cmd(b, f"del C:/Windows/Temp/{filename}")
+        except subprocess.CalledProcessError:
+            # this happens if the file does not exist
+            pass
 
-    execute_cmd(f"scp {tmpf.name} win10:C:/Windows/Temp/{filename}")
-    out = execute_cmd(f"ssh win10 '{interpreter} C:/Windows/Temp/{filename}'")
+        execute_cmd(b, f"{tmpf.name} win10:C:/Windows/Temp/{filename}",
+                    copy=True)
+        out = execute_cmd(b, f"'{interpreter} C:/Windows/Temp/{filename}'")
     return out
 
 

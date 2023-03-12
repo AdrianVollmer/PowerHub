@@ -1,28 +1,40 @@
+import logging
 import os
 import shutil
 import sys
-from subprocess import check_output
+import subprocess
 from shlex import split
 
-from test_config import TEST_URI, TEST_COMMANDS  # noqa
+from test_config import TEST_URI, BACKENDS  # noqa
 # test_config must define these variables. they are local to the computer
 # you are running this on, so the file is not tracked by git.
 # mine looks something like this:
 #  TEST_URI = "192.168.11.2"
-#  TEST_COMMANDS = [
-#      'ssh win10 \'"%(POWERSHELL_ESCAPED_QUOTES)s"\'',
-#      'wmiexec.py -hashes :681d3xxxxxxxxxxxxxxxxxxxxxxxxxxx '
-#      + 'Administrator@192.168.11.3 %(BASH)s',
-#  ]
+#  BACKENDS = {
+#      "win7": {
+#          "psversion": 2,
+#          "command": "sshpass -e ssh win7",
+#          "env": {
+#              "SSHPASS": "!pass show win7-test-vm",
+#          },
+#      },
+#      "win10": {
+#          "psversion": 5,
+#          "command": "ssh win10",
+#      },
+#  }
+# `env` is a dict where the keys are either consts or commands. Consts
+# must be preceded with `=`, commands with `!`.
 
 
-sys.argv = ['./powerhub.py', TEST_URI, '--no-auth']
-NEW_XDG_DATA_HOME = os.path.join(os.sep, 'tmp', 'ph_test')
+sys.argv = ['powerhub', TEST_URI, '--no-auth']
+NEW_XDG_DATA_HOME = os.path.join(os.sep, 'tmp', 'powerhub_test')
+log = logging.getLogger(__name__)
 
 
 def init_tests():
     myPath = os.path.dirname(os.path.abspath(__file__))
-    sys.path.insert(0, myPath + '/../../')
+    sys.path.insert(0, os.path.join(myPath, '..', '..'))
 
     os.environ["XDG_DATA_HOME"] = NEW_XDG_DATA_HOME
     try:
@@ -32,10 +44,38 @@ def init_tests():
     os.makedirs(NEW_XDG_DATA_HOME)
 
 
-def execute_cmd(cmd):
+def execute_cmd(backend, cmd, copy=False):
+    assert '"' not in cmd
+
     env = os.environ
     env["PYTHONIOENCODING"] = "utf8"
-    return check_output(
-        split(cmd),
+    for k, v in backend.get('env', {}).items():
+        if v.startswith('='):
+            env[k] = v[1:]
+        elif v.startswith('1'):
+            env[k] = subprocess.check_output(
+                split(v[1:])
+            )[:-1].decode()
+        else:
+            raise RuntimeError("env values must start with ! or =")
+
+    ssh_cmd = backend['command']
+
+    if copy:
+        ssh_cmd = ssh_cmd.replace(' ssh ', ' scp ')
+
+    output = subprocess.run(
+        split(ssh_cmd) + [cmd],
         env=env,
-    )[:-1].decode()
+        check=False,
+        capture_output=True,
+    )
+    # Can't rely on return code. `ssh win10 xxx` returns 0 if the last
+    # command was successful.
+
+    if output.returncode or output.stderr:
+        result = output.stderr[:-1].decode()
+    else:
+        result = output.stdout[:-1].decode()
+
+    return result
