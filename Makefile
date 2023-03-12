@@ -21,8 +21,9 @@ release:
 	sed -i "s/^## \[Unreleased\]/## [Unreleased]\n\n## [$$version] - $$date/" CHANGELOG.md && \
 	git add CHANGELOG.md pyproject.toml docs/conf.py && \
 	git commit -m "Version bump: $$version" && \
-	read -p "Committed. Do you want to tag and push the new version? [y/n] " ans && \
-	if [ $$ans = 'y' ] ; then git tag $$version && git push && git push origin tag $$version && echo "Tagged and pushed." ; else echo "Tag it and push it yourself then." ; fi
+	git tag $$version && \
+	read -p "Committed and tagged. Do you want push the new version? [y/n] " ans && \
+	if [ $$ans = 'y' ] ; then git push && git push --tags $$version && echo "Pushed." ; else echo "Push it yourself then." ; fi
 
 build:
 	python -m build
