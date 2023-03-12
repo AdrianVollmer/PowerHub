@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+* Fix bug in payload generation
 * Fixed a rare bug related to incremental delivery
 
 ## [2.0.1] - 2023-03-02

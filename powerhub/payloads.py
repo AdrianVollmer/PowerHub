@@ -17,7 +17,6 @@ def load_template(filename, **kwparameters):
     templateLoader = jinja2.FileSystemLoader(
         searchpath=os.path.join(directories.BASE_DIR, "templates", "payloads")
     )
-    templateLoader = jinja2.FileSystemLoader(searchpath=path)
     templateEnv = jinja2.Environment(loader=templateLoader)
     TEMPLATE_FILE = filename
     template = templateEnv.get_template(TEMPLATE_FILE)
