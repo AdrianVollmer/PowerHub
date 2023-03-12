@@ -13,6 +13,10 @@ All notable changes to this project will be documented in this file.
 
 * Restored compatibility with PowerShell v2
 
+### Fixed
+
+* Fixed a rare bug related to incremental delivery
+
 ## [2.0.1] - 2023-03-02
 
 ### Fixed

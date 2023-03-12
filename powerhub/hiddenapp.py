@@ -166,6 +166,11 @@ def stager():
     else:
         result = result.replace(separator, '')
 
+    # Ensure result is non-empty, cause `""|iex` throws an error
+    if not result:
+        log.error("Stage1 or parts thereof failed to load")
+        result = " "
+
     log.debug("Delivering stage 1; context: %s" %
               stager_context.update(stage2='...', stage3='...'))
 
