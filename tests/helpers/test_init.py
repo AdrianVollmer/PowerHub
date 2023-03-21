@@ -14,6 +14,7 @@ from test_config import TEST_URI, BACKENDS  # noqa
 #      "win7": {
 #          "psversion": 2,
 #          "command": "sshpass -e ssh win7",
+#          "copy":  "sshpass -e scp %(src)s win7:%(dst)s",
 #          "env": {
 #              "SSHPASS": "!pass show win7-test-vm",
 #          },
@@ -21,6 +22,7 @@ from test_config import TEST_URI, BACKENDS  # noqa
 #      "win10": {
 #          "psversion": 5,
 #          "command": "ssh win10",
+#          "copy":  "scp %(src)s win10:%(dst)s",
 #      },
 #  }
 # `env` is a dict where the keys are either consts or commands. Consts
@@ -59,13 +61,19 @@ def execute_cmd(backend, cmd, copy=False):
         else:
             raise RuntimeError("env values must start with ! or =")
 
-    ssh_cmd = backend['command']
-
     if copy:
-        ssh_cmd = ssh_cmd.replace(' ssh ', ' scp ')
+        # cmd must not contain exactly one space
+        cmd = backend['copy'] % dict(
+            src=cmd.split(" ")[0],
+            dst=cmd.split(" ")[1],
+        )
+        cmd = split(cmd)
+    else:
+        cmd = split(backend['command']) + [cmd]
 
+    log.info("Running: %s" % " ".join(cmd))
     output = subprocess.run(
-        split(ssh_cmd) + [cmd],
+        cmd,
         env=env,
         check=False,
         capture_output=True,
