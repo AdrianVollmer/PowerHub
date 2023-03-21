@@ -47,8 +47,6 @@ def init_tests():
 
 
 def execute_cmd(backend, cmd, copy=False):
-    assert '"' not in cmd
-
     env = os.environ
     env["PYTHONIOENCODING"] = "utf8"
     for k, v in backend.get('env', {}).items():
