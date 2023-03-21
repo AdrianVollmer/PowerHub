@@ -23,7 +23,7 @@ release:
 	git commit -m "Version bump: $$version" && \
 	git tag $$version && \
 	read -p "Committed and tagged. Do you want push the new version? [y/n] " ans && \
-	if [ $$ans = 'y' ] ; then git push && git push --tags $$version && echo "Pushed." ; else echo "Push it yourself then." ; fi
+	if [ $$ans = 'y' ] ; then git push && git push --tags && echo "Pushed." ; else echo "Push it yourself then." ; fi
 
 build:
 	python -m build
