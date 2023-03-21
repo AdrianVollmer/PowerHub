@@ -1,5 +1,3 @@
-using namespace System.Management.Automation.Language
-
 <#
 .Description
 This function lists all Graph, SharePoint or Exchange permissions required for the specified
