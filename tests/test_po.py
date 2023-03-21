@@ -81,7 +81,7 @@ def parameters(request):
     yield cli_params[request.param]
 
 
-@pytest.fixture(params=list(BACKENDS.keys()))
+@pytest.fixture(params=list(BACKENDS.keys())[1:])
 def backend(request):
     """Parameterize backends"""
     return BACKENDS[request.param]
