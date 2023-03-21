@@ -46,9 +46,14 @@ def parameters():
         yield args, key, callback_urls
 
 
-def copy_and_execute(filename, payload, interpreter=""):
+@pytest.fixture(params=list(BACKENDS.keys())[1:])
+def backend(request):
+    """Parameterize backends"""
+    return BACKENDS[request.param]
+
+
+def copy_and_execute(backend, filename, payload, interpreter=""):
     import tempfile
-    import subprocess
     if isinstance(payload, str):
         tmpf = tempfile.NamedTemporaryFile('w', delete=False)
     else:
@@ -56,20 +61,13 @@ def copy_and_execute(filename, payload, interpreter=""):
     tmpf.write(payload)
     tmpf.close()
 
-    for _, b in BACKENDS.items():
-        try:
-            execute_cmd(b, f"del C:/Windows/Temp/{filename}")
-        except subprocess.CalledProcessError:
-            # this happens if the file does not exist
-            pass
-
-        execute_cmd(b, f"{tmpf.name} win10:C:/Windows/Temp/{filename}",
-                    copy=True)
-        out = execute_cmd(b, f"'{interpreter} C:/Windows/Temp/{filename}'")
+    execute_cmd(backend, f"{tmpf.name} win10:C:/Windows/Temp/{filename}",
+                copy=True)
+    out = execute_cmd(backend, f"'{interpreter} C:/Windows/Temp/{filename}'")
     return out
 
 
-def test_vbs(parameters):
+def test_vbs(parameters, backend):
     from powerhub.payloads import create_vbs
     from powerhub.parameters import param_collection
     args, key, callback_urls = parameters
@@ -79,12 +77,12 @@ def test_vbs(parameters):
     filename, payload = create_vbs(param_collection, key, callback_urls)
     assert filename == 'powerhub-vbs-reflection-http.vbs'
 
-    out = copy_and_execute(filename, payload, "cscript.exe")
+    out = copy_and_execute(backend, filename, payload, "cscript.exe")
     assert "Windows Script Host" in out
     assert "error" not in out
 
 
-def test_gcc(parameters):
+def test_gcc(parameters, backend):
     from powerhub.payloads import create_exe
     from powerhub.parameters import param_collection
     args, key, callback_urls = parameters
@@ -96,11 +94,11 @@ def test_gcc(parameters):
     assert b"DOS" in payload
     assert payload.startswith(b'MZ')
 
-    out = copy_and_execute(filename, payload)
+    out = copy_and_execute(backend, filename, payload)
     assert out == "1"
 
 
-def test_mcs(parameters):
+def test_mcs(parameters, backend):
     from powerhub.payloads import create_dotnet
     from powerhub.parameters import param_collection
     args, key, callback_urls = parameters
@@ -112,6 +110,6 @@ def test_mcs(parameters):
     assert b"DOS" in payload
     assert payload.startswith(b'MZ')
 
-    out = copy_and_execute(filename, payload)
+    out = copy_and_execute(backend, filename, payload)
 
     assert out == ""
