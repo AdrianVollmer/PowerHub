@@ -9,6 +9,7 @@ import string
 from powerhub.tools import encrypt_rc4, encrypt_aes, generate_random_key, Memoize
 from powerhub.modules import sanitize_ps1
 from powerhub.directories import directories
+from powerhub import __version__
 
 
 log = logging.getLogger(__name__)
@@ -375,6 +376,7 @@ def obfuscate_file(fp_in, fp_out, natural=False, debug=False, decoy=False,
         amsibypass=amsi_bypass,
         separator=separator,
         slow_encryption=slow_encryption,
+        VERSION=__version__,
     )
 
     output = get_stage(
