@@ -56,7 +56,7 @@ def copy_and_execute(filename, payload, interpreter=""):
     tmpf.write(payload)
     tmpf.close()
 
-    for _, b in BACKENDS:
+    for _, b in BACKENDS.items():
         try:
             execute_cmd(b, f"del C:/Windows/Temp/{filename}")
         except subprocess.CalledProcessError:
