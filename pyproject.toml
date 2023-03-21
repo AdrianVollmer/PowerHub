@@ -67,7 +67,7 @@ legacy_tox_ini = """
 envlist = py310,lint
 isolated_build = True
 
-[testenv:py30]
+[testenv:py310]
 extras = tests
 commands = pytest
 deps = .[tests]
