@@ -59,6 +59,8 @@ power-obfuscate = "powerhub.__main__:power_obfuscate"
 tests = [
   'pytest',
   'flake8',
+  'beautifulsoup4',
+  'lxml',
 ]
 
 [tool.tox]
