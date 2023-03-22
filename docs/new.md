@@ -13,7 +13,7 @@ Documentation is now hosted by GitHub pages; the GitHub wiki is disabled.
 ## Packaging
 
 The `powerhub.py` and `requirements.txt` have been removed. The `setup.py`
-has been replaced with a `setup.cfg`. PowerHub is now a first-class
+has been replaced with a `pyproject.toml`. PowerHub is now a first-class
 Python package and should be treated as such. Like any other Python package,
 it should be installed with `pip install`, which will place executables in
 `~/.local/bin`.
