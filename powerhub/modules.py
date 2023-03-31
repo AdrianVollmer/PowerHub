@@ -95,6 +95,24 @@ def import_file(path):
     return module
 
 
+def get_builtin(name):
+    """Return content of built-in module"""
+
+    # Built-in module must be a file ending in `.ps1` in the built-in
+    # directory.
+    path = os.path.join(directories.BASE_DIR, 'builtin')
+    builtins = os.listdir(path)
+
+    code = ""
+
+    name = name + '.ps1'
+    if name in builtins:
+        path = os.path.join(path, name)
+        code = open(path, 'rb').read()
+
+    return code
+
+
 def enumerate_modules(_modules=modules):
     for i, m in enumerate(_modules):
         m.n = i

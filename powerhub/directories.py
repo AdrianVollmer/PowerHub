@@ -7,6 +7,7 @@ DirList = collections.namedtuple(
     [
         'BASE_DIR',
         'CERT_DIR',
+        'RSSH_DIR',
         'MOD_DIR',
         'STATIC_DIR',
         'UPLOAD_DIR',
@@ -52,10 +53,12 @@ def init_directories(workspace_dir, create_missing=False):
 
     MOD_DIR = os.path.join(XDG_DATA_HOME, 'modules')
     CERT_DIR = os.path.join(XDG_DATA_HOME, 'ssl')
+    RSSH_DIR = os.path.join(XDG_DATA_HOME, 'rssh')
 
     _directories = [
         BASE_DIR,
         CERT_DIR,
+        RSSH_DIR,
         MOD_DIR,
         STATIC_DIR,
         UPLOAD_DIR,

