@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+* Syntax issue in minimal mode
+
 ## [2.0.3] - 2023-03-21
 
 ### Fixed

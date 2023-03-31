@@ -188,11 +188,12 @@ function List-HubModules {
 
 Lists all modules that are available via the hub.
 
-#>
+#>{% endif %}
     $PowerHubModules | Format-Table -AutoSize -Property N,Type,Name,Loaded
 }
 
 function Get-HubModule {
+{% if not minimal %}<#
 <#
 .SYNOPSIS
 
@@ -615,6 +616,7 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
 }
 
 function New-DotNetAlias {
+{% if not minimal %}
 <#
 .SYNOPSIS
 
@@ -628,7 +630,7 @@ A PowerHub module object of type "dotnet".
 
 Name of the new alias. Default: the module's name.
 
-#>
+#>{% endif %}
     Param(
         [parameter(Mandatory=$false)] [String] $Name,
         [parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)] $Module
