@@ -853,8 +853,8 @@ Unmount the Webdav drive.
 
 #>
     $shares = @($WebdavLetter, $WebdavRoLetter, $WebdavPrivateLetter)
-    foreach ($k in $shares) {
-        $netout = iex "net use ${k}: /delete 2>&1" | Out-Null
+    foreach ($s in $shares) {
+        $netout = iex "net use ${s}: /delete 2>&1" | Out-Null
         if (!$?) {
             Write-Error "Error while executing 'net use': $netout"
         }

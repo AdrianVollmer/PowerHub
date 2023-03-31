@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 * Syntax issue in minimal mode
+* Evade latest Defender
 
 ## [2.0.3] - 2023-03-21
 
