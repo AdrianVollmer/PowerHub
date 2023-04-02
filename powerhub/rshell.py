@@ -1,7 +1,9 @@
 from collections import namedtuple
 import logging
 from enum import Enum, auto
+from inspect import getargspec
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -24,9 +26,17 @@ BuildCommand = namedtuple(
     "BuildCommand", "cmd env comment post"
 )
 
+REGEX_INCOMING = (
+    r"^[0-9 /:]{20}\[(?P<src>[^]]*)\] INFO .* acceptConn() : "
+    r"New controllable connection with id (?P<id>[a-f0-9]{40})$"
+)
+
 
 class ShellHandler(object):
-    def __init__(self):
+    def __init__(self, report_incoming):
+        assert len(getargspec(report_incoming).args) == 2
+        self.report_incoming = report_incoming
+
         self._state = HandlerState.OFFLINE
         self._thread = None
         self._proc = None
@@ -182,6 +192,7 @@ class ShellHandler(object):
 
     def is_ready(self, host, port):
         """Check whether the binaries have been built"""
+        # TODO replace this with a make-like logic
         result = all(
             os.path.exists(os.path.join(directories.RSSH_DIR, path))
             for path in [
@@ -239,8 +250,17 @@ class ShellHandler(object):
         self._state = HandlerState.ONLINE
 
     def proccess_rssh_line(self, line):
+        line = line.strip()
+        log.debug(line)
+
         if line.startswith("Failed to handshake "):
             log.error("Reverse SSH: " + line)
+
+        m = re.match(REGEX_INCOMING, line)
+        if m:
+            d = m.groupdict()
+            log.info("Incoming RSSH connection: %s" % d['id'])
+            self.report_incoming(d['src'], d['id'])
 
     def stop(self):
         if self.state != HandlerState.ONLINE:
