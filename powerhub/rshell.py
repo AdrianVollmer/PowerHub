@@ -4,6 +4,7 @@ from enum import Enum, auto
 import os
 import shutil
 import subprocess
+import tempfile
 import threading
 
 from powerhub.directories import directories
@@ -20,7 +21,7 @@ class HandlerState(Enum):
 
 
 BuildCommand = namedtuple(
-    "BuildCommand", "cmd env comment"
+    "BuildCommand", "cmd env comment post"
 )
 
 
@@ -28,8 +29,8 @@ class ShellHandler(object):
     def __init__(self):
         self._state = HandlerState.OFFLINE
         self._thread = None
-        self._thread_result = None
         self._proc = None
+        self._buffer = ""
         self._build_lock = threading.Lock()
 
     @property
@@ -37,16 +38,19 @@ class ShellHandler(object):
         return self._state
 
     def build(self, host, port):
+        """Start build process in the background
+
+        """
+
         log.info("Building rssh binaries...")
+
         if not self.check_dependencies():
             log.error("Unable to build; missing dependencies")
             return
 
         home_server = "%s:%d" % (host, port)
-        cmd = [shutil.which('make'), '-C', RSSH_EXT_DIR]
+        cmd = [shutil.which('make')]
         env = dict(
-            KEY_DIR=directories.RSSH_DIR,
-            BUILD_DIR=directories.RSSH_DIR,
             CC=shutil.which('x86_64-w64-mingw32-gcc'),
             GOOS='windows',
             HOME=os.environ.get("HOME", ""),
@@ -55,59 +59,100 @@ class ShellHandler(object):
         )
         key_path = os.path.join(directories.RSSH_DIR, "controller_key")
 
+        def post_server(working_dir):
+            for file in ['id_ed25519', 'server', 'authorized_controllee_keys']:
+                shutil.copyfile(
+                    os.path.join(working_dir, "bin", file),
+                    os.path.join(directories.RSSH_DIR, file),
+                )
+            os.chmod(os.path.join(directories.RSSH_DIR, 'server'), 0o700)
+
+        def post_client(working_dir):
+            shutil.copyfile(
+                os.path.join(working_dir, "bin", "client.dll"),
+                self.normalize_filename(host, port, "client.dll"),
+            )
+
+        def post_keygen(working_dir):
+            shutil.copyfile(
+                os.path.join(key_path + ".pub"),
+                os.path.join(directories.RSSH_DIR, "authorized_keys"),
+            )
+
         commands = [
             BuildCommand(
                 cmd=cmd + ['server'],
                 env={**env, 'GOOS': 'linux'},
                 comment="Building RSSH server...",
+                post=post_server,
             ),
             BuildCommand(
                 cmd=cmd + ['client_dll'],
                 env=env,
                 comment="Building RSSH client.dll...",
+                post=post_client,
             ),
             BuildCommand(
                 cmd="ssh-keygen -t ed25519 -f".split() + [key_path, '-N', '', '-C', ''],
                 env={},
-                comment="Building RSSH client.dll...",
+                comment="Generating RSSH controller keys...",
+                post=post_keygen,
             ),
         ]
 
         thread = threading.Thread(
-            target=self._build,
+            target=self._build_wrapper,
             args=(commands, host, port),
         )
         thread.start()
 
-    def _build(self, commands, host, port):
+    def _build_wrapper(self, commands, host, port):
+        """Wrapper for the build function
+
+        This function ensures clean up.
+        """
         self._state = HandlerState.BUILDING
+
         try:
-            for c in commands:
-                p = subprocess.Popen(c.cmd, env=c.env, stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE, encoding='utf-8')
-                log.info(c.comment)
-                log.debug("Running: " + " ".join(c.cmd))
-                stdout, stderr = p.communicate()
-
-                if p.returncode:
-                    raise RuntimeError("Build failed: %s" % stderr)
-
-            # Rename the client.dll to include host and port
-            os.rename(
-                os.path.join(directories.RSSH_DIR, "client.dll"),
-                self.normalize_filename(host, port, "client.dll"),
-            )
-            # Create authorized_keys
-            shutil.copyfile(
-                os.path.join(directories.RSSH_DIR, "controller_key.pub"),
-                os.path.join(directories.RSSH_DIR, "authorized_keys"),
-            )
+            with tempfile.TemporaryDirectory(
+                prefix="powerhub_rssh_",
+            ) as tmpdir:
+                self._build(tmpdir, commands, host, port)
         except Exception:
             self._state = HandlerState.OFFLINE
-            raise
+            log.error("Build failed", exc_info=True)
+            return
 
         self._state = HandlerState.OFFLINE
         log.info("Finished building rssh binaries successfully")
+
+    def _build(self, tmpdir, commands, host, port):
+        """Actually build the binaries
+
+        The repo is copied to a temporary directory to have guaranteed write
+        permissions. The build products are then copied to XDG_DATA_HOME.
+        """
+
+        working_dir = os.path.join(os.path.join(tmpdir, "reverse_ssh"))
+        shutil.copytree(RSSH_EXT_DIR, working_dir)
+
+        for c in commands:
+            p = subprocess.Popen(
+                c.cmd,
+                env=c.env,
+                cwd=working_dir,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                encoding='utf-8',
+            )
+            log.info(c.comment)
+            log.debug("Running: " + " ".join(c.cmd))
+            stdout, stderr = p.communicate()
+
+            if p.returncode:
+                raise RuntimeError("Build failed: %s" % stderr)
+
+            c.post(working_dir)
 
     def normalize_filename(self, host, port, name):
         if name == 'client.dll':
@@ -138,13 +183,14 @@ class ShellHandler(object):
     def is_ready(self, host, port):
         """Check whether the binaries have been built"""
         result = all(
-            os.path.exists(self.normalize_filename(host, port, path))
+            os.path.exists(os.path.join(directories.RSSH_DIR, path))
             for path in [
-                'client.dll',
                 'server',
                 'controller_key',
+                'authorized_controllee_keys',
+                'id_ed25519',
             ]
-        )
+        ) and os.path.exists(self.normalize_filename(host, port, 'client.dll'))
         return result
 
     def run(self, host, port):
@@ -160,14 +206,18 @@ class ShellHandler(object):
             "%s:%d" % (host, port),
         ]
 
-        def store_result(self, func):
+        def process_output(self, proc):
             log.debug("Executing: " + " ".join(cmd))
-            self._thread_result = func()
+            for line in proc.stderr:
+                self._buffer += line
+                self.proccess_rssh_line(line[20:])
+
             self._state == HandlerState.OFFLINE
-            if self._proc.returncode:
+
+            if proc.returncode:
                 log.error(
                     "RSSH Server exited with non-zero return code: "
-                    + self._thread_result[1].decode()
+                    + line
                 )
             else:
                 log.info("RSSH Server exited")
@@ -177,15 +227,20 @@ class ShellHandler(object):
             cwd=directories.RSSH_DIR,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            encoding='utf-8',
         )
         self._thread = threading.Thread(
-            target=store_result,
-            args=(self, self._proc.communicate,),
+            target=process_output,
+            args=(self, self._proc,),
         )
         log.info("Launching RSSH server")
         self._thread.start()
 
         self._state = HandlerState.ONLINE
+
+    def proccess_rssh_line(self, line):
+        if line.startswith("Failed to handshake "):
+            log.error("Reverse SSH: " + line)
 
     def stop(self):
         if self.state != HandlerState.ONLINE:
@@ -194,6 +249,7 @@ class ShellHandler(object):
 
         if self._proc:
             self._proc.terminate()
+            self._proc = None
             self._state = HandlerState.OFFLINE
 
     def get_client_dll(self, host, port):

