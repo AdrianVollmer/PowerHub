@@ -152,6 +152,20 @@ def test_start(backend, stager):
         assert "Run 'Help-PowerHub' for help" in out
 
 
+def test_preload(backend, stager):
+    out = execute_cmd(
+        backend,
+        stager(preloaded="14,17,20-23,37") + (
+            "Invoke-Testfunc14;Invoke-Testfunc17;"
+            "Invoke-Testfunc20;Invoke-Testfunc21;"
+            "Invoke-Testfunc22;Invoke-Testfunc23;"
+            "Invoke-Testfunc37;"
+        ),
+    )
+    for i in [14, 17, 20, 21, 22, 23, 37]:
+        assert "Test%d" % i in out
+
+
 def test_list_hubmodules(backend, stager):
     out = execute_cmd(backend, stager() + "lshm")
     for i in range(MAX_TEST_MODULE_PS1):

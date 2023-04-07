@@ -236,7 +236,7 @@ def get_preloaded_modules(csvlist):
     """Return a string that will be inserted into a PowerShell array
 
     The format of each line is this:
-        New-Object PSObject -Property @{ Name="<NAME">, ... }
+        @{ Name="<NAME">, ... }
     """
 
     if not csvlist:
@@ -257,10 +257,10 @@ def get_preloaded_modules(csvlist):
             log.error("Module not found: %s" % i)
             continue
 
-        obj = '@{ Name="%s"; Type="%s"; N=%d; Loaded=$True; Alias="" }' % (
+        obj = '@{ Name="%s"; Type="%s"; N=%d; Loaded=$True; Alias="" }\n' % (
             m.name, m.type, m.n,
         )
-        result += 'New-Object PowerHubModule -Property %s \n' % obj
+        result += obj
 
     return result
 
@@ -294,11 +294,12 @@ def get_preloaded_modules_content(csvlist):
         name = m.name
         code = m.code
 
-        if isinstance(m.code, bytes):
+        if m.type == 'ps1':
+            code = b64encode(code).decode()
+            code = '[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("%s"))' % code
+        else:
             code = b64encode(code).decode()
             code = '[System.Convert]::FromBase64String("%s")' % code
-        else:
-            code = '@"%s"@)' % code
 
         result += "'%s' = %s\n" % (name, code)
 

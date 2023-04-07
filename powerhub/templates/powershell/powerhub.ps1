@@ -281,32 +281,39 @@ Use the '-Verbose' option to print detailed information.
                 if ($module.Type -eq 'ps1') {
                     $code = Transport-String "module" $transport_args
                     $PowerHubModulesContent.($module.Name) = $code
-                    Import-HubModule $module
                 } else {
                     $PowerHubModulesContent.($module.Name) = Transport-String "module" $transport_args $True
                 }
+                Activate-HubModule $module
                 $module.Loaded = $True
             }
-
-            # Set Alias in two steps
-            # 1. Get Basename
-            if ($Module.Name.Contains('/')) {
-                $AliasName = $Module.Name.split('/')
-                $AliasName = $AliasName[$AliasName.Length - 1]
-            } else {
-                $AliasName = $Module.Name
-            }
-            # 2. Create alias
-            if ($module.Type -eq 'dotnet') {
-                New-DotNetAlias $module -Name $AliasName | Out-Null
-            } elseif ($module.Type -eq 'pe') {
-                New-ExeAlias $module -Name $AliasName | Out-Null
-            }
-
             $result += $module
         }
     }
     return $result
+}
+
+function Activate-HubModule {
+    Param(
+        [parameter(Mandatory=$true)] $Module
+    )
+    # Set Alias in two steps
+    # 1. Get Basename
+    if ($Module.Name.Contains('/')) {
+        $AliasName = $Module.Name.split('/')
+        $AliasName = $AliasName[$AliasName.Length - 1]
+    } else {
+        $AliasName = $Module.Name
+    }
+
+    # 2. Create alias
+    if ($Module.Type -eq 'dotnet') {
+        New-DotNetAlias $Module -Name $AliasName | Out-Null
+    } elseif ($Module.Type -eq 'pe') {
+        New-ExeAlias $Module -Name $AliasName | Out-Null
+    } elseif ($Module.Type -eq 'ps1') {
+        Import-HubModule $Module | Out-Null
+    }
 }
 
 
@@ -942,10 +949,13 @@ foreach ($a in $Aliases.Keys) {
 }
 
 Update-HubModules | Out-Null
+
+# Load pre-loaded modules
 foreach ($name in $PowerHubModulesContent.Keys) {
+    {{'Write-Debug "Activating preloaded module: $name"'|debug}}
     foreach ($m in $PowerHubModules) {
         if ($m.Name -eq $name) {
-            Get-HubModule $m.n | Out-Null
+            Activate-HubModule $m
             break
         }
     }

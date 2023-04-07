@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 * Syntax issue in minimal mode
 * Evade latest Defender
 * Error about existing directory when cloning repos through the webapp
+* Preloaded modules
 
 ## [2.0.3] - 2023-03-21
 
