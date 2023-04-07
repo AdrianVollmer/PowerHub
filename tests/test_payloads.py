@@ -46,7 +46,9 @@ def parameters():
         yield args, key, callback_urls
 
 
-@pytest.fixture(params=list(BACKENDS.keys())[1:])
+@pytest.fixture(
+    params=list(k for k, v in BACKENDS.items() if v['psversion'] >= 5)
+)
 def backend(request):
     """Parameterize backends"""
     return BACKENDS[request.param]

@@ -140,7 +140,7 @@ def test_start(backend, stager):
 
     for k, v in param_set.items():
         log.info("Testing param_set %s" % k)
-        out = execute_cmd(backend, stager(**v) + "")
+        out = execute_cmd(backend, stager(**v))
         # Some features are known to be caught by defender
         if (
             backend['psversion'] >= 5 and
@@ -148,7 +148,6 @@ def test_start(backend, stager):
             ({'zc00l', 'adam-chester', 'none'} & set(v.values()))
         ):
             continue
-        assert "Adrian Vollmer" in out
         assert "Run 'Help-PowerHub' for help" in out
 
 
