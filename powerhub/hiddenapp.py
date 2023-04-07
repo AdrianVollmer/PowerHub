@@ -172,7 +172,7 @@ def stager():
         result = " "
 
     log.debug("Delivering stage 1; context: %s" %
-              stager_context.update(stage2='...', stage3='...'))
+              {**stager_context, "stage2": '...', "stage3": '...'})
 
     return Response(result, content_type='text/plain; charset=utf-8')
 
