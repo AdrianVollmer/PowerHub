@@ -45,6 +45,13 @@ def sanitize_ps1(buffer, file_type):
     return buffer
 
 
+def module_filter(fname):
+    # This is done because PowerSploit contains tests that we
+    # don't want
+    if fname.endswith('.tests.ps1'):
+        return True
+
+
 def update_modules():
     """Import all modules as a list and assign global var `modules` to it"""
 
@@ -53,9 +60,7 @@ def update_modules():
 
     for dirName, subdirList, fileList in os.walk(directories.MOD_DIR, followlinks=True):
         for fname in fileList:
-            if fname.endswith('.tests.ps1'):
-                # This is done because PowerSploit contains tests that we
-                # don't want
+            if module_filter(fname):
                 continue
             _, ext = os.path.splitext(fname)
             if ext.lower() not in EXTENSIONS:
@@ -135,7 +140,7 @@ def find_module_by_path(path):
 
 def on_created(event):
     module = import_file(event.src_path)
-    if not module:
+    if not module or module_filter(event.src_path):
         return
     modules.append(module)
     module.n = len(modules) - 1
@@ -154,7 +159,7 @@ def on_deleted(event):
 def on_modified(event):
     module = import_file(event.src_path)
     m = find_module_by_path(event.src_path)
-    if not m or not module:
+    if not m or not module or module_filter(event.src_path):
         return
     log.info("Module modified: %s" % module.name)
     module.n = m.n
