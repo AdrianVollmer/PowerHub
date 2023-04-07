@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.0.4] - 2023-04-07
+
 ### Fixed
 
 * Syntax issue in minimal mode
