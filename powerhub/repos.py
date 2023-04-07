@@ -38,10 +38,13 @@ def install_repo_from_url(url):
 def git_clone(url):
     """Installs a git repository"""
     dest_dir = directories.MOD_DIR
-    if os.path.isdir(dest_dir):
-        raise Exception("Directory already exists: %s" % dest_dir)
-    subprocess.check_output(['git', 'clone', '--depth', '1', url, dest_dir],
-                            stderr=subprocess.STDOUT)
+    try:
+        output = subprocess.check_output(
+            ['git', 'clone', '--depth', '1', url, dest_dir],
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError:
+        raise Exception("git command failed: %s" % output)
 
 
 def download(url):
