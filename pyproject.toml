@@ -62,14 +62,17 @@ tests = [
   'beautifulsoup4',
   'lxml',
 ]
+dev = [
+  'tox',
+]
 
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py310,lint
+envlist = py,lint
 isolated_build = True
 
-[testenv:py310]
+[testenv:py]
 extras = tests
 commands = pytest
 deps = .[tests]
