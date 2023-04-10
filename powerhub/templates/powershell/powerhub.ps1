@@ -915,7 +915,7 @@ The following functions are available (some with short aliases):
   * List-HubModules (lshm)
   * Get-HubModule (ghm)
   * Update-HubModules (uhm)
-  * Get-SysInfo
+  * Get-SysInfo (gsi)
   * Run-DotNETExe (rdne)
 {%- if not minimal %}
   * Run-Exe (re)
@@ -935,6 +935,7 @@ $Aliases = @{
     ghm = "Get-HubModule"
     lshm = "List-HubModules"
     uhm = "Update-HubModules"
+    gsi = "Get-SysInfo"
     rdne = "Run-DotNETExe"
     mwd = "Mount-Webdav"
     umwd = "Unmount-Webdav"
