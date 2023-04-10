@@ -6,7 +6,7 @@
 </h2>
 
 {% if shells %}
-{% for s in shells %}
+{% for id, s in shells.items() %}
     <p>{{s.src}}, {{s.id}}</p>
 {% endfor %}
 {% else %}
