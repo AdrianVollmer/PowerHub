@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+* Evade latest Defender
+
 ## [2.0.4] - 2023-04-07
 
 ### Fixed

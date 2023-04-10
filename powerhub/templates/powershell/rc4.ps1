@@ -13,7 +13,7 @@ function {{symbol_name("Decrypt-RC4")}} {
 
     for (${{symbol_name('i')}} = 0; ${{symbol_name('i')}} -lt 256; ${{symbol_name('i')}}++)
     {
-        ${{symbol_name('s')}}[${{symbol_name('i')}}] = [Byte]${{symbol_name('i')}};
+        ${{symbol_name('s')}}[${{symbol_name('i')}}] = ${{symbol_name('i')}};
         ${{symbol_name('k')}}[${{symbol_name('i')}}] = ${{symbol_name('key')}}[${{symbol_name('i')}} % ${{symbol_name('key')}}.Length];
     };
 
