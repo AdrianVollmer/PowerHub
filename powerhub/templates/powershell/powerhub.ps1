@@ -1003,6 +1003,7 @@ The following functions are available (some with short aliases):
 {%- if not minimal %}
   * Run-Exe (re)
   * Run-Shellcode (rsh)
+  * Invoke-ReverseShell (irs)
 {%- endif %}
   * PushTo-Hub (pth)
   * Mount-Webdav (mwd)
@@ -1026,6 +1027,7 @@ $Aliases = @{
     {% if not minimal -%}
     re = "Run-Exe"
     rsh = "Run-Shellcode"
+    irs = "Invoke-ReverseShell"
     {%- endif %}
 }
 
