@@ -1,0 +1,16 @@
+{% extends "html/index.html" %}
+{% block receiver_active %}active{% endblock %}
+{% block content %}
+<p id='mainp'>
+<h2>Receiver {{macros.inline_help(help.receiver_main)}}
+</h2>
+
+{% if shells %}
+{% for s in shells %}
+    <p>{{s.src}}, {{s.id}}</p>
+{% endfor %}
+{% else %}
+<div>You have no active shells.</div>
+{% endif %}
+
+{% endblock %}

@@ -387,6 +387,18 @@ def get_repo():
     return redirect('/modules')
 
 
+# === Tab: Receiver =================================================
+
+
+@app.route('/receiver')
+@requires_auth
+def receiver():
+    context = dict(
+        shells=app.shell_handler.shells,
+    )
+    return render_template('html/receiver.html', **context)
+
+
 # === Tab: Static =================================================
 
 
