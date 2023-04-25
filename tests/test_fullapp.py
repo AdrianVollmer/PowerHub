@@ -148,6 +148,7 @@ def test_start(backend, stager):
             ({'zc00l', 'adam-chester', 'none'} & set(v.values()))
         ):
             continue
+        assert "Adrian Vollmer" in out
         assert "Run 'Help-PowerHub' for help" in out
 
 
