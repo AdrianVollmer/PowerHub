@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 * Evade latest Defender
+* Fix pre-defined repository URLs
 
 ## [2.0.4] - 2023-04-07
 
