@@ -1,7 +1,10 @@
 from collections import namedtuple
 import logging
 from enum import Enum, auto
-from inspect import getargspec
+try:
+    from inspect import getfullargspec
+except ImportError:
+    from inspect import getargspec as getfullargspec
 import os
 import re
 import shutil
@@ -34,7 +37,7 @@ REGEX_INCOMING = (
 
 class ShellHandler(object):
     def __init__(self, report_incoming):
-        assert len(getargspec(report_incoming).args) == 2
+        assert len(getfullargspec(report_incoming).args) == 2
         self.report_incoming = report_incoming
 
         self._state = HandlerState.OFFLINE
