@@ -151,7 +151,7 @@ class PowerHubApp(object):
                 'callback_urls': self.callback_urls(),
                 'webdav_url': self.webdav_url(),
                 'socketio': self.socketio,
-                'shell_handler': ShellHandler(),
+                'shell_handler': ShellHandler(lambda x, y: None),
             }.items():
                 setattr(app, k, v)
 

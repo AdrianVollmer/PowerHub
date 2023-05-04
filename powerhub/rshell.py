@@ -26,12 +26,17 @@ class HandlerState(Enum):
 
 
 BuildCommand = namedtuple(
-    "BuildCommand", "cmd env comment post"
+    "BuildCommand", "cmd env comment post target"
 )
 
 REGEX_INCOMING = (
-    r"^[0-9 /:]{20}\[(?P<src>[^]]*)\] INFO .* acceptConn() : "
+    r".*\[(?P<src>[^]]*)\] INFO .* : "
     r"New controllable connection with id (?P<id>[a-f0-9]{40})$"
+)
+
+REGEX_DISCONNECTED = (
+    r".*\[(?P<src>[^]]*)\] INFO .* : "
+    r"Failed to send keepalive, assuming client has disconnected$"
 )
 
 
@@ -39,6 +44,7 @@ class ShellHandler(object):
     def __init__(self, report_incoming):
         assert len(getfullargspec(report_incoming).args) == 2
         self.report_incoming = report_incoming
+        self.report_disconnected = report_incoming  # TODO
 
         self._state = HandlerState.OFFLINE
         self._thread = None
@@ -51,8 +57,7 @@ class ShellHandler(object):
         return self._state
 
     def build(self, host, port):
-        """Start build process in the background
-
+        """Prepare the build process and start it in the background
         """
 
         log.info("Building rssh binaries...")
@@ -71,45 +76,63 @@ class ShellHandler(object):
             #  RSSH_PROXY=foobar:1080,
         )
         key_path = os.path.join(directories.RSSH_DIR, "controller_key")
+        authkeys_path = os.path.join(directories.RSSH_DIR, "authorized_keys")
 
         def post_server(working_dir):
-            for file in ['id_ed25519', 'server', 'authorized_controllee_keys']:
-                shutil.copyfile(
-                    os.path.join(working_dir, "bin", file),
-                    os.path.join(directories.RSSH_DIR, file),
-                )
+            shutil.copyfile(
+                os.path.join(working_dir, "bin", 'server'),
+                os.path.join(directories.RSSH_DIR, 'server'),
+            )
             os.chmod(os.path.join(directories.RSSH_DIR, 'server'), 0o700)
 
         def post_client(working_dir):
+            # Copy the client dll
             shutil.copyfile(
                 os.path.join(working_dir, "bin", "client.dll"),
                 self.normalize_filename(host, port, "client.dll"),
             )
 
-        def post_keygen(working_dir):
-            shutil.copyfile(
-                os.path.join(key_path + ".pub"),
-                os.path.join(directories.RSSH_DIR, "authorized_keys"),
+            # Append key to authorized_controllee_keys
+            client_pubkey_path = os.path.join(
+                working_dir,
+                "internal",
+                "client",
+                "keys",
+                "private_key.pub",
             )
+            key = open(client_pubkey_path, 'r').read()
+            authkeys_path = os.path.join(directories.RSSH_DIR,
+                                         "authorized_controllee_keys")
+            with open(authkeys_path, 'a+') as fp:
+                fp.write(key)
+
+        def post_keygen(working_dir):
+            """Append public key to authorized_keys"""
+            key = open(key_path + ".pub", 'r').read()
+            with open(authkeys_path, 'a+') as fp:
+                fp.write(key)
 
         commands = [
             BuildCommand(
+                cmd="ssh-keygen -t ed25519 -f".split() + [key_path, '-N', '', '-C', ''],
+                target=key_path,
+                env={},
+                comment="Generating RSSH controller keys...",
+                post=post_keygen,
+            ),
+            BuildCommand(
                 cmd=cmd + ['server'],
+                target=os.path.join(directories.RSSH_DIR, 'server'),
                 env={**env, 'GOOS': 'linux'},
                 comment="Building RSSH server...",
                 post=post_server,
             ),
             BuildCommand(
                 cmd=cmd + ['client_dll'],
+                target=self.normalize_filename(host, port, "client.dll"),
                 env=env,
                 comment="Building RSSH client.dll...",
                 post=post_client,
-            ),
-            BuildCommand(
-                cmd="ssh-keygen -t ed25519 -f".split() + [key_path, '-N', '', '-C', ''],
-                env={},
-                comment="Generating RSSH controller keys...",
-                post=post_keygen,
             ),
         ]
 
@@ -150,6 +173,9 @@ class ShellHandler(object):
         shutil.copytree(RSSH_EXT_DIR, working_dir)
 
         for c in commands:
+            if os.path.exists(c.target):
+                continue
+
             p = subprocess.Popen(
                 c.cmd,
                 env=c.env,
@@ -264,6 +290,12 @@ class ShellHandler(object):
             d = m.groupdict()
             log.info("Incoming RSSH connection: %s" % d['id'])
             self.report_incoming(d['src'], d['id'])
+
+        m = re.match(REGEX_DISCONNECTED, line)
+        if m:
+            d = m.groupdict()
+            log.info("RSSH disconnected: %s" % d['src'])
+            self.report_disconnected(d['src'])
 
     def stop(self):
         if self.state != HandlerState.ONLINE:

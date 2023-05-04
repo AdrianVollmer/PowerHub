@@ -1018,6 +1018,7 @@ $Aliases = @{
     ghm = "Get-HubModule"
     lshm = "List-HubModules"
     uhm = "Update-HubModules"
+    irs = "Invoke-ReverseShell"
     gsi = "Get-SysInfo"
     rdne = "Run-DotNETExe"
     mwd = "Mount-Webdav"
