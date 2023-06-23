@@ -46,7 +46,7 @@ def create_self_signed_cert(hostname, cert_file, key_file):
         datetime.datetime.utcnow() + datetime.timedelta(days=30)
     ).sign(key, hash_algo, default_backend())
 
-    log.info("Generated a self-signed certifiate for '%s' with SHA-1 "
+    log.info("Generated a self-signed certifiate for '%s' with SHA256 "
              "fingerprint: %s" % (hostname, cert.fingerprint(hash_algo).hex()))
 
     with open(cert_file, "wb") as f:
@@ -81,7 +81,7 @@ def get_self_signed_cert(hostname, cert_dir):
         cert = x509.load_pem_x509_certificate(pem_data, default_backend())
 
     hash_algo = hashes.SHA256()
-    log.info("Loaded SSL certificate for '%s' with SHA1 fingerprint: %s"
+    log.info("Loaded SSL certificate for '%s' with SHA256 fingerprint: %s"
              % (hostname, cert.fingerprint(hash_algo).hex()))
     return (cert_file, key_file)
 
