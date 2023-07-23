@@ -7,7 +7,7 @@
 
 {{'$DebugPreference = "Continue"'|debug}}
 {{'Write-Debug "Starting up..."'|debug}}
-{{'Write-Debug "PowerShell Version: $PSVersionTable"'|debug}}
+{{'Write-Debug "PowerShell Version: $($PSVersionTable.PSVersion)"'|debug}}
 {{('Write-Debug "PowerHub Version: ' + VERSION + '"')|debug}}
 {%- include "powershell/rc4.ps1" -%}
 
