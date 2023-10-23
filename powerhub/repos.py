@@ -12,6 +12,7 @@ repositories = {
     "samratashok/Nishang": "https://github.com/samratashok/nishang.git",
     "S3cur3Th1sSh1t/PowerSharpPack": "https://github.com/S3cur3Th1sSh1t/PowerSharpPack.git",
     "r3motecontrol/Ghostpack Binaries": "https://github.com/r3motecontrol/Ghostpack-CompiledBinaries.git",  # noqa
+    "PrivescCheck.ps1": "https://raw.githubusercontent.com/itm4n/PrivescCheck/master/PrivescCheck.ps1",  # noqa
 }
 
 
