@@ -39,13 +39,13 @@ def install_repo_from_url(url):
 def git_clone(url):
     """Installs a git repository"""
     dest_dir = directories.MOD_DIR
-    try:
-        output = subprocess.check_output(
-            ['git', 'clone', '--depth', '1', url, dest_dir],
-            stderr=subprocess.STDOUT,
-        )
-    except subprocess.CalledProcessError:
-        raise Exception("git command failed: %s" % output)
+    proc = subprocess.run(
+        ['git', 'clone', '--depth', '1', url, dest_dir],
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+    )
+    if proc.returncode:
+        raise Exception("git command failed: %s" % proc.stderr.decode())
 
 
 def download(url):
