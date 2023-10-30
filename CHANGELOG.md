@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+* Add PrivescCheck to default repos
+
+### Fixed
+
+* Remove useless `eventlet` dependency
+* Improve logging
+
 ## [2.0.5] - 2023-04-29
 
 ### Fixed
