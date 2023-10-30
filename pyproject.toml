@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "powerhub"
-version = "2.0.5"
+version = "2.0.6"
 authors = [
     {name = "Adrian Vollmer", email = "computerfluesterer@protonmail.com"},
 ]

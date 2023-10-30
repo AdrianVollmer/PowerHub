@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.0.6] - 2023-10-30
+
 ### Added
 
 * Add PrivescCheck to default repos
