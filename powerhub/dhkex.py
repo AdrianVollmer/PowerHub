@@ -19,7 +19,7 @@ def generate_diffie_hellman_params():
     log.info("Generating new Diffie-Hellman parameters")
     g = 2
     parameters = dh.generate_parameters(generator=g, key_size=KEY_SIZE)
-    p = parameters.parameter_numbers()._p
+    p = parameters.parameter_numbers().p
 
     global DH_MODULUS, DH_G
     DH_MODULUS, DH_G = p, g
