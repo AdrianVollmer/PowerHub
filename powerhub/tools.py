@@ -74,7 +74,7 @@ def get_self_signed_cert(hostname, cert_dir):
     pem_data = open(cert_file, "br").read()
     cert = x509.load_pem_x509_certificate(pem_data, default_backend())
 
-    if cert.not_valid_after < datetime.datetime.now():
+    if cert.not_valid_after_utc < datetime.datetime.now(tz=datetime.timezone.utc):
         log.info("Certificate expired, generating a new one...")
         create_self_signed_cert(hostname, cert_file, key_file)
         pem_data = open(cert_file, "br").read()
