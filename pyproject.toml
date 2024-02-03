@@ -24,7 +24,7 @@ classifiers = [
 ]
 dependencies = [
     'cheroot',
-    'cryptography>=35',
+    'cryptography>=42',
     'dnspython>=2.3',
     'Flask>=1.0.2',
     'Flask-SocketIO>=5.3.0',
