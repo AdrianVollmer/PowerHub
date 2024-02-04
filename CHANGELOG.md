@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.0.7] - 2024-02-04
+
 ### Fixed
 
 * Establish compatibility with `cryptography` 42.0.0
