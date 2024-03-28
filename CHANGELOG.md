@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+* Fix bug that prevented loading of a lone module
+
 ## [2.0.7] - 2024-02-04
 
 ### Fixed

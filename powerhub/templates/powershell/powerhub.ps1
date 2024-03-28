@@ -134,7 +134,7 @@ function Unzip-Code {
 
 function Update-HubModules {
     Write-Verbose "Updating module list..."
-    $ModuleList = Transport-String "list" | ConvertFrom-Csv
+    [array]$ModuleList = Transport-String "list" | ConvertFrom-Csv
     $Global:PowerHubModules = $ModuleList
     foreach ($m in $PowerHubModules) {
         $m.n = [Int]($m.n)
