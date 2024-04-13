@@ -1,5 +1,6 @@
+PACKAGE_NAME := powerhub
 clean:
-	@rm -rf build __pycache__ *.egg-info docs/_build .docvenv .tox dist powerhub/*.egg-info powerhub/__pycache__
+	@rm -rf build __pycache__ *.egg-info docs/_build .docvenv .tox dist $(PACKAGE_NAME)/*.egg-info $(PACKAGE_NAME)/__pycache__
 
 docs:
 	@find .docvenv -maxdepth 0 -type d || python3 -m venv .docvenv ; \
@@ -29,15 +30,15 @@ build:
 	python -m build
 
 test-publish:
-	@file=$$(ls -1t dist/powerhub-*.tar.gz | head -n1); \
+	@file=$$(ls -1t dist/$(PACKAGE_NAME)-*.tar.gz | head -n1); \
 	read -p "[TEST] Ready to upload $$file? Type yes: " ans; \
 	if [ $$ans = 'yes' ] ; then twine upload -r testpypi $$file ; fi
 
 
 publish:
-	@file=$$(ls -1t dist/powerhub-*.tar.gz | head -n1); \
+	@file=$$(ls -1t dist/$(PACKAGE_NAME)-*.tar.gz | head -n1); \
 	read -p "Ready to upload $$file? Type yes: " ans; \
 	if [ $$ans = 'yes' ] ; then twine upload $$file ; fi
 
 
-.PHONY: clean docs test release build
+.PHONY: clean docs test release build publish test-publish
