@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.0.8] - 2024-04-13
+
 ### Fixed
 
 * Fix bug that prevented loading of a lone module
