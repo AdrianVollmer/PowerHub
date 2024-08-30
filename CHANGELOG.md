@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+* Restore compatibility with watchdog
+
 ## [2.0.8] - 2024-04-13
 
 ### Fixed
