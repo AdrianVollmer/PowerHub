@@ -22,7 +22,7 @@ copyright = '2018-2023, Adrian Vollmer'
 author = 'Adrian Vollmer'
 
 # The full version, including alpha/beta/rc tags
-release = "2.0.8"
+release = "2.0.9"
 
 
 # -- General configuration ---------------------------------------------------
