@@ -18,29 +18,29 @@ EXTENSIONS = [".ps1", ".ps1m", ".exe", ".bin"]
 def get_module_type(filename, file_type, mime):
     """Determine module type based on file name, type and mime type"""
 
-    if '.Net assembly' in file_type and filename.endswith('.exe'):
-        return 'dotnet'
-    elif file_type.startswith('PE32') and filename.endswith('.exe'):
-        return 'pe'
-    elif filename.endswith('.ps1'):
-        return 'ps1'
-    elif file_type == 'data':
-        return 'shellcode'
+    if ".Net assembly" in file_type and filename.endswith(".exe"):
+        return "dotnet"
+    elif file_type.startswith("PE32") and filename.endswith(".exe"):
+        return "pe"
+    elif filename.endswith(".ps1"):
+        return "ps1"
+    elif file_type == "data":
+        return "shellcode"
     return None
 
 
 def sanitize_ps1(buffer, file_type):
     """Remove BOM and make sure it's UTF-8"""
 
-    if 'UTF-8 (with BOM)' in file_type:
-        return buffer.decode('utf-8-sig').encode()
-    elif 'UTF-16 (with BOM)' in file_type:
-        return buffer.decode('utf-16').encode()
-    elif 'UTF-16, little-endian' in file_type:
-        return buffer.decode('utf-16').encode()
-    elif 'UTF-16, big-endian' in file_type:
-        return buffer.decode('utf-16').encode()
-    elif 'ASCII text' in file_type:
+    if "UTF-8 (with BOM)" in file_type:
+        return buffer.decode("utf-8-sig").encode()
+    elif "UTF-16 (with BOM)" in file_type:
+        return buffer.decode("utf-16").encode()
+    elif "UTF-16, little-endian" in file_type:
+        return buffer.decode("utf-16").encode()
+    elif "UTF-16, big-endian" in file_type:
+        return buffer.decode("utf-16").encode()
+    elif "ASCII text" in file_type:
         return buffer
     return buffer
 
@@ -48,7 +48,7 @@ def sanitize_ps1(buffer, file_type):
 def module_filter(fname):
     # This is done because PowerSploit contains tests that we
     # don't want
-    if fname.endswith('.tests.ps1'):
+    if fname.endswith(".tests.ps1"):
         return True
 
 
@@ -86,7 +86,7 @@ def import_file(path):
         if not mod_type:
             return
     module = Module(
-        path.replace(directories.MOD_DIR, ''),
+        path.replace(directories.MOD_DIR, ""),
         path,
         mod_type,
         file_type,
@@ -101,8 +101,7 @@ def enumerate_modules(_modules=modules):
 
 
 class Module(object):
-    """Represents a module
-    """
+    """Represents a module"""
 
     def __init__(self, name, path, type, file_type):
         self.name = name
@@ -115,8 +114,8 @@ class Module(object):
     @property
     def code(self):
         if self._code is None:
-            self._code = open(self._path, 'rb').read()
-            if self.type == 'ps1':
+            self._code = open(self._path, "rb").read()
+            if self.type == "ps1":
                 self._code = sanitize_ps1(self._code, self.file_type)
 
         return self._code
@@ -170,18 +169,18 @@ def on_moved(event):
     m = find_module_by_path(event.src_path)
     log.info("Module renamed: %s" % m.name)
     m._path = event.dest_path
-    m.name = m._path.replace(directories.MOD_DIR, '')
+    m.name = m._path.replace(directories.MOD_DIR, "")
 
 
 def set_up_watchdog():
     """Watch for changed files and updated the modules"""
 
-    patterns = ['*' + e for e in EXTENSIONS]
-    ignore_patterns = None
-    ignore_directories = False
-    case_sensitive = False
+    patterns = ["*" + e for e in EXTENSIONS]
     my_event_handler = PatternMatchingEventHandler(
-        patterns, ignore_patterns, ignore_directories, case_sensitive
+        patterns=patterns,
+        ignore_patterns=None,
+        ignore_directories=False,
+        case_sensitive=False,
     )
 
     my_event_handler.on_created = on_created
