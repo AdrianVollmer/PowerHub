@@ -37,7 +37,7 @@ PS C:\Users\avollmer> [System.Net.ServicePointManager]::ServerCertificateValidat
   _____   _____  _  _  _ _______  ______ _     _ _     _ ______
  |_____] |     | |  |  | |______ |_____/ |_____| |     | |_____]
  |       |_____| |__|__| |______ |    \_ |     | |_____| |_____]
-2.0.0                       written by Adrian Vollmer, 2018-202
+2.0.0                       written by Adrian Vollmer, 2018-2024
 Run 'Help-PowerHub' for help
 PS C:\Users\avollmer> Get-HubModule PowerView
 
@@ -74,7 +74,7 @@ Thanks!
 Author and License
 ==================
 
-Adrian Vollmer, 2018-2023. MIT License.
+Adrian Vollmer, 2018-2024. MIT License.
 
 Disclaimer
 ==========
