@@ -38,7 +38,8 @@ def install_repo_from_url(url):
 
 def git_clone(url):
     """Installs a git repository"""
-    dest_dir = directories.MOD_DIR
+    repo_name = url.split("/")[-1].split(".")[0]
+    dest_dir = directories.MOD_DIR + "/" + repo_name
     proc = subprocess.run(
         ['git', 'clone', '--depth', '1', url, dest_dir],
         stderr=subprocess.PIPE,
