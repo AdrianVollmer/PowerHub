@@ -949,7 +949,8 @@ foreach ($a in $Aliases.Keys) {
     try { New-Alias -Force -Name $a -Value $Aliases.$a } catch { }
 }
 
-Update-HubModules | Out-Null
+# Convert error to warning bc connection errors might be irrelevant when having preloaded modules
+try { Update-HubModules | Out-Null } catch { Write-Warning $_ }
 
 # Load pre-loaded modules
 foreach ($name in $PowerHubModulesContent.Keys) {
