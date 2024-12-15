@@ -65,10 +65,12 @@ def build_cradle_webclient(params, key, callback_urls, incremental=False):
 
     result = "$%(web_client)s=New-Object Net.WebClient;"
 
-    if params['proxy']:
+    if params['proxy'] == 'system_proxy':
         result += ("$%(web_client)s.Proxy=[Net.WebRequest]::GetSystemWebProxy();"
                    "$%(web_client)s.Proxy.Credentials=[Net.CredentialCache]::"
                    "DefaultCredentials;")
+    elif params['proxy'] == 'unset':
+        result += ("$%(web_client)s.Proxy=$null;")
 
     if params['useragent']:
         result += (

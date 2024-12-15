@@ -168,6 +168,14 @@ params = [
         get_arg='t',
     ),
     Parameter(
+        'proxy', 'unspecified', 'Web Proxy', 'selection',
+        options=[
+            ("unspecified", "Unspecified (Net.WebClient default behavior)"),
+            ("system_proxy", "System Proxy with Default Credentials"),
+            ("unset", "Explicitly Unset"),
+        ],
+    ),
+    Parameter(
         'kex', 'oob', 'Key Exchange', 'selection',
         options=[
             ("oob", "Out of Band"),
@@ -220,7 +228,6 @@ params = [
         help="By default, PowerShell sets no or a revealing user-agent. "
              "This option sets a more natural user-agent.",
     ),
-    Parameter('proxy', False, 'Use Web Proxy', 'checkbox'),
     Parameter('tlsv1.2', False, 'Force TLSv1.2', 'checkbox',
               classes='relevant-to-https'),
     Parameter(
