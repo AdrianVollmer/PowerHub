@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.0.10] - 2024-12-20
+
+### Added
+
+* Option to force no proxy usage
+
+### Changed
+
+* Remove spell check lines for the download cradle in the webapp
+* Use just-in-time AMSI bypass for the global process-specific AMSI
+
 ## [2.0.9] - 2024-08-30
 
 ### Fixed
