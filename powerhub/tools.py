@@ -250,9 +250,9 @@ def modify_callbacks(callbacks, pivot_endpoint, args):
     if not pivot_endpoint:
         return callbacks
 
-    modifiedCallbacks = callbacks.copy()
+    modified_callbacks = callbacks.copy()
     for transport in callbacks:
         old = old_endpoint(transport, args)
-        modifiedCallbacks[transport] = callbacks[transport].replace(old, pivot_endpoint, 1)
+        modified_callbacks[transport] = callbacks[transport].replace(old, pivot_endpoint, 1)
 
-    return modifiedCallbacks
+    return modified_callbacks
