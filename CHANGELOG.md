@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+* Added *Download Mode* to *Static Files* page, which supports HTMl Smuggling
+
 ### Fixed
 
 * Update Get-Sysinfo to display the new value of the new key for the release ID
