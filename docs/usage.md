@@ -198,6 +198,12 @@ you are already running PowerHub, just put your files inside the static
 folder instead. It will respect the tree-like structure of files and
 directories and make them accessible for everyone without authentication.
 
+Besides of directly downloading a file, it is also possible to change the
+download mode to *HTML Smuggling*. In that mode the file is wrapped in an
+HTML page that reassembles the file in the browser and triggers the download
+via JavaScript (MITRE ATT&CK T1027.006). This helps against content filters
+that inspect file contents or block certain MIME types.
+
 
 ### WebDAV
 
@@ -320,4 +326,3 @@ $ power-obfuscate -i SharpHound.exe -o sharphound.ps1 -n -y --epilogue 'SharpHou
 I 2023-02-18 16:09:14 Output written to sharphound.ps1
 I 2023-02-18 16:09:14 Execute the file with 'cat sharphound.ps1|iex' or 'ipmo sharphound.ps1' on the target
 ```
-

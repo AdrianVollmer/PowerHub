@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>PowerHub Download File</title>
+    </head>
+    <body>
+        <p>If the download does not start automatically, <a href="#" id="dl">click here</a>.</p>
+        <script>
+            function b64decode(data) {
+                var byteString = atob(data);
+                var bytes = new Uint8Array(byteString.length);
+                for(var i = 0; i < byteString.length; i++) {
+                    bytes[i] = byteString.charCodeAt(i);
+                }
+                return bytes;
+            }
+
+            var fileName = {{ filename|tojson }};
+            var b64File = {{ data|tojson }};
+            var mimeType = "application/octet-stream";
+
+            function download() {
+                var bytes = b64decode(b64File);
+                var blob = new Blob([bytes], { type: mimeType });
+
+                if(navigator.msSaveBlob) {
+                    navigator.msSaveBlob(blob, fileName);
+                } else {
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement("a");
+                    a.href = url;
+                    a.download = fileName;
+                    a.style.display = "none";
+                    document.body.appendChild(a);
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+            }
+
+            document.getElementById("dl").addEventListener("click", function(event) {
+                event.preventDefault();
+                download();
+            });
+
+            download();
+        </script>
+    </body>
+</html>
